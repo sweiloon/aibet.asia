@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/sonner";
 
 export default function AdminUsers() {
   const { 
@@ -45,6 +46,13 @@ export default function AdminUsers() {
     fetchUsers();
   }, [fetchUsers]);
 
+  useEffect(() => {
+    // Handle errors from useUserManagement
+    if (error) {
+      toast.error(error || "Failed to load users");
+    }
+  }, [error]);
+
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name
@@ -56,6 +64,7 @@ export default function AdminUsers() {
   };
 
   const handleEditUser = (user: any) => {
+    console.log("Editing user:", user);
     setEditingUser(user);
     setEditDialogOpen(true);
   };
@@ -67,9 +76,11 @@ export default function AdminUsers() {
 
   const handleDeleteConfirm = async () => {
     if (userToDelete) {
-      await deleteUser(userToDelete);
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
+      const success = await deleteUser(userToDelete);
+      if (success) {
+        setDeleteDialogOpen(false);
+        setUserToDelete(null);
+      }
     }
   };
 
@@ -109,6 +120,9 @@ export default function AdminUsers() {
                       <div>
                         <div className="font-medium">{user.name || "No name"}</div>
                         <div className="text-sm text-muted-foreground">{user.email}</div>
+                        {user.phone && (
+                          <div className="text-xs text-muted-foreground">{user.phone}</div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -141,7 +155,9 @@ export default function AdminUsers() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10">No users found.</TableCell>
+                  <TableCell colSpan={4} className="text-center py-10">
+                    {error ? `Error: ${error}` : "No users found."}
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

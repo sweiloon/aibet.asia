@@ -35,10 +35,12 @@ export const useUserManagement = () => {
         throw error;
       }
 
+      console.log("Fetched users:", data);
       setUsers(data || []);
     } catch (err) {
       console.error("Error fetching users:", err);
       setError("Failed to fetch users");
+      toast.error("Failed to load users");
     } finally {
       setLoading(false);
     }
@@ -46,7 +48,9 @@ export const useUserManagement = () => {
 
   const deleteUser = async (userId: string) => {
     try {
-      // Only admins can delete users
+      setLoading(true);
+      
+      // First delete from auth (this cascades to profiles due to references)
       const { error } = await supabase.auth.admin.deleteUser(userId);
 
       if (error) {
@@ -56,15 +60,16 @@ export const useUserManagement = () => {
       }
 
       toast.success("User deleted successfully");
-      setConfirmingDelete(null);
       
       // Refresh the user list
-      fetchUsers();
+      await fetchUsers();
       return true;
     } catch (err) {
       toast.error("Failed to delete user");
       console.error("Error deleting user:", err);
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
