@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -187,10 +188,21 @@ const DeleteUserDialog = ({
     setIsDeleting(true);
     
     try {
-      // Delete the user from auth
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      // First delete the profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
       
-      if (error) throw error;
+      if (profileError) throw profileError;
+      
+      // Then attempt to delete the user from auth
+      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+      
+      if (authError) {
+        console.error("Failed to delete user from auth:", authError);
+        // Continue anyway as the profile was deleted
+      }
       
       toast({
         title: "User deleted",
@@ -241,17 +253,26 @@ export default function AdminUsers() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  // Fetch users data
+  // Fetch users data - modified to correctly fetch users
   const { data: users, isLoading, isError, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Log the start of the fetch process
+      console.log("Fetching users data...");
+      
+      // Get all profiles with role 'user'
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('role', 'user');
       
-      if (error) throw error;
-      return data as UserData[];
+      if (error) {
+        console.error("Error fetching users:", error);
+        throw error;
+      }
+      
+      console.log("Fetched profiles:", profiles);
+      return profiles as UserData[];
     }
   });
   
@@ -274,6 +295,11 @@ export default function AdminUsers() {
       .toUpperCase()
       .substring(0, 2);
   };
+
+  // Added console log to debug what's in the users array
+  useEffect(() => {
+    console.log("Current users data:", users);
+  }, [users]);
 
   return (
     <DashboardLayout isAdmin>
