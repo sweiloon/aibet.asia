@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,17 +13,30 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("user");
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect user if already logged in
+  useEffect(() => {
+    if (user) {
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await login(email, password, activeTab === "admin");
+    const isAdmin = activeTab === "admin";
+    const success = await login(email, password, isAdmin);
     setLoading(false);
     
     if (success) {
-      navigate(activeTab === "admin" ? "/admin" : "/dashboard");
+      // The redirection will happen automatically from the useEffect when user state is updated
+      // This is to prevent navigation issues if the user role isn't set immediately
     }
   };
 

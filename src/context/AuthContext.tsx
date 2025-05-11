@@ -178,11 +178,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
       
       // Verify admin access if attempting admin login
-      if (isAdmin && (!profile || profile.role !== "admin")) {
-        // Sign out if not an admin
-        await supabase.auth.signOut();
-        toast.error("Invalid admin credentials");
-        return false;
+      if (isAdmin) {
+        if (!profile || profile.role !== "admin") {
+          // Sign out if not an admin
+          await supabase.auth.signOut();
+          toast.error("You must be an admin to access this page");
+          return false;
+        }
+      } else {
+        // Verify user access if attempting user login
+        if (profile && profile.role === "admin") {
+          // Sign out if admin trying to use user login
+          await supabase.auth.signOut();
+          toast.error("Admins should use the admin login page");
+          return false;
+        }
       }
       
       toast.success("Login successful!");
