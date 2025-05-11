@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, Globe2, FileText, ShieldCheck, Users, LayoutDashboard, ClipboardCheck, Upload } from "lucide-react";
+import { LogOut, Settings, Globe2, FileText, ShieldCheck, Users, LayoutDashboard, ClipboardCheck, Upload, History, Files, IdCard, Banknote } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -111,14 +111,34 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
                   )}
                   
                   {!isAdmin && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
-                        <button onClick={() => navigate("/dashboard/websites/add")}>
-                          <Upload />
-                          <span>Upload Website</span>
-                        </button>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <button onClick={() => navigate("/dashboard/websites/add")}>
+                            <Upload />
+                            <span>Upload Website</span>
+                          </button>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <button onClick={() => navigate("/dashboard/upload-history")}>
+                            <History />
+                            <span>Upload History</span>
+                          </button>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <button onClick={() => navigate("/dashboard/upload-document")}>
+                            <Files />
+                            <span>Upload Document</span>
+                          </button>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </>
                   )}
                 </SidebarMenu>
               </SidebarGroupContent>

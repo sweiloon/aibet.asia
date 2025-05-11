@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +20,8 @@ import UserSettings from "./pages/user/Settings";
 import UserWebsites from "./pages/user/Websites";
 import WebsiteAdd from "./pages/user/WebsiteAdd";
 import WebsiteDetail from "./pages/user/WebsiteDetail";
+import UploadHistory from "./pages/user/UploadHistory";
+import UploadDocument from "./pages/user/UploadDocument";
 
 // Admin Dashboard Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -110,6 +113,22 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRole="user">
                     <WebsiteDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/dashboard/upload-history" 
+                element={
+                  <ProtectedRoute requiredRole="user">
+                    <UploadHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/dashboard/upload-document" 
+                element={
+                  <ProtectedRoute requiredRole="user">
+                    <UploadDocument />
                   </ProtectedRoute>
                 }
               />
