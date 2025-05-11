@@ -32,7 +32,7 @@ const formSchema = z.object({
   confirmPassword: z.string().optional(),
   role: z.enum(["user", "admin"]),
   status: z.enum(["active", "inactive"]),
-  ranking: z.enum(["", "customer", "agent", "master", "ranking"]).optional(),
+  ranking: z.enum(["none", "customer", "agent", "master", "ranking"]).optional(),
 }).refine(data => !data.password || data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -60,7 +60,9 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
       confirmPassword: "",
       role: user?.role || "user",
       status: user?.status || "active",
-      ranking: (user?.ranking as "" | "customer" | "agent" | "master" | "ranking") || "",
+      ranking: (user?.ranking && user?.ranking !== "") ? 
+        (user.ranking as "customer" | "agent" | "master" | "ranking") : 
+        "none",
     },
   });
 
@@ -75,7 +77,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
         email: values.email,
         role: values.role,
         status: values.status,
-        ranking: values.ranking,
+        ranking: values.ranking === "none" ? "" : values.ranking,
       };
       
       const success = await onSave(user.id, userData, values.password);
@@ -172,14 +174,14 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                   <FormLabel>Ranking</FormLabel>
                   <FormControl>
                     <Select 
-                      value={field.value || ""} 
+                      value={field.value || "none"} 
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select ranking" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Not Set</SelectItem>
+                        <SelectItem value="none">Not Set</SelectItem>
                         <SelectItem value="customer">Customer</SelectItem>
                         <SelectItem value="agent">Agent</SelectItem>
                         <SelectItem value="master">Master</SelectItem>
