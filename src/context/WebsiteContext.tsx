@@ -31,7 +31,7 @@ interface WebsiteContextType {
   websites: Website[];
   getUserWebsites: () => Website[];
   getAllWebsites: () => Website[];
-  addWebsite: (website: Omit<Website, "id" | "status" | "managementData" | "createdAt">) => void;
+  addWebsite: (website: Omit<Website, "id" | "userId" | "status" | "managementData" | "createdAt">) => void;
   updateWebsiteStatus: (id: string, status: Website["status"]) => void;
   addManagementRecord: (websiteId: string, record: Omit<WebsiteManagement, "id" | "websiteId">) => void;
   updateManagementRecord: (websiteId: string, recordId: string, tasks: WebsiteManagement["tasks"]) => void;
@@ -80,7 +80,7 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   const getAllWebsites = () => websites;
   
   // Add a new website
-  const addWebsite = (website: Omit<Website, "id" | "status" | "managementData" | "createdAt">) => {
+  const addWebsite = (website: Omit<Website, "id" | "userId" | "status" | "managementData" | "createdAt">) => {
     if (!user) return;
     
     const newWebsite: Website = {
