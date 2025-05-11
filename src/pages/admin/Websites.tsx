@@ -24,7 +24,7 @@ export default function AdminWebsites() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   
   // Set initial status filter based on URL query param
@@ -33,11 +33,13 @@ export default function AdminWebsites() {
     const status = params.get("status");
     if (status) {
       setStatusFilter(status);
+    } else {
+      setStatusFilter("all");
     }
   }, [location.search]);
   
   const filteredWebsites = websites.filter(website => {
-    const matchesStatus = !statusFilter || website.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || website.status === statusFilter;
     const matchesSearch = !searchTerm || 
       website.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       website.url.toLowerCase().includes(searchTerm.toLowerCase());
@@ -85,7 +87,7 @@ export default function AdminWebsites() {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="approved">Approved</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
@@ -146,10 +148,10 @@ export default function AdminWebsites() {
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-6">
                       <p>No websites found matching your filters</p>
-                      {statusFilter && (
+                      {statusFilter !== "all" && (
                         <Button
                           variant="link"
-                          onClick={() => setStatusFilter("")}
+                          onClick={() => setStatusFilter("all")}
                           className="mt-2"
                         >
                           Clear status filter
