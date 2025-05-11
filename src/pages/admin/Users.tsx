@@ -11,8 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, UserX } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useUserManagement } from "@/hooks/useUserManagement";
 import { EditUserDialog } from "@/components/EditUserDialog";
@@ -33,9 +32,7 @@ export default function AdminUsers() {
     loading, 
     error, 
     fetchUsers, 
-    deleteUser, 
-    confirmingDelete,
-    setConfirmingDelete
+    deleteUser
   } = useUserManagement();
 
   const [editingUser, setEditingUser] = useState<any | null>(null);
@@ -44,12 +41,9 @@ export default function AdminUsers() {
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   useEffect(() => {
+    // Fetch users when component mounts
     fetchUsers();
   }, [fetchUsers]);
-
-  if (error) {
-    toast.error("Failed to load users");
-  }
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";

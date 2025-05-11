@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,15 +28,15 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Reset form when user changes
-  useState(() => {
-    if (user) {
+  // Reset form when user changes or dialog opens
+  useEffect(() => {
+    if (user && open) {
       setName(user.name || "");
       setEmail(user.email || "");
       setPhone(user.phone || "");
       setPassword("");
     }
-  });
+  }, [user, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

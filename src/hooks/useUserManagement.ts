@@ -24,10 +24,11 @@ export const useUserManagement = () => {
       setLoading(true);
       setError(null);
 
-      // Only admins should be able to see this data
+      // Only fetch non-admin users
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
+        .eq("role", "user") // Only fetch users with role="user"
         .order("created_at", { ascending: false });
 
       if (error) {
