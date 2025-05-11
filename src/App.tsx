@@ -26,9 +26,6 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminSettings from "./pages/admin/Settings";
 import AdminWebsites from "./pages/admin/Websites";
 import AdminWebsiteDetail from "./pages/admin/WebsiteDetail";
-import AdminUsers from "./pages/admin/Users";
-import AdminReports from "./pages/admin/Reports";
-import AdminSecurity from "./pages/admin/Security";
 
 const queryClient = new QueryClient();
 
@@ -144,30 +141,6 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRole="admin">
                     <AdminWebsiteDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route 
-                path="/admin/users" 
-                element={
-                  <ProtectedRoute requiredRole="admin">
-                    <AdminUsers />
-                  </ProtectedRoute>
-                }
-              />
-              <Route 
-                path="/admin/reports" 
-                element={
-                  <ProtectedRoute requiredRole="admin">
-                    <AdminReports />
-                  </ProtectedRoute>
-                }
-              />
-              <Route 
-                path="/admin/security" 
-                element={
-                  <ProtectedRoute requiredRole="admin">
-                    <AdminSecurity />
                   </ProtectedRoute>
                 }
               />
