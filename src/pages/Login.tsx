@@ -7,8 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
-import { toast } from "@/components/ui/sonner";
-import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -21,19 +19,11 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const success = await login(email, password, activeTab === "admin");
+    setLoading(false);
     
-    try {
-      // Different login flow for user vs admin
-      const success = await login(email, password, activeTab === "admin");
-      
-      if (success) {
-        navigate(activeTab === "admin" ? "/admin" : "/dashboard");
-      }
-    } catch (error) {
-      toast.error("Login failed. Please check your credentials and try again.");
-      console.error("Login error:", error);
-    } finally {
-      setLoading(false);
+    if (success) {
+      navigate(activeTab === "admin" ? "/admin" : "/dashboard");
     }
   };
 
@@ -76,7 +66,6 @@ export default function Login() {
                           onChange={(e) => setEmail(e.target.value)}
                           className="pr-24"
                           required
-                          disabled={loading}
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
                           @aibet.asia
@@ -95,7 +84,6 @@ export default function Login() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        disabled={loading}
                       />
                     </div>
                   </CardContent>
@@ -106,12 +94,7 @@ export default function Login() {
                       className="w-full"
                       disabled={loading}
                     >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : "Login"}
+                      {loading ? "Logging in..." : "Login"}
                     </Button>
                     
                     <div className="text-center text-sm">
@@ -142,7 +125,6 @@ export default function Login() {
                           onChange={(e) => setEmail(e.target.value)}
                           className="pr-24"
                           required
-                          disabled={loading}
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
                           @aibet.asia
@@ -161,7 +143,6 @@ export default function Login() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        disabled={loading}
                       />
                     </div>
                   </CardContent>
@@ -172,12 +153,7 @@ export default function Login() {
                       className="w-full"
                       disabled={loading}
                     >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : "Admin Login"}
+                      {loading ? "Logging in..." : "Admin Login"}
                     </Button>
                   </CardFooter>
                 </form>

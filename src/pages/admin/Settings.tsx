@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "@/components/ui/sonner";
-import { Loader2 } from "lucide-react";
 
 export default function AdminSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -18,26 +16,17 @@ export default function AdminSettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmNewPassword) {
-      toast.error("New passwords don't match!");
       return;
     }
     
     setLoading(true);
-    try {
-      const success = await changePassword(currentPassword, newPassword);
-      
-      if (success) {
-        // Clear fields on success
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmNewPassword("");
-      }
-    } catch (error) {
-      console.error("Password change error:", error);
-      toast.error("Failed to change password. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    await changePassword(currentPassword, newPassword);
+    setLoading(false);
+    
+    // Clear fields
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
   };
   
   return (
@@ -89,7 +78,6 @@ export default function AdminSettings() {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       required
-                      disabled={loading}
                     />
                   </div>
                   
@@ -104,7 +92,6 @@ export default function AdminSettings() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
-                      disabled={loading}
                     />
                   </div>
                   
@@ -119,7 +106,6 @@ export default function AdminSettings() {
                       value={confirmNewPassword}
                       onChange={(e) => setConfirmNewPassword(e.target.value)}
                       required
-                      disabled={loading}
                     />
                     {newPassword !== confirmNewPassword && confirmNewPassword && (
                       <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
@@ -132,12 +118,7 @@ export default function AdminSettings() {
                     type="submit"
                     disabled={loading || newPassword !== confirmNewPassword}
                   >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Updating...
-                      </>
-                    ) : "Update Password"}
+                    {loading ? "Updating..." : "Update Password"}
                   </Button>
                 </CardFooter>
               </form>

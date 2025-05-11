@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
-import { Loader2 } from "lucide-react";
 
 export default function SignUp() {
   const [name, setName] = useState("");
@@ -50,17 +49,11 @@ export default function SignUp() {
     }
     
     setLoading(true);
-    try {
-      const success = await signup(email, password, phone, name);
-      
-      if (success) {
-        navigate("/dashboard");
-      }
-    } catch (error) {
-      console.error("Signup error:", error);
-      toast.error("Signup failed, please try again.");
-    } finally {
-      setLoading(false);
+    const success = await signup(email, password, phone, name);
+    setLoading(false);
+    
+    if (success) {
+      navigate("/dashboard");
     }
   };
 
@@ -89,7 +82,6 @@ export default function SignUp() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    disabled={loading}
                   />
                 </div>
                 
@@ -105,7 +97,6 @@ export default function SignUp() {
                       onChange={(e) => setEmail(e.target.value)}
                       className="pr-24"
                       required
-                      disabled={loading}
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
                       @aibet.asia
@@ -123,7 +114,6 @@ export default function SignUp() {
                     value={phone}
                     onChange={handlePhoneChange}
                     required
-                    disabled={loading}
                   />
                 </div>
                 
@@ -138,7 +128,6 @@ export default function SignUp() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    disabled={loading}
                   />
                 </div>
                 
@@ -153,7 +142,6 @@ export default function SignUp() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    disabled={loading}
                   />
                 </div>
               </CardContent>
@@ -164,12 +152,7 @@ export default function SignUp() {
                   className="w-full"
                   disabled={loading}
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Account...
-                    </>
-                  ) : "Sign Up"}
+                  {loading ? "Creating Account..." : "Sign Up"}
                 </Button>
                 
                 <div className="text-center text-sm">
