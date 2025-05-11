@@ -1,6 +1,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 export interface User {
   id: string;
@@ -13,13 +15,9 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string, isAdmin: boolean) => Promise<boolean>;
   signup: (email: string, password: string, phone: string, name: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
 }
-
-// Default admin credentials
-const ADMIN_EMAIL = "admin@aibet.asia";
-const ADMIN_PASSWORD = "11111111";
 
 // Create context with a default value
 const AuthContext = createContext<AuthContextType>({
@@ -27,7 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   login: async () => false,
   signup: async () => false,
-  logout: () => {},
+  logout: async () => {},
   changePassword: async () => false,
 });
 
@@ -35,18 +33,89 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   
+  // Initialize auth state
   useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    // First set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          try {
+            // Fetch user role from profiles
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+              
+            if (error) {
+              console.error("Error fetching user role:", error);
+              setUser(null);
+              return;
+            }
+            
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              role: data.role as "user" | "admin"
+            });
+          } catch (error) {
+            console.error("Error setting user:", error);
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      }
+    );
+    
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      
+      if (session?.user) {
+        // Fetch user role from profiles
+        setTimeout(async () => {
+          try {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+              
+            if (error) {
+              console.error("Error fetching user role:", error);
+              setUser(null);
+              return;
+            }
+            
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              role: data.role as "user" | "admin"
+            });
+          } catch (error) {
+            console.error("Error setting user:", error);
+            setUser(null);
+          }
+          setLoading(false);
+        }, 0);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   
-  // Mock login function
+  // Login function
   const login = async (email: string, password: string, isAdmin: boolean): Promise<boolean> => {
     setLoading(true);
     try {
@@ -54,35 +123,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!email.includes("@")) {
         email = `${email}@aibet.asia`;
       }
-
-      // Admin login check
-      if (isAdmin) {
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-          const adminUser = { id: "admin1", email: ADMIN_EMAIL, role: "admin" as const };
-          setUser(adminUser);
-          localStorage.setItem('user', JSON.stringify(adminUser));
-          toast.success("Admin login successful!");
-          return true;
-        } else {
-          toast.error("Invalid admin credentials!");
-          return false;
-        }
-      }
       
-      // User login (mock - in real app would check against database)
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const matchedUser = users.find((u: any) => u.email === email);
+      // First authenticate the user
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      if (matchedUser && matchedUser.password === password) {
-        const userObj = { id: matchedUser.id, email: matchedUser.email, role: "user" as const };
-        setUser(userObj);
-        localStorage.setItem('user', JSON.stringify(userObj));
-        toast.success("Login successful!");
-        return true;
-      } else {
-        toast.error("Invalid credentials!");
+      if (authError) {
+        toast.error(authError.message);
+        setLoading(false);
         return false;
       }
+      
+      if (!authData.user) {
+        toast.error("Invalid credentials");
+        setLoading(false);
+        return false;
+      }
+      
+      // Check if the user has the correct role
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', authData.user.id)
+        .single();
+      
+      if (profileError) {
+        toast.error("Error fetching user profile");
+        // Sign out if profile check fails
+        await supabase.auth.signOut();
+        setLoading(false);
+        return false;
+      }
+      
+      // Verify the role matches the login type
+      const userRole = profile.role;
+      if ((isAdmin && userRole !== 'admin') || (!isAdmin && userRole !== 'user')) {
+        toast.error(isAdmin 
+          ? "This account doesn't have admin privileges. Please use the user login." 
+          : "Admin accounts must use the admin login.");
+        // Sign out if role doesn't match
+        await supabase.auth.signOut();
+        setLoading(false);
+        return false;
+      }
+      
+      toast.success("Login successful!");
+      return true;
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Login failed!");
@@ -92,7 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  // Mock signup function
+  // Signup function
   const signup = async (email: string, password: string, phone: string, name: string): Promise<boolean> => {
     setLoading(true);
     try {
@@ -108,33 +196,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      // Check if user already exists
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      if (users.some((u: any) => u.email === email)) {
-        toast.error("Account already exists with this email!");
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            phone,
+            name
+          }
+        }
+      });
+      
+      if (error) {
+        toast.error(error.message);
         return false;
       }
       
-      // Create new user
-      const newUser = {
-        id: `user${Date.now()}`,
-        email,
-        password,
-        phone,
-        name,
-        createdAt: new Date().toISOString()
-      };
-      
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Auto-login after signup
-      const userObj = { id: newUser.id, email: newUser.email, role: "user" as const };
-      setUser(userObj);
-      localStorage.setItem('user', JSON.stringify(userObj));
-      
-      toast.success("Account created successfully!");
-      return true;
+      if (data.user) {
+        toast.success("Account created successfully!");
+        return true;
+      } else {
+        toast.error("Failed to create account");
+        return false;
+      }
     } catch (error) {
       console.error("Signup error:", error);
       toast.error("Signup failed!");
@@ -145,9 +229,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Logout function
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    await supabase.auth.signOut();
     toast.success("Logged out successfully");
   };
   
@@ -156,35 +239,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return false;
     
     try {
-      if (user.role === "admin") {
-        // Admin password change
-        if (currentPassword !== ADMIN_PASSWORD) {
-          toast.error("Current password is incorrect!");
-          return false;
-        }
-        // In a real app, you would update the admin password in a database
-        toast.success("Admin password would be updated in a real application!");
-        return true;
-      } else {
-        // User password change
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const userIndex = users.findIndex((u: any) => u.email === user.email);
-        
-        if (userIndex === -1) {
-          toast.error("User not found!");
-          return false;
-        }
-        
-        if (users[userIndex].password !== currentPassword) {
-          toast.error("Current password is incorrect!");
-          return false;
-        }
-        
-        users[userIndex].password = newPassword;
-        localStorage.setItem('users', JSON.stringify(users));
-        toast.success("Password updated successfully!");
-        return true;
+      // First verify the current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+      
+      if (signInError) {
+        toast.error("Current password is incorrect!");
+        return false;
       }
+      
+      // Update the password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+      
+      toast.success("Password updated successfully!");
+      return true;
     } catch (error) {
       console.error("Password change error:", error);
       toast.error("Failed to change password!");
