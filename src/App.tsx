@@ -22,6 +22,7 @@ import WebsiteAdd from "./pages/user/WebsiteAdd";
 import WebsiteDetail from "./pages/user/WebsiteDetail";
 import UploadHistory from "./pages/user/UploadHistory";
 import UploadDocument from "./pages/user/UploadDocument";
+import UserWebsiteRecords from "./pages/user/WebsiteRecords";
 
 // Admin Dashboard Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -32,6 +33,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminReports from "./pages/admin/Reports";
 import AdminSecurity from "./pages/admin/Security";
 import AdminApprovals from "./pages/admin/Approvals";
+import WebsiteRecords from "./pages/admin/WebsiteRecords";
 
 const queryClient = new QueryClient();
 
@@ -132,6 +134,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route 
+                path="/dashboard/website-records" 
+                element={
+                  <ProtectedRoute requiredRole="user">
+                    <UserWebsiteRecords />
+                  </ProtectedRoute>
+                }
+              />
               
               {/* Admin Dashboard Routes */}
               <Route 
@@ -195,6 +205,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRole="admin">
                     <AdminApprovals />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/admin/website-records" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <WebsiteRecords />
                   </ProtectedRoute>
                 }
               />
