@@ -14,6 +14,14 @@ export interface Website {
   status: "pending" | "approved" | "rejected";
   managementData: WebsiteManagement[];
   createdAt: string;
+  updatedAt?: string;
+  type?: "website" | "document" | "id-card" | "bank-statement";
+  files?: Array<{
+    name: string;
+    url: string;
+    type: string;
+  }>;
+  rejectionReason?: string;
 }
 
 export interface WebsiteManagement {
@@ -83,13 +91,16 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   const addWebsite = (website: Omit<Website, "id" | "userId" | "status" | "managementData" | "createdAt">) => {
     if (!user) return;
     
+    const now = new Date().toISOString();
     const newWebsite: Website = {
       ...website,
       id: `website-${Date.now()}`,
       userId: user.id,
       status: "pending",
       managementData: [],
-      createdAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now,
+      type: website.type || "website"
     };
     
     setWebsites(prev => [...prev, newWebsite]);
@@ -99,7 +110,11 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   // Update website status
   const updateWebsiteStatus = (id: string, status: Website["status"]) => {
     setWebsites(prev => prev.map(website => 
-      website.id === id ? { ...website, status } : website
+      website.id === id ? { 
+        ...website, 
+        status,
+        updatedAt: new Date().toISOString()
+      } : website
     ));
     toast.success(`Website status updated to ${status}`);
   };
