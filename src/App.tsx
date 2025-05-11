@@ -26,6 +26,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminSettings from "./pages/admin/Settings";
 import AdminWebsites from "./pages/admin/Websites";
 import AdminWebsiteDetail from "./pages/admin/WebsiteDetail";
+import AdminUsers from "./pages/admin/Users";
 
 const queryClient = new QueryClient();
 
@@ -141,6 +142,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRole="admin">
                     <AdminWebsiteDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/admin/users" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminUsers />
                   </ProtectedRoute>
                 }
               />
