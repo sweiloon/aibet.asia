@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, Globe2, FileText, ShieldCheck, Users, LayoutDashboard } from "lucide-react";
+import { LogOut, Home, Settings, Globe2, FileText, ShieldCheck, Users, LayoutDashboard } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -44,10 +44,7 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
         <Sidebar className="border-r border-r-white/10">
           <SidebarHeader className="flex flex-col items-start py-4">
             <div className="px-4">
-              <div 
-                className="flex items-center gap-2 cursor-pointer" 
-                onClick={() => navigate("/")}
-              >
+              <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-gradient">WebManage</span>
                 <span className="text-xs rounded-full px-2 bg-blue-500/30 text-blue-200">CRM</span>
               </div>
@@ -61,6 +58,15 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
               <SidebarGroupLabel>Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <button onClick={() => navigate("/")}>
+                        <Home />
+                        <span>Home</span>
+                      </button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <button onClick={() => navigate(isAdmin ? "/admin" : "/dashboard")}>
