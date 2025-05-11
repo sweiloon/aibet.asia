@@ -17,6 +17,7 @@ import WebsiteAdd from "@/pages/user/WebsiteAdd";
 import WebsiteDetail from "@/pages/user/WebsiteDetail";
 import UploadHistory from "@/pages/user/UploadHistory";
 import UploadDocument from "@/pages/user/UploadDocument";
+import UserWebsiteRecords from "@/pages/user/WebsiteRecords";
 
 // Admin Dashboard Pages
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -27,6 +28,7 @@ import AdminUsers from "@/pages/admin/Users";
 import AdminReports from "@/pages/admin/Reports";
 import AdminSecurity from "@/pages/admin/Security";
 import AdminApprovals from "@/pages/admin/Approvals";
+import AdminWebsiteRecords from "@/pages/admin/WebsiteRecords";
 
 // Protected route component
 const ProtectedRoute = ({ 
@@ -119,6 +121,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route 
+        path="/dashboard/website-records" 
+        element={
+          <ProtectedRoute requiredRole="user">
+            <UserWebsiteRecords />
+          </ProtectedRoute>
+        }
+      />
       
       {/* Admin Dashboard Routes */}
       <Route 
@@ -150,6 +160,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <AdminWebsiteDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/admin/website-records" 
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminWebsiteRecords />
           </ProtectedRoute>
         }
       />

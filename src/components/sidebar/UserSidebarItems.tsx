@@ -11,6 +11,7 @@ import {
   Upload,
   History,
   Files,
+  ListChecks,
 } from "lucide-react";
 
 interface UserSidebarItemsProps {
@@ -45,6 +46,15 @@ export function UserSidebarItems({ className }: UserSidebarItemsProps) {
           <button onClick={() => navigate("/dashboard/upload-history")}>
             <History />
             <span>Upload History</span>
+          </button>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <button onClick={() => navigate("/dashboard/website-records")}>
+            <ListChecks />
+            <span>Website Records</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>

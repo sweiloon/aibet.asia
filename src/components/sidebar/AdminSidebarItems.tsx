@@ -13,6 +13,7 @@ import {
   Users,
   FileText,
   ShieldCheck,
+  ListChecks,
 } from "lucide-react";
 
 interface AdminSidebarItemsProps {
@@ -38,6 +39,15 @@ export function AdminSidebarItems({ className }: AdminSidebarItemsProps) {
           <button onClick={() => navigate("/admin/websites")}>
             <Globe2 />
             <span>Websites</span>
+          </button>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <button onClick={() => navigate("/admin/website-records")}>
+            <ListChecks />
+            <span>Website Records</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>
