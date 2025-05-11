@@ -257,11 +257,7 @@ export default function AdminUsers() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {user.role === 'admin' ? (
-                            <Badge className="bg-purple-100 text-purple-800 border-purple-200">Admin</Badge>
-                          ) : (
-                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">Customer</Badge>
-                          )}
+                          {getRoleBadge(user.role)}
                         </TableCell>
                         <TableCell>
                           <Button variant="outline" size="sm" className="flex gap-1 items-center">
@@ -332,11 +328,7 @@ export default function AdminUsers() {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Role</p>
-                          {user.role === 'admin' ? (
-                            <Badge className="mt-1 bg-purple-100 text-purple-800 border-purple-200">Admin</Badge>
-                          ) : (
-                            <Badge className="mt-1 bg-blue-100 text-blue-800 border-blue-200">Customer</Badge>
-                          )}
+                          {getRoleBadge(user.role)}
                         </div>
                       </div>
                       <div className="flex justify-between mt-4">
