@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (session?.user) {
           try {
+            console.log("Auth state changed, fetching profile for user:", session.user.id);
             // Fetch user role from profiles
             const { data, error } = await supabase
               .from('profiles')
@@ -58,6 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               return;
             }
             
+            console.log("Profile data fetched:", data);
             setUser({
               id: session.user.id,
               email: session.user.email || '',
@@ -75,12 +77,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session ? "Session found" : "No session");
       setSession(session);
       
       if (session?.user) {
-        // Fetch user role from profiles
+        // Using setTimeout to avoid potential deadlock with auth state change
         setTimeout(async () => {
           try {
+            console.log("Getting profile for user:", session.user.id);
             const { data, error } = await supabase
               .from('profiles')
               .select('role')
@@ -90,16 +94,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (error) {
               console.error("Error fetching user role:", error);
               setUser(null);
+              setLoading(false);
               return;
             }
             
+            console.log("Initial profile data:", data);
             setUser({
               id: session.user.id,
               email: session.user.email || '',
               role: data.role as "user" | "admin"
             });
           } catch (error) {
-            console.error("Error setting user:", error);
+            console.error("Error setting initial user:", error);
             setUser(null);
           }
           setLoading(false);
@@ -118,6 +124,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Login function
   const login = async (email: string, password: string, isAdmin: boolean): Promise<boolean> => {
     setLoading(true);
+    console.log("Attempting login for:", email, "as admin:", isAdmin);
+    
     try {
       // Add domain suffix if not present
       if (!email.includes("@")) {
@@ -131,16 +139,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       if (authError) {
+        console.error("Auth error:", authError);
         toast.error(authError.message);
         setLoading(false);
         return false;
       }
       
       if (!authData.user) {
+        console.error("No user returned from auth");
         toast.error("Invalid credentials");
         setLoading(false);
         return false;
       }
+      
+      console.log("Auth successful, checking profile");
       
       // Check if the user has the correct role
       const { data: profile, error: profileError } = await supabase
@@ -150,6 +162,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
       
       if (profileError) {
+        console.error("Profile error:", profileError);
         toast.error("Error fetching user profile");
         // Sign out if profile check fails
         await supabase.auth.signOut();
@@ -158,6 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Verify the role matches the login type
+      console.log("Profile found:", profile, "expecting admin:", isAdmin);
       const userRole = profile.role;
       if ((isAdmin && userRole !== 'admin') || (!isAdmin && userRole !== 'user')) {
         toast.error(isAdmin 
@@ -193,6 +207,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const phonePattern = /^\+60[1-9]/;
       if (!phonePattern.test(phone)) {
         toast.error("Phone number must start with +60 followed by a digit from 1-9");
+        setLoading(false);
         return false;
       }
       
@@ -209,22 +224,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         toast.error(error.message);
+        setLoading(false);
         return false;
       }
       
       if (data.user) {
         toast.success("Account created successfully!");
+        setLoading(false);
         return true;
       } else {
         toast.error("Failed to create account");
+        setLoading(false);
         return false;
       }
     } catch (error) {
       console.error("Signup error:", error);
       toast.error("Signup failed!");
-      return false;
-    } finally {
       setLoading(false);
+      return false;
     }
   };
   

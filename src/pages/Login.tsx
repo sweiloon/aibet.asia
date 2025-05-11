@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { toast } from "@/components/ui/sonner";
+import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -31,11 +32,19 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await login(email, password, activeTab === "admin");
-    setLoading(false);
     
-    if (success) {
-      navigate(activeTab === "admin" ? "/admin" : "/dashboard");
+    try {
+      console.log("Submitting login form for", email, "as", activeTab);
+      const success = await login(email, password, activeTab === "admin");
+      
+      if (success) {
+        console.log("Login successful, redirecting to", activeTab === "admin" ? "/admin" : "/dashboard");
+        navigate(activeTab === "admin" ? "/admin" : "/dashboard");
+      }
+    } catch (error) {
+      console.error("Login form error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,6 +86,7 @@ export default function Login() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className="pr-24"
+                          disabled={loading}
                           required
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
@@ -95,6 +105,7 @@ export default function Login() {
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
                         required
                       />
                     </div>
@@ -106,7 +117,14 @@ export default function Login() {
                       className="w-full"
                       disabled={loading}
                     >
-                      {loading ? "Logging in..." : "Login"}
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        "Login"
+                      )}
                     </Button>
                     
                     <div className="text-center text-sm">
@@ -136,6 +154,7 @@ export default function Login() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className="pr-24"
+                          disabled={loading}
                           required
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
@@ -154,6 +173,7 @@ export default function Login() {
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
                         required
                       />
                     </div>
@@ -165,7 +185,14 @@ export default function Login() {
                       className="w-full"
                       disabled={loading}
                     >
-                      {loading ? "Logging in..." : "Admin Login"}
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        "Admin Login"
+                      )}
                     </Button>
                   </CardFooter>
                 </form>
