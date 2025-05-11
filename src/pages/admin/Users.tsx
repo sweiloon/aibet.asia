@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Users, Trash, Edit } from "lucide-react";
+import { Users as UsersIcon, Trash, Edit } from "lucide-react";
 
 // Type definition for user data
 interface UserData {
@@ -56,7 +55,7 @@ const UserEditDialog = ({
   });
   
   // Reset form when user changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       form.reset({
         name: user.name || "",
@@ -286,7 +285,7 @@ export default function AdminUsers() {
         
         <div className="rounded-lg border">
           <div className="flex items-center p-4 border-b">
-            <Users className="h-5 w-5 mr-2 text-muted-foreground" />
+            <UsersIcon className="h-5 w-5 mr-2 text-muted-foreground" />
             <h2 className="text-lg font-medium">Users</h2>
           </div>
           
