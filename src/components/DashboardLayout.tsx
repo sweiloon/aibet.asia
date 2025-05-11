@@ -1,24 +1,11 @@
 
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarProvider,
-  SidebarTrigger
-} from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-
-import { AdminSidebarItems } from "./sidebar/AdminSidebarItems";
-import { UserSidebarItems } from "./sidebar/UserSidebarItems";
-import { AccountItems } from "./sidebar/AccountItems";
+import { DashboardSidebar } from "./dashboard/DashboardSidebar";
+import { DashboardHeader } from "./dashboard/DashboardHeader";
+import { DashboardContent } from "./dashboard/DashboardContent";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -26,7 +13,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutProps) {
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
   if (!user) {
@@ -34,73 +21,15 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
     return null;
   }
   
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
-  
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <Sidebar className="border-r border-r-white/10">
-          <SidebarHeader className="flex flex-col items-start py-4">
-            <div 
-              className="px-4 cursor-pointer" 
-              onClick={() => navigate("/")}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-gradient">WebManage</span>
-                <span className="text-xs rounded-full px-2 bg-blue-500/30 text-blue-200">CRM</span>
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {isAdmin ? "Admin Dashboard" : "User Dashboard"}
-              </div>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-              <SidebarGroupContent>
-                {isAdmin ? <AdminSidebarItems /> : <UserSidebarItems />}
-              </SidebarGroupContent>
-            </SidebarGroup>
-            
-            <SidebarGroup>
-              <SidebarGroupLabel>Account</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <AccountItems isAdmin={isAdmin} />
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-          
-          <SidebarFooter className="p-4">
-            <div className="w-full">
-              <span className="text-xs text-muted-foreground block mb-2">
-                Logged in as {user?.email}
-              </span>
-              <Button 
-                variant="outline"
-                className="w-full justify-start"
-                onClick={handleLogout}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
-            </div>
-          </SidebarFooter>
-        </Sidebar>
-        
+        <DashboardSidebar isAdmin={isAdmin} user={user} />
         <div className="flex-1 flex flex-col min-h-screen">
-          <div className="h-16 border-b border-border flex items-center px-6">
-            <SidebarTrigger />
-            <div className="ml-4 font-medium">
-              {isAdmin ? "Administrator Dashboard" : "User Dashboard"}
-            </div>
-          </div>
-          
-          <div className="flex-1 overflow-auto p-6">
+          <DashboardHeader isAdmin={isAdmin} />
+          <DashboardContent>
             {children}
-          </div>
+          </DashboardContent>
         </div>
       </div>
     </SidebarProvider>
