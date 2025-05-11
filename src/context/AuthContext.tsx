@@ -19,7 +19,7 @@ interface AuthContextType {
 
 // Default admin credentials
 const ADMIN_EMAIL = "admin@aibet.asia";
-const ADMIN_PASSWORD = "11111111";
+let ADMIN_PASSWORD = "11111111";
 
 // Create context with a default value
 const AuthContext = createContext<AuthContextType>({
@@ -43,6 +43,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    
+    // Check for admin password override in localStorage
+    const adminPasswordOverride = localStorage.getItem('adminPassword');
+    if (adminPasswordOverride) {
+      ADMIN_PASSWORD = adminPasswordOverride;
+    }
+    
     setLoading(false);
   }, []);
   
@@ -162,8 +169,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           toast.error("Current password is incorrect!");
           return false;
         }
-        // In a real app, you would update the admin password in a database
-        toast.success("Admin password would be updated in a real application!");
+        
+        // Update admin password
+        ADMIN_PASSWORD = newPassword;
+        localStorage.setItem('adminPassword', newPassword);
+        toast.success("Admin password updated successfully!");
         return true;
       } else {
         // User password change
