@@ -32,7 +32,7 @@ const formSchema = z.object({
   confirmPassword: z.string().optional().or(z.literal('')),
   role: z.enum(["user", "admin"]).optional(),
   status: z.enum(["active", "inactive"]).optional(),
-  ranking: z.enum(["none", "customer", "agent", "master", "ranking"]).optional(),
+  ranking: z.enum(["none", "customer", "agent", "master", "senior"]).optional(),
 }).refine(data => !data.password || data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -62,8 +62,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
       role: user?.role || "user",
       status: user?.status || "active",
       ranking: (user?.ranking && user?.ranking !== "") ? 
-        (user.ranking as "customer" | "agent" | "master" | "ranking") : 
-        "none",
+        (user.ranking as "customer" | "agent" | "master" | "senior") : 
+        "customer",
     },
   });
 
@@ -72,8 +72,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
     if (open && user) {
       // Properly type the ranking value using as to ensure it matches the expected enum type
       const userRanking = user?.ranking && user?.ranking !== "" 
-        ? (user.ranking as "customer" | "agent" | "master" | "ranking") 
-        : "none";
+        ? (user.ranking as "customer" | "agent" | "master" | "senior") 
+        : "customer";
       
       const values: FormValues = {
         name: user?.name || "",
@@ -109,7 +109,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
       const initialRanking = initialValues.ranking === "none" ? "" : initialValues.ranking;
       
       if (newRanking !== initialRanking) {
-        userData.ranking = newRanking as "" | "customer" | "agent" | "master" | "ranking";
+        userData.ranking = newRanking as "" | "customer" | "agent" | "master" | "senior";
       }
       
       // Only pass password if it was entered, changed, and not empty
@@ -209,7 +209,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                   <FormLabel>Ranking</FormLabel>
                   <FormControl>
                     <Select 
-                      value={field.value || "none"} 
+                      value={field.value || "customer"} 
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger>
@@ -220,7 +220,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                         <SelectItem value="customer">Customer</SelectItem>
                         <SelectItem value="agent">Agent</SelectItem>
                         <SelectItem value="master">Master</SelectItem>
-                        <SelectItem value="ranking">Ranking</SelectItem>
+                        <SelectItem value="senior">Senior</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>

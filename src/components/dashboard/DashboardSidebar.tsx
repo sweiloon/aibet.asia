@@ -33,20 +33,21 @@ export function DashboardSidebar({ isAdmin = false, user }: DashboardSidebarProp
   };
 
   const getRankingBadge = () => {
-    if (!user.ranking) return null;
+    // Default to "customer" if no ranking is set
+    const userRanking = user.ranking || "customer";
     
     const rankingStyles: {[key: string]: string} = {
       customer: "bg-blue-500/20 text-blue-300",
       agent: "bg-green-500/20 text-green-300",
       master: "bg-purple-500/20 text-purple-300",
-      ranking: "bg-yellow-500/20 text-yellow-300"
+      senior: "bg-yellow-500/20 text-yellow-300"
     };
     
-    const style = rankingStyles[user.ranking] || "";
+    const style = rankingStyles[userRanking] || "";
     
     return (
       <Badge className={`${style} mb-2`}>
-        {user.ranking.charAt(0).toUpperCase() + user.ranking.slice(1)}
+        {userRanking.charAt(0).toUpperCase() + userRanking.slice(1)}
       </Badge>
     );
   };

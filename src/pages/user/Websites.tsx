@@ -342,7 +342,7 @@ export default function UserWebsites() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Password</p>
-                    <p className="text-base">••••••••</p>
+                    <p className="text-base">{selectedWebsite.password || "Not provided"}</p>
                   </div>
                 </div>
               </div>
