@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -104,10 +103,10 @@ export default function AdminUsers() {
         return <Badge className="bg-green-500/20 text-green-300">Agent</Badge>;
       case "master":
         return <Badge className="bg-purple-500/20 text-purple-300">Master</Badge>;
-      case "ranking":
-        return <Badge className="bg-yellow-500/20 text-yellow-300">Ranking</Badge>;
+      case "senior":
+        return <Badge className="bg-yellow-500/20 text-yellow-300">Senior</Badge>;
       default:
-        return <Badge variant="secondary">Not Set</Badge>;
+        return <Badge className="bg-blue-500/20 text-blue-300">Customer</Badge>; // Default to Customer
     }
   };
   
@@ -164,7 +163,7 @@ export default function AdminUsers() {
                         </Badge>
                       </TableCell>
                       <TableCell>{new Date(user.createdAt || Date.now()).toLocaleDateString()}</TableCell>
-                      <TableCell>{getRankingBadge(user.ranking || "")}</TableCell>
+                      <TableCell>{getRankingBadge(user.ranking || "customer")}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button

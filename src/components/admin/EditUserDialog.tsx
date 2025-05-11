@@ -32,7 +32,7 @@ const formSchema = z.object({
   confirmPassword: z.string().optional().or(z.literal('')),
   role: z.enum(["user", "admin"]).optional(),
   status: z.enum(["active", "inactive"]).optional(),
-  ranking: z.enum(["none", "customer", "agent", "master", "senior"]).optional(),
+  ranking: z.enum(["customer", "agent", "master", "senior"]).optional(),
 }).refine(data => !data.password || data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -104,12 +104,9 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
       if (values.role !== initialValues.role) userData.role = values.role;
       if (values.status !== initialValues.status) userData.status = values.status;
       
-      // Special handling for ranking
-      const newRanking = values.ranking === "none" ? "" : values.ranking;
-      const initialRanking = initialValues.ranking === "none" ? "" : initialValues.ranking;
-      
-      if (newRanking !== initialRanking) {
-        userData.ranking = newRanking as "" | "customer" | "agent" | "master" | "senior";
+      // Check if ranking has changed
+      if (values.ranking !== initialValues.ranking) {
+        userData.ranking = values.ranking;
       }
       
       // Only pass password if it was entered, changed, and not empty
@@ -216,7 +213,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                         <SelectValue placeholder="Select ranking" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Not Set</SelectItem>
                         <SelectItem value="customer">Customer</SelectItem>
                         <SelectItem value="agent">Agent</SelectItem>
                         <SelectItem value="master">Master</SelectItem>

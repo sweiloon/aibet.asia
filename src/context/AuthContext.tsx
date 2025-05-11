@@ -10,6 +10,7 @@ export interface User {
   createdAt?: string;
   websites?: any[];
   ranking?: string; // Add ranking property
+  phone?: string; // Add phone property
 }
 
 interface AuthContextType {
@@ -96,7 +97,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const adminUser = users.find((u: any) => u.email === email && u.role === "admin");
           
           if (adminUser && adminUser.password === password) {
-            const userObj = { id: adminUser.id, email: adminUser.email, role: "admin" as const };
+            const userObj = { 
+              id: adminUser.id, 
+              email: adminUser.email, 
+              role: "admin" as const,
+              ranking: adminUser.ranking || "customer" // Ensure ranking is preserved
+            };
             setUser(userObj);
             localStorage.setItem('user', JSON.stringify(userObj));
             toast.success("Admin login successful!");
@@ -113,7 +119,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const matchedUser = users.find((u: any) => u.email === email);
       
       if (matchedUser && matchedUser.password === password) {
-        const userObj = { id: matchedUser.id, email: matchedUser.email, role: matchedUser.role || "user" as const };
+        const userObj = { 
+          id: matchedUser.id, 
+          email: matchedUser.email, 
+          role: matchedUser.role || "user" as const,
+          ranking: matchedUser.ranking || "customer", // Ensure ranking is preserved
+          name: matchedUser.name,
+          phone: matchedUser.phone
+        };
         setUser(userObj);
         localStorage.setItem('user', JSON.stringify(userObj));
         toast.success("Login successful!");
@@ -154,6 +167,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
+      // Check if phone number already exists
+      if (users.some((u: any) => u.phone === phone)) {
+        toast.error("This phone number has already been registered!");
+        return false;
+      }
+      
       // For admin signup, check if admin already exists
       if (isAdmin) {
         const adminExists = await checkAdminExists();
@@ -171,14 +190,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         phone,
         name,
         role: isAdmin ? "admin" : "user",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        ranking: "customer" // Set default ranking
       };
       
       users.push(newUser);
       localStorage.setItem('users', JSON.stringify(users));
       
       // Auto-login after signup
-      const userObj = { id: newUser.id, email: newUser.email, role: isAdmin ? "admin" as const : "user" as const };
+      const userObj = { 
+        id: newUser.id, 
+        email: newUser.email, 
+        role: isAdmin ? "admin" as const : "user" as const,
+        ranking: "customer", // Set default ranking
+        name: newUser.name,
+        phone: newUser.phone
+      };
       setUser(userObj);
       localStorage.setItem('user', JSON.stringify(userObj));
       
@@ -270,7 +297,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         status: u.status || "active",
         createdAt: u.createdAt || new Date().toISOString(),
         websites: u.websites || [],
-        ranking: u.ranking || "",
+        ranking: u.ranking || "customer", // Default to customer instead of empty string
+        phone: u.phone
       }));
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -337,11 +365,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // If current user is being updated, update the user in state and localStorage
       if (user && user.id === userId) {
         const currentUserObj = {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          name: updatedUser.name,
-          role: updatedUser.role,
-          status: updatedUser.status,
+          ...user,
+          ...userData,
         };
         setUser(currentUserObj);
         localStorage.setItem('user', JSON.stringify(currentUserObj));

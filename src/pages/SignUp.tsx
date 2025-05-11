@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("+60");
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup, getAllUsers } = useAuth();
   const navigate = useNavigate();
 
   const validatePhone = (value: string) => {
@@ -45,6 +44,14 @@ export default function SignUp() {
     
     if (!validatePhone(phone)) {
       toast.error("Phone number must start with +60 followed by a digit from 1-9");
+      return;
+    }
+    
+    // Check if phone number already exists
+    const users = getAllUsers();
+    const phoneExists = users.some(user => user.phone === phone);
+    if (phoneExists) {
+      toast.error("This phone number has already been registered!");
       return;
     }
     
