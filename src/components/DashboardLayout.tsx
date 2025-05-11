@@ -9,15 +9,16 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, Globe2, FileText, ShieldCheck, Users, LayoutDashboard, ClipboardCheck, Upload, History, Files, IdCard, Banknote } from "lucide-react";
+import { LogOut } from "lucide-react";
+
+import { AdminSidebarItems } from "./sidebar/AdminSidebarItems";
+import { UserSidebarItems } from "./sidebar/UserSidebarItems";
+import { AccountItems } from "./sidebar/AccountItems";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -60,114 +61,14 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
             <SidebarGroup>
               <SidebarGroupLabel>Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <button onClick={() => navigate(isAdmin ? "/admin" : "/dashboard")}>
-                        <LayoutDashboard />
-                        <span>Dashboard</span>
-                      </button>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  
-                  {isAdmin && (
-                    <>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                          <button onClick={() => navigate("/admin/websites")}>
-                            <Globe2 />
-                            <span>Websites</span>
-                          </button>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                          <button onClick={() => navigate("/admin/approvals")}>
-                            <ClipboardCheck />
-                            <span>Approvals</span>
-                          </button>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                          <button onClick={() => navigate("/admin/users")}>
-                            <Users />
-                            <span>Users</span>
-                          </button>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                          <button onClick={() => navigate("/admin/reports")}>
-                            <FileText />
-                            <span>Reports</span>
-                          </button>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </>
-                  )}
-                  
-                  {!isAdmin && (
-                    <>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                          <button onClick={() => navigate("/dashboard/websites/add")}>
-                            <Upload />
-                            <span>Upload Website</span>
-                          </button>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                          <button onClick={() => navigate("/dashboard/upload-history")}>
-                            <History />
-                            <span>Upload History</span>
-                          </button>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                          <button onClick={() => navigate("/dashboard/upload-document")}>
-                            <Files />
-                            <span>Upload Document</span>
-                          </button>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </>
-                  )}
-                </SidebarMenu>
+                {isAdmin ? <AdminSidebarItems /> : <UserSidebarItems />}
               </SidebarGroupContent>
             </SidebarGroup>
             
             <SidebarGroup>
               <SidebarGroupLabel>Account</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <button onClick={() => navigate(isAdmin ? "/admin/settings" : "/dashboard/settings")}>
-                        <Settings />
-                        <span>Settings</span>
-                      </button>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  
-                  {isAdmin && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
-                        <button onClick={() => navigate("/admin/security")}>
-                          <ShieldCheck />
-                          <span>Security</span>
-                        </button>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                </SidebarMenu>
+                <AccountItems isAdmin={isAdmin} />
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
