@@ -40,35 +40,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        console.log("Auth state changed:", event, session ? "Session exists" : "No session");
         setSession(session);
         
         if (session?.user) {
-          try {
-            console.log("Auth state changed, fetching profile for user:", session.user.id);
-            // Fetch user role from profiles
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single();
+          // Using setTimeout to avoid potential deadlock with auth state change
+          setTimeout(async () => {
+            try {
+              console.log("Auth change: fetching profile for user:", session.user.id);
+              // Fetch user role from profiles
+              const { data, error } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', session.user.id)
+                .single();
+                
+              if (error) {
+                console.error("Error fetching user role:", error);
+                setUser(null);
+                return;
+              }
               
-            if (error) {
-              console.error("Error fetching user role:", error);
+              console.log("Profile data fetched:", data);
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                role: data.role as "user" | "admin"
+              });
+            } catch (error) {
+              console.error("Error setting user:", error);
               setUser(null);
-              return;
             }
-            
-            console.log("Profile data fetched:", data);
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              role: data.role as "user" | "admin"
-            });
-          } catch (error) {
-            console.error("Error setting user:", error);
-            setUser(null);
-          }
+          }, 0);
         } else {
           setUser(null);
         }
@@ -76,45 +80,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
     
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       console.log("Initial session check:", session ? "Session found" : "No session");
       setSession(session);
       
       if (session?.user) {
-        // Using setTimeout to avoid potential deadlock with auth state change
-        setTimeout(async () => {
-          try {
-            console.log("Getting profile for user:", session.user.id);
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single();
-              
-            if (error) {
-              console.error("Error fetching user role:", error);
-              setUser(null);
-              setLoading(false);
-              return;
-            }
+        try {
+          console.log("Getting profile for user:", session.user.id);
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
             
-            console.log("Initial profile data:", data);
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              role: data.role as "user" | "admin"
-            });
-          } catch (error) {
-            console.error("Error setting initial user:", error);
+          if (error) {
+            console.error("Error fetching user role:", error);
             setUser(null);
+            setLoading(false);
+            return;
           }
-          setLoading(false);
-        }, 0);
-      } else {
-        setUser(null);
-        setLoading(false);
+          
+          console.log("Initial profile data:", data);
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            role: data.role as "user" | "admin"
+          });
+        } catch (error) {
+          console.error("Error setting initial user:", error);
+          setUser(null);
+        }
       }
-    });
+      setLoading(false);
+    };
+    
+    checkSession();
     
     return () => {
       subscription.unsubscribe();

@@ -8,12 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { toast } from "@/components/ui/sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("user");
   const { login, user } = useAuth();
   const navigate = useNavigate();
@@ -29,9 +30,14 @@ export default function Login() {
     }
   }, [user, navigate]);
 
+  const clearError = () => {
+    if (error) setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     
     try {
       console.log("Submitting login form for", email, "as", activeTab);
@@ -40,9 +46,12 @@ export default function Login() {
       if (success) {
         console.log("Login successful, redirecting to", activeTab === "admin" ? "/admin" : "/dashboard");
         navigate(activeTab === "admin" ? "/admin" : "/dashboard");
+      } else {
+        setError("Login failed. Please check your credentials and try again.");
       }
     } catch (error) {
       console.error("Login form error:", error);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -64,7 +73,10 @@ export default function Login() {
             <Tabs 
               defaultValue="user" 
               value={activeTab} 
-              onValueChange={setActiveTab}
+              onValueChange={(value) => {
+                setActiveTab(value);
+                clearError();
+              }}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -84,7 +96,10 @@ export default function Login() {
                           id="email"
                           placeholder="username"
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            clearError();
+                          }}
                           className="pr-24"
                           disabled={loading}
                           required
@@ -104,11 +119,21 @@ export default function Login() {
                         type="password"
                         placeholder="••••••••"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          clearError();
+                        }}
                         disabled={loading}
                         required
                       />
                     </div>
+
+                    {error && (
+                      <div className="bg-destructive/15 text-destructive p-3 rounded-md flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <p className="text-sm">{error}</p>
+                      </div>
+                    )}
                   </CardContent>
                   
                   <CardFooter className="flex flex-col space-y-4">
@@ -152,7 +177,10 @@ export default function Login() {
                           id="adminEmail"
                           placeholder="admin"
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            clearError();
+                          }}
                           className="pr-24"
                           disabled={loading}
                           required
@@ -172,11 +200,21 @@ export default function Login() {
                         type="password"
                         placeholder="••••••••"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          clearError();
+                        }}
                         disabled={loading}
                         required
                       />
                     </div>
+
+                    {error && (
+                      <div className="bg-destructive/15 text-destructive p-3 rounded-md flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <p className="text-sm">{error}</p>
+                      </div>
+                    )}
                   </CardContent>
                   
                   <CardFooter>
