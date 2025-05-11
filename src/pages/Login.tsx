@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,6 +29,7 @@ export default function Login() {
   return (
     <>
       <Navbar />
+      
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-black">
         <div className="w-full max-w-md animate-fade-in">
           <Card className="glass-morphism">
