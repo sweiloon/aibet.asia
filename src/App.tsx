@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from "@/components/ui/sonner"
@@ -9,12 +10,12 @@ import SignUp from './pages/SignUp';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminWebsites from './pages/admin/Websites';
 import AdminWebsiteDetail from './pages/admin/WebsiteDetail';
-import UserDashboard from './pages/dashboard/Dashboard';
-import UserWebsites from './pages/dashboard/Websites';
-import UserWebsiteAdd from './pages/dashboard/WebsiteAdd';
-import UserWebsiteDetail from './pages/dashboard/WebsiteDetail';
+import UserDashboard from './pages/user/Dashboard';
+import UserWebsites from './pages/user/Websites';
+import UserWebsiteAdd from './pages/user/WebsiteAdd';
+import UserWebsiteDetail from './pages/user/WebsiteDetail';
 import AdminSettings from './pages/admin/Settings';
-import UserSettings from './pages/dashboard/Settings';
+import UserSettings from './pages/user/Settings';
 import NotFound from './pages/NotFound';
 import AdminUsers from "./pages/admin/Users";
 import AdminReports from "./pages/admin/Reports";
