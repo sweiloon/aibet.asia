@@ -131,12 +131,12 @@ export default function AdminUsers() {
                         <Badge 
                           variant="secondary"
                           className={user.status === "active" ? "bg-green-500/20 text-green-300" : ""}
-                          onClick={() => user.id !== currentUser?.id && handleToggleUserStatus(user.id, user.status)}
+                          onClick={() => user.id !== currentUser?.id && handleToggleUserStatus(user.id, user.status || "active")}
                         >
-                          {user.status}
+                          {user.status || "active"}
                         </Badge>
                       </TableCell>
-                      <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(user.createdAt || Date.now()).toLocaleDateString()}</TableCell>
                       <TableCell>{user.websites?.length || 0}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

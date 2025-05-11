@@ -1,11 +1,14 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
 
 export interface User {
   id: string;
   email: string;
+  name?: string;
   role: "user" | "admin";
+  status?: "active" | "inactive";
+  createdAt?: string;
+  websites?: any[];
 }
 
 interface AuthContextType {
@@ -16,6 +19,9 @@ interface AuthContextType {
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   checkAdminExists: () => Promise<boolean>;
+  getAllUsers: () => User[];
+  deleteUser: (userId: string) => Promise<boolean>;
+  updateUserStatus: (userId: string, newStatus: string) => Promise<boolean>;
 }
 
 // Default admin credentials
@@ -31,6 +37,9 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   changePassword: async () => false,
   checkAdminExists: async () => false,
+  getAllUsers: () => [],
+  deleteUser: async () => false,
+  updateUserStatus: async () => false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -245,9 +254,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
+
+  // Get all users function
+  const getAllUsers = (): User[] => {
+    try {
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      return users.map((u: any) => ({
+        id: u.id,
+        email: u.email,
+        name: u.name || "",
+        role: u.role || "user",
+        status: u.status || "active",
+        createdAt: u.createdAt || new Date().toISOString(),
+        websites: u.websites || [],
+      }));
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return [];
+    }
+  };
+
+  // Delete user function
+  const deleteUser = async (userId: string): Promise<boolean> => {
+    try {
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const updatedUsers = users.filter((u: any) => u.id !== userId);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+      return true;
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return false;
+    }
+  };
+
+  // Update user status function
+  const updateUserStatus = async (userId: string, newStatus: string): Promise<boolean> => {
+    try {
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const userIndex = users.findIndex((u: any) => u.id === userId);
+      
+      if (userIndex !== -1) {
+        users[userIndex].status = newStatus;
+        localStorage.setItem('users', JSON.stringify(users));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      return false;
+    }
+  };
   
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, changePassword, checkAdminExists }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      signup, 
+      logout, 
+      changePassword, 
+      checkAdminExists,
+      getAllUsers,
+      deleteUser,
+      updateUserStatus
+    }}>
       {children}
     </AuthContext.Provider>
   );
