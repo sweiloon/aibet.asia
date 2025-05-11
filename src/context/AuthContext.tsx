@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   // Change password wrapper
   const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
-    if (!user || !user.email) return false;
+    if (!user) return false;
     return authService.changePassword(currentPassword, newPassword, user.email);
   };
   
