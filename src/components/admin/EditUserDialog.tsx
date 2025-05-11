@@ -28,8 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 const formSchema = z.object({
   name: z.string().optional(),
   email: z.string().email("Invalid email address").optional(),
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
-  confirmPassword: z.string().optional(),
+  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal('')),
+  confirmPassword: z.string().optional().or(z.literal('')),
   role: z.enum(["user", "admin"]).optional(),
   status: z.enum(["active", "inactive"]).optional(),
   ranking: z.enum(["none", "customer", "agent", "master", "ranking"]).optional(),
@@ -112,7 +112,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
         userData.ranking = newRanking as "" | "customer" | "agent" | "master" | "ranking";
       }
       
-      // Only pass password if it was entered and changed
+      // Only pass password if it was entered, changed, and not empty
       const newPassword = values.password && values.password.trim() !== "" ? values.password : undefined;
       
       const success = await onSave(user.id, userData, newPassword);
