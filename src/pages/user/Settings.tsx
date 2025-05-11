@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "@/components/ui/sonner";
 
 export default function UserSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -16,17 +17,31 @@ export default function UserSettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmNewPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters");
       return;
     }
     
     setLoading(true);
-    await changePassword(currentPassword, newPassword);
-    setLoading(false);
-    
-    // Clear fields
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmNewPassword("");
+    try {
+      const success = await changePassword(currentPassword, newPassword);
+      if (success) {
+        toast.success("Password updated successfully");
+        // Clear fields
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast.error("Failed to update password");
+    } finally {
+      setLoading(false);
+    }
   };
   
   return (
@@ -116,7 +131,7 @@ export default function UserSettings() {
                 <CardFooter>
                   <Button
                     type="submit"
-                    disabled={loading || newPassword !== confirmNewPassword}
+                    disabled={loading || newPassword !== confirmNewPassword || !currentPassword || !newPassword || newPassword.length < 6}
                   >
                     {loading ? "Updating..." : "Update Password"}
                   </Button>
