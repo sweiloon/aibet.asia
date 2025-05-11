@@ -12,7 +12,6 @@ import {
   ClipboardCheck,
   Users,
   FileText,
-  ShieldCheck,
   ListChecks,
 } from "lucide-react";
 

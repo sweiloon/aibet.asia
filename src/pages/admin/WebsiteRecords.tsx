@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useWebsites, Website, WebsiteManagement } from "@/context/WebsiteContext";
 import { Button } from "@/components/ui/button";
@@ -11,13 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Table, 
   TableBody, 
-  TableCaption, 
   TableCell, 
   TableHead, 
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Eye, Pencil, Trash2, Plus } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, Filter } from "lucide-react";
 import { format } from 'date-fns';
 import { toast } from "@/components/ui/sonner";
 
@@ -28,9 +27,38 @@ const WebsiteRecords = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Only approved websites
-  const approvedWebsites = websites.filter(website => website.status === "approved");
+  // Filter states
+  const [nameFilter, setNameFilter] = useState("");
+  const [emailFilter, setEmailFilter] = useState("");
+  const [filteredWebsites, setFilteredWebsites] = useState<Website[]>([]);
+
+  // Only approved websites of type "website"
+  const approvedWebsites = websites.filter(website => 
+    website.status === "approved" && website.type === "website"
+  );
+
+  // Apply filters
+  useEffect(() => {
+    let filtered = approvedWebsites;
+
+    if (nameFilter) {
+      filtered = filtered.filter(website => 
+        website.name.toLowerCase().includes(nameFilter.toLowerCase())
+      );
+    }
+
+    if (emailFilter) {
+      filtered = filtered.filter(website => {
+        // This would need to be updated if you have actual user emails associated with websites
+        const userEmail = website.userId; // Placeholder, in a real app this would be user.email
+        return userEmail.toLowerCase().includes(emailFilter.toLowerCase());
+      });
+    }
+
+    setFilteredWebsites(filtered);
+  }, [nameFilter, emailFilter, approvedWebsites]);
 
   // Form states
   const [formDate, setFormDate] = useState("");
@@ -120,19 +148,34 @@ const WebsiteRecords = () => {
     setIsDetailOpen(true);
   };
 
+  // Reset filters
+  const resetFilters = () => {
+    setNameFilter("");
+    setEmailFilter("");
+    setIsFilterOpen(false);
+  };
+
   return (
     <DashboardLayout isAdmin>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Website Records</h1>
+          <Button 
+            onClick={() => setIsFilterOpen(true)} 
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            Filter
+          </Button>
         </div>
         
-        {approvedWebsites.length === 0 ? (
+        {filteredWebsites.length === 0 ? (
           <div className="text-center p-10 border rounded-lg">
             <p className="text-muted-foreground">No approved websites found</p>
           </div>
         ) : (
-          approvedWebsites.map((website) => (
+          filteredWebsites.map((website) => (
             <div key={website.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">{website.name}</h2>
@@ -285,6 +328,44 @@ const WebsiteRecords = () => {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+        
+        {/* Filter Dialog */}
+        <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Filter Websites</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="website-name">Website Name</Label>
+                <Input
+                  id="website-name"
+                  value={nameFilter}
+                  onChange={(e) => setNameFilter(e.target.value)}
+                  placeholder="Filter by website name"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="user-email">User Email</Label>
+                <Input
+                  id="user-email"
+                  value={emailFilter}
+                  onChange={(e) => setEmailFilter(e.target.value)}
+                  placeholder="Filter by user email"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={resetFilters}>
+                Reset
+              </Button>
+              <Button onClick={() => setIsFilterOpen(false)}>
+                Apply Filters
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
         

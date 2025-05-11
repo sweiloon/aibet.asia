@@ -5,7 +5,6 @@ import { useAuth } from "@/context/AuthContext";
 import { 
   Table, 
   TableBody, 
-  TableCaption, 
   TableCell, 
   TableHead, 
   TableHeader, 
@@ -23,9 +22,13 @@ const WebsiteRecords = () => {
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   
-  // Only show approved websites that belong to the current user
+  // Only show approved websites of type "website" that belong to the current user
   const userApprovedWebsites = user ? 
-    websites.filter(website => website.userId === user.id && website.status === "approved") : 
+    websites.filter(website => 
+      website.userId === user.id && 
+      website.status === "approved" &&
+      website.type === "website"
+    ) : 
     [];
 
   // Show website details
