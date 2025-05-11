@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -9,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { IdCard, Banknote, Upload, FileText, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useWebsites } from "@/context/WebsiteContext";
 
 export default function UploadDocument() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addWebsite } = useWebsites();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("id-card");
   
@@ -69,7 +70,28 @@ export default function UploadDocument() {
     
     setIsSubmitting(true);
     
-    // Simulate API call
+    // Convert files to file objects with URLs (in a real app, these would be uploaded to a server)
+    const files = [
+      {
+        name: idFrontImage.name,
+        url: URL.createObjectURL(idFrontImage),
+        type: idFrontImage.type
+      },
+      {
+        name: idBackImage.name,
+        url: URL.createObjectURL(idBackImage),
+        type: idBackImage.type
+      }
+    ];
+    
+    // Add the ID card submission to the website context
+    addWebsite({
+      name: "ID Card Submission",
+      url: "N/A",
+      type: "id-card",
+      files
+    });
+    
     setTimeout(() => {
       toast({
         title: "ID Card Submitted",
@@ -77,7 +99,7 @@ export default function UploadDocument() {
       });
       setIsSubmitting(false);
       navigate("/dashboard/upload-history");
-    }, 1500);
+    }, 1000);
   };
   
   const handleBankStatementSubmit = (e: React.FormEvent) => {
@@ -94,7 +116,21 @@ export default function UploadDocument() {
     
     setIsSubmitting(true);
     
-    // Simulate API call
+    // Convert files to file objects with URLs (in a real app, these would be uploaded to a server)
+    const files = bankStatementFiles.map(file => ({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      type: file.type
+    }));
+    
+    // Add the bank statement submission to the website context
+    addWebsite({
+      name: "Bank Statement Submission",
+      url: "N/A",
+      type: "bank-statement",
+      files
+    });
+    
     setTimeout(() => {
       toast({
         title: "Bank Statement Submitted",
@@ -102,7 +138,7 @@ export default function UploadDocument() {
       });
       setIsSubmitting(false);
       navigate("/dashboard/upload-history");
-    }, 1500);
+    }, 1000);
   };
   
   return (

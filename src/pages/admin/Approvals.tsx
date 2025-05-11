@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +20,9 @@ import {
   Globe2, 
   KeyRound, 
   Eye, 
-  History 
+  History,
+  FileText,
+  File
 } from "lucide-react";
 import { useWebsites } from "@/context/WebsiteContext";
 import { useToast } from "@/hooks/use-toast";
@@ -43,49 +44,81 @@ export default function AdminApprovals() {
   // Get all websites from context
   const allWebsites = getAllWebsites();
   
-  // Filter for pending websites
-  const pendingWebsites = allWebsites.filter(website => 
-    website.status === "pending" &&
+  // Filter for pending websites and documents
+  const pendingItems = allWebsites.filter(item => 
+    item.status === "pending" &&
     (searchTerm === "" || 
-     website.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     website.url.toLowerCase().includes(searchTerm.toLowerCase()))
+     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     (item.url && item.url.toLowerCase().includes(searchTerm.toLowerCase())))
   );
   
-  // Filter for approved websites
-  const approvedWebsites = allWebsites.filter(website => 
-    website.status === "approved" &&
+  // Filter for approved websites and documents
+  const approvedItems = allWebsites.filter(item => 
+    item.status === "approved" &&
     (searchTerm === "" || 
-     website.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     website.url.toLowerCase().includes(searchTerm.toLowerCase()))
+     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     (item.url && item.url.toLowerCase().includes(searchTerm.toLowerCase())))
   );
   
-  // Filter for rejected websites
-  const rejectedWebsites = allWebsites.filter(website => 
-    website.status === "rejected" &&
+  // Filter for rejected websites and documents
+  const rejectedItems = allWebsites.filter(item => 
+    item.status === "rejected" &&
     (searchTerm === "" || 
-     website.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     website.url.toLowerCase().includes(searchTerm.toLowerCase()))
+     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     (item.url && item.url.toLowerCase().includes(searchTerm.toLowerCase())))
   );
   
-  const handleApprove = (websiteId: string) => {
-    updateWebsiteStatus(websiteId, "approved");
+  const handleApprove = (itemId: string) => {
+    updateWebsiteStatus(itemId, "approved");
     toast({
-      title: "Website approved",
-      description: "The website has been approved for management.",
+      title: "Item approved",
+      description: "The item has been approved.",
     });
   };
   
-  const handleReject = (websiteId: string) => {
-    updateWebsiteStatus(websiteId, "rejected");
+  const handleReject = (itemId: string) => {
+    updateWebsiteStatus(itemId, "rejected");
     toast({
-      title: "Website rejected",
-      description: "The website has been rejected.",
+      title: "Item rejected",
+      description: "The item has been rejected.",
     });
   };
   
-  const viewWebsiteDetails = (website: any) => {
-    setSelectedWebsite(website);
+  const viewItemDetails = (item: any) => {
+    setSelectedWebsite(item);
     setDetailsOpen(true);
+  };
+  
+  const getItemIcon = (type: string) => {
+    switch(type) {
+      case 'website':
+        return <Globe2 className="h-4 w-4" />;
+      case 'id-card':
+        return <File className="h-4 w-4" />;
+      case 'bank-statement':
+        return <FileText className="h-4 w-4" />;
+      case 'document':
+        return <FileText className="h-4 w-4" />;
+      default:
+        return <Globe2 className="h-4 w-4" />;
+    }
+  };
+  
+  const getItemTypeDisplay = (item: any) => {
+    if (item.url === "N/A" || !item.url) {
+      return <Badge variant="outline" className="capitalize">{item.type || "Document"}</Badge>;
+    }
+    return (
+      <a 
+        href={item.url} 
+        target="_blank" 
+        rel="noreferrer"
+        className="flex items-center gap-1 text-blue-400 hover:underline"
+      >
+        {getItemIcon(item.type || "website")}
+        {item.url}
+      </a>
+    );
   };
   
   return (
@@ -93,7 +126,7 @@ export default function AdminApprovals() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Approval Requests</h1>
-          <p className="text-muted-foreground">Review and manage website submissions</p>
+          <p className="text-muted-foreground">Review and manage website and document submissions</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4">
@@ -112,15 +145,15 @@ export default function AdminApprovals() {
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="pending" className="flex items-center gap-2">
               <span className="hidden sm:inline">Pending Approvals</span>
-              <Badge variant="outline">{pendingWebsites.length}</Badge>
+              <Badge variant="outline">{pendingItems.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="approved" className="flex items-center gap-2">
               <span className="hidden sm:inline">Approved</span>
-              <Badge variant="outline">{approvedWebsites.length}</Badge>
+              <Badge variant="outline">{approvedItems.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="rejected" className="flex items-center gap-2">
               <span className="hidden sm:inline">Rejected</span>
-              <Badge variant="outline">{rejectedWebsites.length}</Badge>
+              <Badge variant="outline">{rejectedItems.length}</Badge>
             </TabsTrigger>
           </TabsList>
           
@@ -130,37 +163,27 @@ export default function AdminApprovals() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Website Name</TableHead>
-                      <TableHead>URL</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type/URL</TableHead>
                       <TableHead>Submitted By</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead>Credentials</TableHead>
+                      <TableHead>Details</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pendingWebsites.length > 0 ? (
-                      pendingWebsites.map((website) => (
-                        <TableRow key={website.id}>
-                          <TableCell className="font-medium">{website.name}</TableCell>
+                    {pendingItems.length > 0 ? (
+                      pendingItems.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>{getItemTypeDisplay(item)}</TableCell>
+                          <TableCell>{item.userId}</TableCell>
+                          <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                           <TableCell>
-                            <a 
-                              href={website.url} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              className="flex items-center gap-1 text-blue-400 hover:underline"
-                            >
-                              <Globe2 className="h-4 w-4" />
-                              {website.url}
-                            </a>
-                          </TableCell>
-                          <TableCell>{website.userId}</TableCell>
-                          <TableCell>{new Date(website.createdAt).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            {website.username ? (
+                            {item.username || item.files ? (
                               <Badge className="flex items-center gap-1">
                                 <KeyRound className="h-3 w-3" />
-                                Provided
+                                {item.files ? `${item.files.length} Files` : "Credentials"}
                               </Badge>
                             ) : (
                               <span className="text-muted-foreground text-sm">None</span>
@@ -171,7 +194,7 @@ export default function AdminApprovals() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => viewWebsiteDetails(website)}
+                                onClick={() => viewItemDetails(item)}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 Details
@@ -181,7 +204,7 @@ export default function AdminApprovals() {
                                 size="sm"
                                 className="bg-green-500/20 hover:bg-green-500/30 text-green-300"
                                 title="Approve"
-                                onClick={() => handleApprove(website.id)}
+                                onClick={() => handleApprove(item.id)}
                               >
                                 <CheckCircle className="h-4 w-4 mr-1" />
                                 Approve
@@ -191,7 +214,7 @@ export default function AdminApprovals() {
                                 size="sm"
                                 className="bg-red-500/20 hover:bg-red-500/30 text-red-300"
                                 title="Reject"
-                                onClick={() => handleReject(website.id)}
+                                onClick={() => handleReject(item.id)}
                               >
                                 <XCircle className="h-4 w-4 mr-1" />
                                 Reject
@@ -228,8 +251,8 @@ export default function AdminApprovals() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Website Name</TableHead>
-                      <TableHead>URL</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type/URL</TableHead>
                       <TableHead>Submitted By</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Date Approved</TableHead>
@@ -237,29 +260,19 @@ export default function AdminApprovals() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {approvedWebsites.length > 0 ? (
-                      approvedWebsites.map((website) => (
-                        <TableRow key={website.id}>
-                          <TableCell className="font-medium">{website.name}</TableCell>
-                          <TableCell>
-                            <a 
-                              href={website.url} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              className="flex items-center gap-1 text-blue-400 hover:underline"
-                            >
-                              <Globe2 className="h-4 w-4" />
-                              {website.url}
-                            </a>
-                          </TableCell>
-                          <TableCell>{website.userId}</TableCell>
-                          <TableCell>{new Date(website.createdAt).toLocaleDateString()}</TableCell>
+                    {approvedItems.length > 0 ? (
+                      approvedItems.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>{getItemTypeDisplay(item)}</TableCell>
+                          <TableCell>{item.userId}</TableCell>
+                          <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                           <TableCell>{new Date().toLocaleDateString()}</TableCell>
                           <TableCell className="text-right">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => viewWebsiteDetails(website)}
+                              onClick={() => viewItemDetails(item)}
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               Details
@@ -270,7 +283,7 @@ export default function AdminApprovals() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-6">
-                          <p>No approved websites found</p>
+                          <p>No approved items found</p>
                           {searchTerm && (
                             <Button
                               variant="link"
@@ -295,8 +308,8 @@ export default function AdminApprovals() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Website Name</TableHead>
-                      <TableHead>URL</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type/URL</TableHead>
                       <TableHead>Submitted By</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Date Rejected</TableHead>
@@ -304,29 +317,19 @@ export default function AdminApprovals() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rejectedWebsites.length > 0 ? (
-                      rejectedWebsites.map((website) => (
-                        <TableRow key={website.id}>
-                          <TableCell className="font-medium">{website.name}</TableCell>
-                          <TableCell>
-                            <a 
-                              href={website.url} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              className="flex items-center gap-1 text-blue-400 hover:underline"
-                            >
-                              <Globe2 className="h-4 w-4" />
-                              {website.url}
-                            </a>
-                          </TableCell>
-                          <TableCell>{website.userId}</TableCell>
-                          <TableCell>{new Date(website.createdAt).toLocaleDateString()}</TableCell>
+                    {rejectedItems.length > 0 ? (
+                      rejectedItems.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>{getItemTypeDisplay(item)}</TableCell>
+                          <TableCell>{item.userId}</TableCell>
+                          <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                           <TableCell>{new Date().toLocaleDateString()}</TableCell>
                           <TableCell className="text-right">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => viewWebsiteDetails(website)}
+                              onClick={() => viewItemDetails(item)}
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               Details
@@ -337,7 +340,7 @@ export default function AdminApprovals() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-6">
-                          <p>No rejected websites found</p>
+                          <p>No rejected items found</p>
                           {searchTerm && (
                             <Button
                               variant="link"
@@ -361,28 +364,21 @@ export default function AdminApprovals() {
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Website Details</DialogTitle>
+            <DialogTitle>Submission Details</DialogTitle>
             <DialogDescription>
-              Full details for the website submission
+              Full details for the submission
             </DialogDescription>
           </DialogHeader>
           {selectedWebsite && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Website Name</p>
+                  <p className="text-sm font-medium text-muted-foreground">Name</p>
                   <p className="text-base">{selectedWebsite.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">URL</p>
-                  <a 
-                    href={selectedWebsite.url} 
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-400 hover:underline"
-                  >
-                    {selectedWebsite.url}
-                  </a>
+                  <p className="text-sm font-medium text-muted-foreground">Type</p>
+                  <p className="text-base capitalize">{selectedWebsite.type || "Website"}</p>
                 </div>
               </div>
               
@@ -397,19 +393,53 @@ export default function AdminApprovals() {
                 </div>
               </div>
               
-              <div className="pt-2 border-t border-border">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Login Credentials</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Username</p>
-                    <p className="text-base">{selectedWebsite.username || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Password</p>
-                    <p className="text-base">{selectedWebsite.password || "Not provided"}</p>
+              {selectedWebsite.url && selectedWebsite.url !== "N/A" && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">URL</p>
+                  <a 
+                    href={selectedWebsite.url} 
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-400 hover:underline"
+                  >
+                    {selectedWebsite.url}
+                  </a>
+                </div>
+              )}
+              
+              {selectedWebsite.username && (
+                <div className="pt-2 border-t border-border">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Login Credentials</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Username</p>
+                      <p className="text-base">{selectedWebsite.username}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Password</p>
+                      <p className="text-base">{selectedWebsite.password}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+              
+              {selectedWebsite.files && selectedWebsite.files.length > 0 && (
+                <div className="pt-2 border-t border-border">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Files</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedWebsite.files.map((file: any, index: number) => (
+                      <div key={index} className="flex items-center gap-2">
+                        {file.type.includes("image") ? (
+                          <img src={file.url} alt={file.name} className="w-16 h-16 object-cover rounded" />
+                        ) : (
+                          <div className="p-2 bg-muted rounded">PDF</div>
+                        )}
+                        <div className="text-sm truncate">{file.name}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {selectedWebsite.status === "pending" && (
                 <div className="flex justify-end gap-2 pt-4">

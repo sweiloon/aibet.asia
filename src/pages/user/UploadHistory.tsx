@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -21,19 +20,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useWebsites } from "@/context/WebsiteContext";
-import { Eye } from "lucide-react";
+import { Eye, File, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function UploadHistory() {
   const { getUserWebsites } = useWebsites();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const navigate = useNavigate();
   
   const userUploads = getUserWebsites();
   
-  // Filter uploads by type and status
-  const websiteUploads = userUploads.filter(item => item.type === 'website');
-  const documentUploads = userUploads.filter(item => item.type === 'document');
+  // Filter uploads by type
+  const websiteUploads = userUploads.filter(item => item.type === 'website' || !item.type);
+  const documentUploads = userUploads.filter(item => 
+    item.type === 'document' || item.type === 'id-card' || item.type === 'bank-statement'
+  );
   
+  // Filter uploads by status
   const approvedUploads = userUploads.filter(item => item.status === "approved");
   const pendingUploads = userUploads.filter(item => item.status === "pending");
   const rejectedUploads = userUploads.filter(item => item.status === "rejected");
@@ -62,13 +66,31 @@ export default function UploadHistory() {
       case "bank-statement":
         return <Badge variant="outline">Bank Statement</Badge>;
       default:
-        return null;
+        return <Badge variant="outline">Website</Badge>;
     }
+  };
+  
+  const getTypeIcon = (item: any) => {
+    if (item.type === 'id-card' || item.type === 'bank-statement' || item.type === 'document') {
+      return item.type === 'bank-statement' ? <FileText className="h-4 w-4 mr-1" /> : <File className="h-4 w-4 mr-1" />;
+    }
+    return null;
   };
   
   const viewDetails = (item: any) => {
     setSelectedItem(item);
     setDetailsOpen(true);
+  };
+  
+  const handleResubmit = (item: any) => {
+    setDetailsOpen(false);
+    
+    // Navigate to appropriate upload page based on type
+    if (item.type === "website") {
+      navigate("/dashboard/websites/add");
+    } else if (item.type === "id-card" || item.type === "bank-statement") {
+      navigate("/dashboard/upload-document");
+    }
   };
   
   return (
@@ -117,7 +139,10 @@ export default function UploadHistory() {
                     {userUploads.length > 0 ? (
                       userUploads.map((upload) => (
                         <TableRow key={upload.id}>
-                          <TableCell className="font-medium">{upload.name}</TableCell>
+                          <TableCell className="font-medium flex items-center">
+                            {getTypeIcon(upload)}
+                            {upload.name}
+                          </TableCell>
                           <TableCell>{getTypeBadge(upload.type || "website")}</TableCell>
                           <TableCell>{getStatusBadge(upload.status)}</TableCell>
                           <TableCell>{new Date(upload.createdAt).toLocaleDateString()}</TableCell>
@@ -322,7 +347,7 @@ export default function UploadHistory() {
                 </div>
               </div>
               
-              {selectedItem.url && (
+              {selectedItem.url && selectedItem.url !== "N/A" && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">URL</p>
                   <a 
@@ -379,17 +404,7 @@ export default function UploadHistory() {
               
               {selectedItem.status === "rejected" && (
                 <div className="flex justify-end pt-4">
-                  <Button 
-                    onClick={() => {
-                      setDetailsOpen(false);
-                      // Navigate to appropriate upload page based on type
-                      if (selectedItem.type === "website") {
-                        // history.push("/dashboard/websites/add");
-                      } else {
-                        // history.push("/dashboard/upload-document");
-                      }
-                    }}
-                  >
+                  <Button onClick={() => handleResubmit(selectedItem)}>
                     Resubmit
                   </Button>
                 </div>
