@@ -22,6 +22,7 @@ interface AuthContextType {
   getAllUsers: () => User[];
   deleteUser: (userId: string) => Promise<boolean>;
   updateUserStatus: (userId: string, newStatus: string) => Promise<boolean>;
+  updateUser: (userId: string, userData: Partial<User>, newPassword?: string) => Promise<boolean>;
 }
 
 // Default admin credentials
@@ -40,6 +41,7 @@ const AuthContext = createContext<AuthContextType>({
   getAllUsers: () => [],
   deleteUser: async () => false,
   updateUserStatus: async () => false,
+  updateUser: async () => false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -304,6 +306,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
+
+  // Update user function
+  const updateUser = async (userId: string, userData: Partial<User>, newPassword?: string): Promise<boolean> => {
+    try {
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const userIndex = users.findIndex((u: any) => u.id === userId);
+      
+      if (userIndex === -1) {
+        toast.error("User not found!");
+        return false;
+      }
+      
+      // Update user data
+      const updatedUser = {
+        ...users[userIndex],
+        ...userData,
+      };
+      
+      // Update password if provided
+      if (newPassword) {
+        updatedUser.password = newPassword;
+      }
+      
+      users[userIndex] = updatedUser;
+      localStorage.setItem('users', JSON.stringify(users));
+      
+      // If current user is being updated, update the user in state and localStorage
+      if (user && user.id === userId) {
+        const currentUserObj = {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role,
+          status: updatedUser.status,
+        };
+        setUser(currentUserObj);
+        localStorage.setItem('user', JSON.stringify(currentUserObj));
+      }
+      
+      toast.success("User updated successfully!");
+      return true;
+    } catch (error) {
+      console.error("User update error:", error);
+      toast.error("Failed to update user!");
+      return false;
+    }
+  };
   
   return (
     <AuthContext.Provider value={{ 
@@ -316,7 +365,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       checkAdminExists,
       getAllUsers,
       deleteUser,
-      updateUserStatus
+      updateUserStatus,
+      updateUser
     }}>
       {children}
     </AuthContext.Provider>

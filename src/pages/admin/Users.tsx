@@ -24,13 +24,16 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { EditUserDialog } from "@/components/admin/EditUserDialog";
 
 export default function AdminUsers() {
-  const { user: currentUser, getAllUsers, deleteUser, updateUserStatus } = useAuth();
+  const { user: currentUser, getAllUsers, deleteUser, updateUserStatus, updateUser } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<any | null>(null);
   
   // Get all users from auth context
   const allUsers = getAllUsers();
@@ -82,6 +85,15 @@ export default function AdminUsers() {
   const confirmDelete = (userId: string) => {
     setUserToDelete(userId);
     setIsDeleteDialogOpen(true);
+  };
+
+  const openEditDialog = (user: any) => {
+    setUserToEdit(user);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleSaveUser = async (userId: string, userData: Partial<any>, newPassword?: string) => {
+    return await updateUser(userId, userData, newPassword);
   };
   
   return (
@@ -145,7 +157,7 @@ export default function AdminUsers() {
                             size="sm"
                             className="w-8 h-8 p-0"
                             title="Edit user"
-                            disabled={user.role === "admin" && user.id !== currentUser?.id}
+                            onClick={() => openEditDialog(user)}
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -204,6 +216,14 @@ export default function AdminUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit User Dialog */}
+      <EditUserDialog
+        user={userToEdit}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSave={handleSaveUser}
+      />
     </DashboardLayout>
   );
 }
