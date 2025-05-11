@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -48,14 +49,11 @@ export default function SignUp() {
     }
     
     setLoading(true);
-    try {
-      const success = await signup(email, password, phone, name);
-      
-      if (success) {
-        navigate("/dashboard");
-      }
-    } finally {
-      setLoading(false);
+    const success = await signup(email, password, phone, name);
+    setLoading(false);
+    
+    if (success) {
+      navigate("/dashboard");
     }
   };
 

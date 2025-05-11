@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
-import { toast } from "@/components/ui/sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -20,15 +19,11 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const success = await login(email, password, activeTab === "admin");
+    setLoading(false);
     
-    try {
-      const success = await login(email, password, activeTab === "admin");
-      
-      if (success) {
-        navigate(activeTab === "admin" ? "/admin" : "/dashboard");
-      }
-    } finally {
-      setLoading(false);
+    if (success) {
+      navigate(activeTab === "admin" ? "/admin" : "/dashboard");
     }
   };
 
