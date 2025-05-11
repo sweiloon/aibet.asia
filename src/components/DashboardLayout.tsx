@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, Globe2, FileText, ShieldCheck, Users, LayoutDashboard } from "lucide-react";
+import { LogOut, Settings, Globe2, FileText, ShieldCheck, Users, LayoutDashboard, ClipboardCheck } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -77,6 +77,15 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
                           <button onClick={() => navigate("/admin/websites")}>
                             <Globe2 />
                             <span>Websites</span>
+                          </button>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <button onClick={() => navigate("/admin/approvals")}>
+                            <ClipboardCheck />
+                            <span>Approvals</span>
                           </button>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
