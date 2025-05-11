@@ -109,11 +109,11 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
       const initialRanking = initialValues.ranking === "none" ? "" : initialValues.ranking;
       
       if (newRanking !== initialRanking) {
-        userData.ranking = newRanking;
+        userData.ranking = newRanking as "" | "customer" | "agent" | "master" | "ranking";
       }
       
-      // Only pass password if it was entered
-      const newPassword = values.password ? values.password : undefined;
+      // Only pass password if it was entered and changed
+      const newPassword = values.password && values.password.trim() !== "" ? values.password : undefined;
       
       const success = await onSave(user.id, userData, newPassword);
       
@@ -301,4 +301,3 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
     </Dialog>
   );
 }
-

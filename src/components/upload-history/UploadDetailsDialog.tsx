@@ -102,7 +102,7 @@ export const UploadDetailsDialog = ({ open, onOpenChange, item }: UploadDetailsD
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Password</p>
-                  <p className="text-base">••••••••</p>
+                  <p className="text-base">{item.password}</p>
                 </div>
               </div>
             </div>
