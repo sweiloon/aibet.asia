@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -24,7 +23,6 @@ export default function AdminWebsites() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   
   // Set initial status filter based on URL query param
@@ -32,17 +30,24 @@ export default function AdminWebsites() {
     const params = new URLSearchParams(location.search);
     const status = params.get("status");
     if (status) {
-      setStatusFilter(status);
+      // We can still honor status from URL by filtering in the search function
+      if (status !== "all") {
+        setSearchTerm(status);
+      }
     }
   }, [location.search]);
   
   const filteredWebsites = websites.filter(website => {
-    const matchesStatus = statusFilter === "all" || website.status === statusFilter;
-    const matchesSearch = !searchTerm || 
-      website.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      website.url.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!searchTerm) return true;
     
-    return matchesStatus && matchesSearch;
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    return (
+      website.name.toLowerCase().includes(searchTermLower) ||
+      website.url.toLowerCase().includes(searchTermLower) ||
+      website.status.toLowerCase().includes(searchTermLower) ||
+      (website.userEmail && website.userEmail.toLowerCase().includes(searchTermLower))
+    );
   });
   
   const getStatusBadge = (status: string) => {
@@ -66,31 +71,14 @@ export default function AdminWebsites() {
           <p className="text-muted-foreground">Review and manage all websites in the system</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search websites..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          
-          <Select
-            value={statusFilter}
-            onValueChange={setStatusFilter}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, URL, status, or user email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
         </div>
         
         <Card className="glass-morphism">
@@ -111,7 +99,7 @@ export default function AdminWebsites() {
                 {filteredWebsites.length > 0 ? (
                   filteredWebsites.map((website) => {
                     // Get user info (in a real app would fetch from database)
-                    const userEmail = "user@aibet.asia"; // Placeholder
+                    const userEmail = website.userEmail || "user@aibet.asia"; // Placeholder
                     
                     return (
                       <TableRow key={website.id}>
@@ -145,14 +133,14 @@ export default function AdminWebsites() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-6">
-                      <p>No websites found matching your filters</p>
-                      {statusFilter !== "all" && (
+                      <p>No websites found matching your search</p>
+                      {searchTerm && (
                         <Button
                           variant="link"
-                          onClick={() => setStatusFilter("all")}
+                          onClick={() => setSearchTerm("")}
                           className="mt-2"
                         >
-                          Clear status filter
+                          Clear search
                         </Button>
                       )}
                     </TableCell>

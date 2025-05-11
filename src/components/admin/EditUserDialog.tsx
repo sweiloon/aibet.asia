@@ -32,6 +32,7 @@ const formSchema = z.object({
   confirmPassword: z.string().optional(),
   role: z.enum(["user", "admin"]),
   status: z.enum(["active", "inactive"]),
+  ranking: z.enum(["customer", "agent", "master", "ranking", ""]).optional(),
 }).refine(data => !data.password || data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -59,6 +60,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
       confirmPassword: "",
       role: user?.role || "user",
       status: user?.status || "active",
+      ranking: user?.ranking || "",
     },
   });
 
@@ -73,6 +75,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
         email: values.email,
         role: values.role,
         status: values.status,
+        ranking: values.ranking,
       };
       
       const success = await onSave(user.id, userData, values.password);
@@ -153,6 +156,34 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                       <SelectContent>
                         <SelectItem value="user">User</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="ranking"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ranking</FormLabel>
+                  <FormControl>
+                    <Select 
+                      value={field.value || ""} 
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select ranking" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Not Set</SelectItem>
+                        <SelectItem value="customer">Customer</SelectItem>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="master">Master</SelectItem>
+                        <SelectItem value="ranking">Ranking</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>

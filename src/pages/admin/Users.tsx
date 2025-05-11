@@ -96,6 +96,21 @@ export default function AdminUsers() {
     return await updateUser(userId, userData, newPassword);
   };
   
+  const getRankingBadge = (ranking: string) => {
+    switch (ranking) {
+      case "customer":
+        return <Badge className="bg-blue-500/20 text-blue-300">Customer</Badge>;
+      case "agent":
+        return <Badge className="bg-green-500/20 text-green-300">Agent</Badge>;
+      case "master":
+        return <Badge className="bg-purple-500/20 text-purple-300">Master</Badge>;
+      case "ranking":
+        return <Badge className="bg-yellow-500/20 text-yellow-300">Ranking</Badge>;
+      default:
+        return <Badge variant="secondary">Not Set</Badge>;
+    }
+  };
+  
   return (
     <DashboardLayout isAdmin>
       <div className="space-y-6">
@@ -125,7 +140,7 @@ export default function AdminUsers() {
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
-                  <TableHead>Websites</TableHead>
+                  <TableHead>Ranking</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -149,7 +164,7 @@ export default function AdminUsers() {
                         </Badge>
                       </TableCell>
                       <TableCell>{new Date(user.createdAt || Date.now()).toLocaleDateString()}</TableCell>
-                      <TableCell>{user.websites?.length || 0}</TableCell>
+                      <TableCell>{getRankingBadge(user.ranking || "")}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button

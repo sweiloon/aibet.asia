@@ -10,6 +10,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { LogOut } from "lucide-react";
 import { AdminSidebarItems } from "../sidebar/AdminSidebarItems";
 import { UserSidebarItems } from "../sidebar/UserSidebarItems";
@@ -29,6 +30,25 @@ export function DashboardSidebar({ isAdmin = false, user }: DashboardSidebarProp
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const getRankingBadge = () => {
+    if (!user.ranking) return null;
+    
+    const rankingStyles: {[key: string]: string} = {
+      customer: "bg-blue-500/20 text-blue-300",
+      agent: "bg-green-500/20 text-green-300",
+      master: "bg-purple-500/20 text-purple-300",
+      ranking: "bg-yellow-500/20 text-yellow-300"
+    };
+    
+    const style = rankingStyles[user.ranking] || "";
+    
+    return (
+      <Badge className={`${style} mb-2`}>
+        {user.ranking.charAt(0).toUpperCase() + user.ranking.slice(1)}
+      </Badge>
+    );
   };
   
   return (
@@ -65,6 +85,7 @@ export function DashboardSidebar({ isAdmin = false, user }: DashboardSidebarProp
       
       <SidebarFooter className="p-4">
         <div className="w-full">
+          {!isAdmin && getRankingBadge()}
           <span className="text-xs text-muted-foreground block mb-2">
             Logged in as {user?.email}
           </span>

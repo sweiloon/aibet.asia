@@ -13,6 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { useState } from "react";
 import { Eye } from "lucide-react";
 
@@ -21,6 +23,7 @@ const WebsiteRecords = () => {
   const { websites } = useWebsites();
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   
   // Only show approved websites of type "website" that belong to the current user
   const userApprovedWebsites = user ? 
@@ -30,6 +33,11 @@ const WebsiteRecords = () => {
       website.type === "website"
     ) : 
     [];
+
+  // Filter websites based on search term
+  const filteredWebsites = userApprovedWebsites.filter(website =>
+    !searchTerm || website.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Show website details
   const showWebsiteDetails = (website: Website) => {
@@ -44,12 +52,37 @@ const WebsiteRecords = () => {
           <h1 className="text-2xl font-bold">Website Records</h1>
         </div>
         
-        {userApprovedWebsites.length === 0 ? (
+        {userApprovedWebsites.length > 0 && (
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search websites..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        )}
+        
+        {filteredWebsites.length === 0 ? (
           <div className="text-center p-10 border rounded-lg">
-            <p className="text-muted-foreground">You don't have any approved websites yet</p>
+            <p className="text-muted-foreground">
+              {userApprovedWebsites.length === 0 
+                ? "You don't have any approved websites yet" 
+                : "No websites found matching your search"}
+            </p>
+            {searchTerm && (
+              <Button
+                variant="link"
+                onClick={() => setSearchTerm("")}
+                className="mt-2"
+              >
+                Clear search
+              </Button>
+            )}
           </div>
         ) : (
-          userApprovedWebsites.map((website) => (
+          filteredWebsites.map((website) => (
             <div key={website.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">{website.name}</h2>
