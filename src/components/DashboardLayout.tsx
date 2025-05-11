@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, Globe2, FileText, ShieldCheck, Users, LayoutDashboard, ClipboardCheck } from "lucide-react";
+import { LogOut, Settings, Globe2, FileText, ShieldCheck, Users, LayoutDashboard, ClipboardCheck, Upload } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -113,9 +113,9 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
                   {!isAdmin && (
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
-                        <button onClick={() => navigate("/dashboard/websites")}>
-                          <Globe2 />
-                          <span>My Websites</span>
+                        <button onClick={() => navigate("/dashboard/websites/add")}>
+                          <Upload />
+                          <span>Upload Website</span>
                         </button>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

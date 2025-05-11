@@ -11,9 +11,10 @@ import { useWebsites } from "@/context/WebsiteContext";
 export default function WebsiteAdd() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
-  const [loginUrl, setLoginUrl] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   
   const { addWebsite } = useWebsites();
@@ -21,6 +22,13 @@ export default function WebsiteAdd() {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password match
+    if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+    
     setLoading(true);
     
     // Format URL if needed
@@ -33,7 +41,6 @@ export default function WebsiteAdd() {
     const websiteData = {
       name,
       url: formattedUrl,
-      loginUrl,
       username,
       password
     };
@@ -47,7 +54,7 @@ export default function WebsiteAdd() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Add New Website</h1>
+          <h1 className="text-3xl font-bold">Upload Website</h1>
           <p className="text-muted-foreground">Submit a new website for management</p>
         </div>
         
@@ -85,41 +92,58 @@ export default function WebsiteAdd() {
               </div>
               
               <div className="pt-4 space-y-6 border-t border-border">
-                <div className="space-y-2">
-                  <Label htmlFor="login-url">Admin Login URL (Optional)</Label>
-                  <Input
-                    id="login-url"
-                    placeholder="https://example.com/wp-admin"
-                    value={loginUrl}
-                    onChange={(e) => setLoginUrl(e.target.value)}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="username">Admin Username (Optional)</Label>
+                    <Label htmlFor="username">Admin Username</Label>
                     <Input
                       id="username"
                       placeholder="admin"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
+                      required
                     />
                   </div>
-                  
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="password">Admin Password (Optional)</Label>
+                    <Label htmlFor="password">Admin Password</Label>
                     <Input
                       id="password"
                       type="password"
                       placeholder="••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setPasswordError("");
+                      }}
+                      required
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Your credentials are securely stored and only used for management purposes.
-                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setPasswordError("");
+                      }}
+                      className={passwordError ? "border-red-500" : ""}
+                      required
+                    />
+                    {passwordError && (
+                      <p className="text-xs text-red-500">{passwordError}</p>
+                    )}
                   </div>
                 </div>
+                
+                <p className="text-xs text-muted-foreground mt-2">
+                  Your credentials are securely stored and only used for management purposes.
+                </p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">

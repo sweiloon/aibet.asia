@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useWebsites } from "@/context/WebsiteContext";
+import { Upload } from "lucide-react";
 
 export default function UserWebsites() {
   const { getUserWebsites } = useWebsites();
@@ -43,7 +44,8 @@ export default function UserWebsites() {
           </div>
           
           <Button onClick={() => navigate("/dashboard/websites/add")}>
-            Add New Website
+            <Upload className="mr-2 h-4 w-4" />
+            Upload Website
           </Button>
         </div>
         
@@ -99,13 +101,14 @@ export default function UserWebsites() {
               <div className="text-center py-6">
                 <p className="text-xl">No websites submitted yet</p>
                 <p className="text-muted-foreground mt-2">
-                  Submit your first website for management.
+                  Submit your website for management.
                 </p>
                 <Button 
                   onClick={() => navigate("/dashboard/websites/add")}
                   className="mt-4"
                 >
-                  Add Your First Website
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Website
                 </Button>
               </div>
             </CardContent>

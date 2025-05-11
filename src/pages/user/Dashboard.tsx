@@ -1,10 +1,10 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useWebsites } from "@/context/WebsiteContext";
 import { useNavigate } from "react-router-dom";
+import { Upload } from "lucide-react";
 
 export default function UserDashboard() {
   const { getUserWebsites } = useWebsites();
@@ -31,7 +31,8 @@ export default function UserDashboard() {
             onClick={() => navigate("/dashboard/websites/add")}
             className="mt-4 md:mt-0"
           >
-            Add New Website
+            <Upload className="mr-2 h-4 w-4" />
+            Upload Website
           </Button>
         </div>
         
@@ -161,7 +162,8 @@ export default function UserDashboard() {
                     onClick={() => navigate("/dashboard/websites/add")}
                     className="mt-4"
                   >
-                    Submit a Website
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Website
                   </Button>
                 </div>
               </CardContent>
