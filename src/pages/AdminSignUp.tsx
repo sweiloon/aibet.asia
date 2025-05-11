@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AdminSignUp() {
   const [name, setName] = useState("");
@@ -16,6 +17,7 @@ export default function AdminSignUp() {
   const [phone, setPhone] = useState("+60");
   const [loading, setLoading] = useState(false);
   const [adminExists, setAdminExists] = useState(true);
+  const [country, setCountry] = useState("malaysia"); // Default country value that is not empty
   const { signup, checkAdminExists } = useAuth();
   const navigate = useNavigate();
 
@@ -121,6 +123,23 @@ export default function AdminSignUp() {
                       @aibet.asia
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="country">
+                    Country
+                  </label>
+                  <Select value={country} onValueChange={setCountry}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="malaysia">Malaysia</SelectItem>
+                      <SelectItem value="singapore">Singapore</SelectItem>
+                      <SelectItem value="indonesia">Indonesia</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">
