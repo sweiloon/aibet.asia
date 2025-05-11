@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +13,18 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, Settings, User } from "lucide-react";
 
 export function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, checkAdminExists } = useAuth();
   const navigate = useNavigate();
+  const [adminExists, setAdminExists] = useState(true);
+  
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const exists = await checkAdminExists();
+      setAdminExists(exists);
+    };
+    
+    checkAdmin();
+  }, [checkAdminExists]);
   
   const handleLogout = () => {
     logout();
@@ -41,6 +52,11 @@ export function Navbar() {
               <Button onClick={() => navigate("/signup")}>
                 Get Started
               </Button>
+              {!adminExists && (
+                <Button variant="outline" onClick={() => navigate("/admin-signup")}>
+                  Admin Setup
+                </Button>
+              )}
             </>
           ) : (
             <>

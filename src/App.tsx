@@ -11,6 +11,7 @@ import { WebsiteProvider } from "./context/WebsiteContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
+import AdminSignUp from "./pages/AdminSignUp";
 import NotFound from "./pages/NotFound";
 
 // User Dashboard Pages
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/admin-signup" element={<AdminSignUp />} />
               
               {/* User Dashboard Routes */}
               <Route 

@@ -12,14 +12,15 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string, isAdmin: boolean) => Promise<boolean>;
-  signup: (email: string, password: string, phone: string, name: string) => Promise<boolean>;
+  signup: (email: string, password: string, phone: string, name: string, isAdmin?: boolean) => Promise<boolean>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  checkAdminExists: () => Promise<boolean>;
 }
 
 // Default admin credentials
 const ADMIN_EMAIL = "admin@aibet.asia";
-const ADMIN_PASSWORD = "11111111";
+const ADMIN_PASSWORD = "admin123";
 
 // Create context with a default value
 const AuthContext = createContext<AuthContextType>({
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType>({
   signup: async () => false,
   logout: () => {},
   changePassword: async () => false,
+  checkAdminExists: async () => false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -36,6 +38,19 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Check if admin exists
+  const checkAdminExists = async (): Promise<boolean> => {
+    try {
+      // In a real app, this would check the database for admin accounts
+      // For this mock implementation, we'll check localStorage
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      return users.some((user: any) => user.role === "admin");
+    } catch (error) {
+      console.error("Error checking admin existence:", error);
+      return false;
+    }
+  };
   
   useEffect(() => {
     // Check for stored user session
@@ -64,8 +79,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           toast.success("Admin login successful!");
           return true;
         } else {
-          toast.error("Invalid admin credentials!");
-          return false;
+          // Check for custom admin accounts in localStorage
+          const users = JSON.parse(localStorage.getItem('users') || '[]');
+          const adminUser = users.find((u: any) => u.email === email && u.role === "admin");
+          
+          if (adminUser && adminUser.password === password) {
+            const userObj = { id: adminUser.id, email: adminUser.email, role: "admin" as const };
+            setUser(userObj);
+            localStorage.setItem('user', JSON.stringify(userObj));
+            toast.success("Admin login successful!");
+            return true;
+          } else {
+            toast.error("Invalid admin credentials!");
+            return false;
+          }
         }
       }
       
@@ -74,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const matchedUser = users.find((u: any) => u.email === email);
       
       if (matchedUser && matchedUser.password === password) {
-        const userObj = { id: matchedUser.id, email: matchedUser.email, role: "user" as const };
+        const userObj = { id: matchedUser.id, email: matchedUser.email, role: matchedUser.role || "user" as const };
         setUser(userObj);
         localStorage.setItem('user', JSON.stringify(userObj));
         toast.success("Login successful!");
@@ -93,7 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Mock signup function
-  const signup = async (email: string, password: string, phone: string, name: string): Promise<boolean> => {
+  const signup = async (email: string, password: string, phone: string, name: string, isAdmin = false): Promise<boolean> => {
     setLoading(true);
     try {
       // Add domain suffix if not present
@@ -115,6 +142,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
+      // For admin signup, check if admin already exists
+      if (isAdmin) {
+        const adminExists = await checkAdminExists();
+        if (adminExists) {
+          toast.error("An admin account already exists!");
+          return false;
+        }
+      }
+      
       // Create new user
       const newUser = {
         id: `user${Date.now()}`,
@@ -122,6 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
         phone,
         name,
+        role: isAdmin ? "admin" : "user",
         createdAt: new Date().toISOString()
       };
       
@@ -129,11 +166,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('users', JSON.stringify(users));
       
       // Auto-login after signup
-      const userObj = { id: newUser.id, email: newUser.email, role: "user" as const };
+      const userObj = { id: newUser.id, email: newUser.email, role: isAdmin ? "admin" as const : "user" as const };
       setUser(userObj);
       localStorage.setItem('user', JSON.stringify(userObj));
       
-      toast.success("Account created successfully!");
+      toast.success(isAdmin ? "Admin account created successfully!" : "Account created successfully!");
       return true;
     } catch (error) {
       console.error("Signup error:", error);
@@ -158,10 +195,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       if (user.role === "admin") {
         // Admin password change
-        if (currentPassword !== ADMIN_PASSWORD) {
+        if (user.email === ADMIN_EMAIL && currentPassword !== ADMIN_PASSWORD) {
           toast.error("Current password is incorrect!");
           return false;
         }
+        
+        // Check for custom admin account
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const userIndex = users.findIndex((u: any) => u.email === user.email);
+        
+        if (userIndex !== -1) {
+          if (users[userIndex].password !== currentPassword) {
+            toast.error("Current password is incorrect!");
+            return false;
+          }
+          
+          users[userIndex].password = newPassword;
+          localStorage.setItem('users', JSON.stringify(users));
+          toast.success("Password updated successfully!");
+          return true;
+        }
+        
         // In a real app, you would update the admin password in a database
         toast.success("Admin password would be updated in a real application!");
         return true;
@@ -193,7 +247,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, changePassword }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, changePassword, checkAdminExists }}>
       {children}
     </AuthContext.Provider>
   );
