@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,11 +27,11 @@ import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   name: z.string().optional(),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").optional(),
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
   confirmPassword: z.string().optional(),
-  role: z.enum(["user", "admin"]),
-  status: z.enum(["active", "inactive"]),
+  role: z.enum(["user", "admin"]).optional(),
+  status: z.enum(["active", "inactive"]).optional(),
   ranking: z.enum(["none", "customer", "agent", "master", "ranking"]).optional(),
 }).refine(data => !data.password || data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -50,6 +50,7 @@ interface EditUserDialogProps {
 export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initialValues, setInitialValues] = useState<FormValues | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -66,21 +67,52 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
     },
   });
 
+  // Reset form when user changes or dialog opens
+  useEffect(() => {
+    if (open && user) {
+      const values = {
+        name: user?.name || "",
+        email: user?.email || "",
+        password: "",
+        confirmPassword: "",
+        role: user?.role || "user",
+        status: user?.status || "active",
+        ranking: (user?.ranking && user?.ranking !== "") ? 
+          (user.ranking as "customer" | "agent" | "master" | "ranking") : 
+          "none",
+      };
+      
+      form.reset(values);
+      setInitialValues(values);
+    }
+  }, [user, open, form]);
+
   const handleSubmit = async (values: FormValues) => {
-    if (!user) return;
+    if (!user || !initialValues) return;
     
     setIsSubmitting(true);
     
     try {
-      const userData: Partial<User> = {
-        name: values.name,
-        email: values.email,
-        role: values.role,
-        status: values.status,
-        ranking: values.ranking === "none" ? "" : values.ranking,
-      };
+      // Only include fields that have been changed
+      const userData: Partial<User> = {};
       
-      const success = await onSave(user.id, userData, values.password);
+      if (values.name !== initialValues.name) userData.name = values.name;
+      if (values.email !== initialValues.email) userData.email = values.email;
+      if (values.role !== initialValues.role) userData.role = values.role;
+      if (values.status !== initialValues.status) userData.status = values.status;
+      
+      // Special handling for ranking
+      const newRanking = values.ranking === "none" ? "" : values.ranking;
+      const initialRanking = initialValues.ranking === "none" ? "" : initialValues.ranking;
+      
+      if (newRanking !== initialRanking) {
+        userData.ranking = newRanking;
+      }
+      
+      // Only pass password if it was entered
+      const newPassword = values.password ? values.password : undefined;
+      
+      const success = await onSave(user.id, userData, newPassword);
       
       if (success) {
         toast({
@@ -106,7 +138,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update the user's details and permissions. Click save when you're done.
+            Update the user's details and permissions. Only changed fields will be updated.
           </DialogDescription>
         </DialogHeader>
         
