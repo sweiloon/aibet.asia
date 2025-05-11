@@ -9,6 +9,7 @@ export interface User {
   status?: "active" | "inactive";
   createdAt?: string;
   websites?: any[];
+  ranking?: string; // Add ranking property
 }
 
 interface AuthContextType {
@@ -269,6 +270,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         status: u.status || "active",
         createdAt: u.createdAt || new Date().toISOString(),
         websites: u.websites || [],
+        ranking: u.ranking || "",
       }));
     } catch (error) {
       console.error("Error fetching users:", error);

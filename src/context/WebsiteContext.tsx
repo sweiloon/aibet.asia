@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "./AuthContext";
@@ -6,6 +5,7 @@ import { useAuth } from "./AuthContext";
 export interface Website {
   id: string;
   userId: string;
+  userEmail?: string; // Add userEmail property
   name: string;
   url: string;
   loginUrl?: string;
@@ -96,6 +96,7 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
       ...website,
       id: `website-${Date.now()}`,
       userId: user.id,
+      userEmail: user.email, // Add user email to the website
       status: "pending",
       managementData: [],
       createdAt: now,
