@@ -70,16 +70,19 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
   // Reset form when user changes or dialog opens
   useEffect(() => {
     if (open && user) {
-      const values = {
+      // Properly type the ranking value using as to ensure it matches the expected enum type
+      const userRanking = user?.ranking && user?.ranking !== "" 
+        ? (user.ranking as "customer" | "agent" | "master" | "ranking") 
+        : "none";
+      
+      const values: FormValues = {
         name: user?.name || "",
         email: user?.email || "",
         password: "",
         confirmPassword: "",
         role: user?.role || "user",
         status: user?.status || "active",
-        ranking: (user?.ranking && user?.ranking !== "") ? 
-          (user.ranking as "customer" | "agent" | "master" | "ranking") : 
-          "none",
+        ranking: userRanking,
       };
       
       form.reset(values);
@@ -298,3 +301,4 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
     </Dialog>
   );
 }
+
