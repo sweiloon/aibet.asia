@@ -37,7 +37,7 @@ export default function AdminWebsites() {
   }, [location.search]);
   
   const filteredWebsites = websites.filter(website => {
-    const matchesStatus = statusFilter === "" || statusFilter === "all" || website.status === statusFilter;
+    const matchesStatus = !statusFilter || website.status === statusFilter;
     const matchesSearch = !searchTerm || 
       website.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       website.url.toLowerCase().includes(searchTerm.toLowerCase());
@@ -85,7 +85,7 @@ export default function AdminWebsites() {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="">All Statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="approved">Approved</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
