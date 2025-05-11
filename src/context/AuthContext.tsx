@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state change:", event, session?.user?.id);
         if (session?.user) {
           try {
             // Get user role from profiles
@@ -49,7 +50,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .eq('id', session.user.id)
               .single();
             
-            if (error) throw error;
+            if (error) {
+              console.error("Error fetching user profile:", error);
+              setUser(null);
+              return;
+            }
+            
+            console.log("Profile data:", profile);
             
             setUser({
               id: session.user.id,
@@ -79,7 +86,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .eq('id', session.user.id)
             .single();
           
-          if (error) throw error;
+          if (error) {
+            console.error("Error fetching profile:", error);
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+          
+          console.log("Initial profile data:", profile);
           
           setUser({
             id: session.user.id,
@@ -110,12 +124,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email = `${email}@aibet.asia`;
       }
       
+      console.log(`Login attempt: ${email} as ${isAdmin ? 'admin' : 'user'}`);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Login error:", error);
+        toast.error(error.message || "Invalid credentials!");
+        return false;
+      }
       
       if (!data.user) {
         toast.error("Invalid credentials!");
@@ -129,9 +149,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', data.user.id)
         .single();
       
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Profile error:", profileError);
+        toast.error("Error fetching user profile. Please try again.");
+        await supabase.auth.signOut();
+        return false;
+      }
       
       const userRole = profile?.role || "user";
+      console.log(`User role: ${userRole}, Requested role: ${isAdmin ? 'admin' : 'user'}`);
       
       // Validate role matches login type
       if ((isAdmin && userRole !== "admin") || (!isAdmin && userRole === "admin")) {

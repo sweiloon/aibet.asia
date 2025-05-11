@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
+import { toast } from "@/components/ui/sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,11 +20,27 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await login(email, password, activeTab === "admin");
-    setLoading(false);
     
-    if (success) {
-      navigate(activeTab === "admin" ? "/admin" : "/dashboard");
+    try {
+      // Handle email formatting
+      let formattedEmail = email;
+      if (!formattedEmail.includes("@")) {
+        formattedEmail = `${formattedEmail}@aibet.asia`;
+      }
+      
+      console.log(`Attempting login with: ${formattedEmail} as ${activeTab}`);
+      
+      const success = await login(formattedEmail, password, activeTab === "admin");
+      
+      if (success) {
+        toast.success(`Logged in successfully as ${activeTab}`);
+        navigate(activeTab === "admin" ? "/admin" : "/dashboard");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Failed to login. Please check your credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
