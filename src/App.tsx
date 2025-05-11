@@ -1,169 +1,156 @@
 
-import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from "@/components/ui/sonner"
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { WebsiteProvider } from './context/WebsiteContext';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminWebsites from './pages/admin/Websites';
-import AdminWebsiteDetail from './pages/admin/WebsiteDetail';
-import UserDashboard from './pages/user/Dashboard';
-import UserWebsites from './pages/user/Websites';
-import UserWebsiteAdd from './pages/user/WebsiteAdd';
-import UserWebsiteDetail from './pages/user/WebsiteDetail';
-import AdminSettings from './pages/admin/Settings';
-import UserSettings from './pages/user/Settings';
-import NotFound from './pages/NotFound';
-import AdminUsers from "./pages/admin/Users";
-import AdminReports from "./pages/admin/Reports";
-import AdminSecurity from "./pages/admin/Security";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { WebsiteProvider } from "./context/WebsiteContext";
 
-// Route guard for admin routes
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+// Pages
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import NotFound from "./pages/NotFound";
+
+// User Dashboard Pages
+import UserDashboard from "./pages/user/Dashboard";
+import UserSettings from "./pages/user/Settings";
+import UserWebsites from "./pages/user/Websites";
+import WebsiteAdd from "./pages/user/WebsiteAdd";
+import WebsiteDetail from "./pages/user/WebsiteDetail";
+
+// Admin Dashboard Pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminSettings from "./pages/admin/Settings";
+import AdminWebsites from "./pages/admin/Websites";
+import AdminWebsiteDetail from "./pages/admin/WebsiteDetail";
+
+const queryClient = new QueryClient();
+
+// Protected route component
+const ProtectedRoute = ({ 
+  children, 
+  requiredRole,
+  redirectTo = "/login" 
+}: { 
+  children: React.ReactNode; 
+  requiredRole?: "user" | "admin";
+  redirectTo?: string;
+}) => {
   const { user, loading } = useAuth();
   
+  // While checking authentication
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
   
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  if (user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
+  // If not authenticated or doesn't have the required role
+  if (!user || (requiredRole && user.role !== requiredRole)) {
+    return <Navigate to={redirectTo} replace />;
   }
   
   return <>{children}</>;
 };
 
-// Route guard for user routes
-const UserRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  if (user.role === 'admin') {
-    return <Navigate to="/admin" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-const AppRoutes = () => {
-  const { user } = useAuth();
-  
-  // Use effect to redirect based on role when user logs in
-  useEffect(() => {
-    if (user) {
-      const currentPath = window.location.pathname;
-      
-      // If on login or signup pages, redirect to appropriate dashboard
-      if (['/login', '/signup', '/'].includes(currentPath)) {
-        if (user.role === 'admin') {
-          window.location.href = '/admin';
-        } else {
-          window.location.href = '/dashboard';
-        }
-      }
-    }
-  }, [user]);
-  
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<SignUp />} />
-      
-      {/* Admin Routes */}
-      <Route path="/admin" element={
-        <AdminRoute>
-          <AdminDashboard />
-        </AdminRoute>
-      } />
-      <Route path="/admin/websites" element={
-        <AdminRoute>
-          <AdminWebsites />
-        </AdminRoute>
-      } />
-      <Route path="/admin/websites/:id" element={
-        <AdminRoute>
-          <AdminWebsiteDetail />
-        </AdminRoute>
-      } />
-      <Route path="/admin/users" element={
-        <AdminRoute>
-          <AdminUsers />
-        </AdminRoute>
-      } />
-      <Route path="/admin/reports" element={
-        <AdminRoute>
-          <AdminReports />
-        </AdminRoute>
-      } />
-      <Route path="/admin/settings" element={
-        <AdminRoute>
-          <AdminSettings />
-        </AdminRoute>
-      } />
-      <Route path="/admin/security" element={
-        <AdminRoute>
-          <AdminSecurity />
-        </AdminRoute>
-      } />
-      
-      {/* User Routes */}
-      <Route path="/dashboard" element={
-        <UserRoute>
-          <UserDashboard />
-        </UserRoute>
-      } />
-      <Route path="/dashboard/websites" element={
-        <UserRoute>
-          <UserWebsites />
-        </UserRoute>
-      } />
-      <Route path="/dashboard/websites/add" element={
-        <UserRoute>
-          <UserWebsiteAdd />
-        </UserRoute>
-      } />
-      <Route path="/dashboard/websites/:id" element={
-        <UserRoute>
-          <UserWebsiteDetail />
-        </UserRoute>
-      } />
-      <Route path="/dashboard/settings" element={
-        <UserRoute>
-          <UserSettings />
-        </UserRoute>
-      } />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
-
-const App: React.FC = () => {
-  return (
-    <AuthProvider>
-      <WebsiteProvider>
-        <BrowserRouter>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <AuthProvider>
+        <WebsiteProvider>
           <Toaster />
-          <AppRoutes />
-        </BrowserRouter>
-      </WebsiteProvider>
-    </AuthProvider>
-  );
-};
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              
+              {/* User Dashboard Routes */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute requiredRole="user">
+                    <UserDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/dashboard/settings" 
+                element={
+                  <ProtectedRoute requiredRole="user">
+                    <UserSettings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/dashboard/websites" 
+                element={
+                  <ProtectedRoute requiredRole="user">
+                    <UserWebsites />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/dashboard/websites/add" 
+                element={
+                  <ProtectedRoute requiredRole="user">
+                    <WebsiteAdd />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/dashboard/websites/:id" 
+                element={
+                  <ProtectedRoute requiredRole="user">
+                    <WebsiteDetail />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Admin Dashboard Routes */}
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/admin/settings" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminSettings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/admin/websites" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminWebsites />
+                  </ProtectedRoute>
+                }
+              />
+              <Route 
+                path="/admin/websites/:id" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminWebsiteDetail />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Catch-All 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </WebsiteProvider>
+      </AuthProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

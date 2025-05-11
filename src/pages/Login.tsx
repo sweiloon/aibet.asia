@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,37 +13,23 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("user");
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  // Redirect user if already logged in
-  useEffect(() => {
-    if (user) {
-      if (user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
-      }
-    }
-  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const isAdmin = activeTab === "admin";
-    const success = await login(email, password, isAdmin);
+    const success = await login(email, password, activeTab === "admin");
     setLoading(false);
     
     if (success) {
-      // The redirection will happen automatically from the useEffect when user state is updated
-      // This is to prevent navigation issues if the user role isn't set immediately
+      navigate(activeTab === "admin" ? "/admin" : "/dashboard");
     }
   };
 
   return (
     <>
       <Navbar />
-      
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-black">
         <div className="w-full max-w-md animate-fade-in">
           <Card className="glass-morphism">
