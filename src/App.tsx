@@ -28,12 +28,14 @@ import AdminWebsiteDetail from "./pages/admin/WebsiteDetail";
 
 const queryClient = new QueryClient();
 
-// Protected route component for regular users
-const UserRoute = ({ 
-  children,
+// Protected route component
+const ProtectedRoute = ({ 
+  children, 
+  requiredRole,
   redirectTo = "/login" 
 }: { 
-  children: React.ReactNode;
+  children: React.ReactNode; 
+  requiredRole?: "user" | "admin";
   redirectTo?: string;
 }) => {
   const { user, loading } = useAuth();
@@ -43,31 +45,8 @@ const UserRoute = ({
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
   
-  // If not authenticated or not a user
-  if (!user || user.role !== "user") {
-    return <Navigate to={redirectTo} replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Protected route component for admin users
-const AdminRoute = ({ 
-  children,
-  redirectTo = "/login" 
-}: { 
-  children: React.ReactNode;
-  redirectTo?: string;
-}) => {
-  const { user, loading } = useAuth();
-  
-  // While checking authentication
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-  
-  // If not authenticated or not an admin
-  if (!user || user.role !== "admin") {
+  // If not authenticated or doesn't have the required role
+  if (!user || (requiredRole && user.role !== requiredRole)) {
     return <Navigate to={redirectTo} replace />;
   }
   
@@ -92,41 +71,41 @@ const App = () => (
               <Route 
                 path="/dashboard" 
                 element={
-                  <UserRoute>
+                  <ProtectedRoute requiredRole="user">
                     <UserDashboard />
-                  </UserRoute>
+                  </ProtectedRoute>
                 }
               />
               <Route 
                 path="/dashboard/settings" 
                 element={
-                  <UserRoute>
+                  <ProtectedRoute requiredRole="user">
                     <UserSettings />
-                  </UserRoute>
+                  </ProtectedRoute>
                 }
               />
               <Route 
                 path="/dashboard/websites" 
                 element={
-                  <UserRoute>
+                  <ProtectedRoute requiredRole="user">
                     <UserWebsites />
-                  </UserRoute>
+                  </ProtectedRoute>
                 }
               />
               <Route 
                 path="/dashboard/websites/add" 
                 element={
-                  <UserRoute>
+                  <ProtectedRoute requiredRole="user">
                     <WebsiteAdd />
-                  </UserRoute>
+                  </ProtectedRoute>
                 }
               />
               <Route 
                 path="/dashboard/websites/:id" 
                 element={
-                  <UserRoute>
+                  <ProtectedRoute requiredRole="user">
                     <WebsiteDetail />
-                  </UserRoute>
+                  </ProtectedRoute>
                 }
               />
               
@@ -134,33 +113,33 @@ const App = () => (
               <Route 
                 path="/admin" 
                 element={
-                  <AdminRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <AdminDashboard />
-                  </AdminRoute>
+                  </ProtectedRoute>
                 }
               />
               <Route 
                 path="/admin/settings" 
                 element={
-                  <AdminRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <AdminSettings />
-                  </AdminRoute>
+                  </ProtectedRoute>
                 }
               />
               <Route 
                 path="/admin/websites" 
                 element={
-                  <AdminRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <AdminWebsites />
-                  </AdminRoute>
+                  </ProtectedRoute>
                 }
               />
               <Route 
                 path="/admin/websites/:id" 
                 element={
-                  <AdminRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <AdminWebsiteDetail />
-                  </AdminRoute>
+                  </ProtectedRoute>
                 }
               />
 

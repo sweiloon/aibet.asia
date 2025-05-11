@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,15 +15,8 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("+60");
   const [loading, setLoading] = useState(false);
-  const { signup, user } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
-  
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
 
   const validatePhone = (value: string) => {
     // Phone must start with +60 followed by a digit from 1-9

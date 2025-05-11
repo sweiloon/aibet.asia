@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,53 +7,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
-import { toast } from "@/components/ui/sonner";
-import { Loader2, AlertCircle } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("user");
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-  
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      if (user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
-      }
-    }
-  }, [user, navigate]);
-
-  const clearError = () => {
-    if (error) setError(null);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    const success = await login(email, password, activeTab === "admin");
+    setLoading(false);
     
-    try {
-      console.log("Submitting login form for", email, "as", activeTab);
-      const success = await login(email, password, activeTab === "admin");
-      
-      if (success) {
-        console.log("Login successful, redirecting to", activeTab === "admin" ? "/admin" : "/dashboard");
-        navigate(activeTab === "admin" ? "/admin" : "/dashboard");
-      } else {
-        setError("Login failed. Please check your credentials and try again.");
-      }
-    } catch (error) {
-      console.error("Login form error:", error);
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
+    if (success) {
+      navigate(activeTab === "admin" ? "/admin" : "/dashboard");
     }
   };
 
@@ -73,10 +43,7 @@ export default function Login() {
             <Tabs 
               defaultValue="user" 
               value={activeTab} 
-              onValueChange={(value) => {
-                setActiveTab(value);
-                clearError();
-              }}
+              onValueChange={setActiveTab}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -96,12 +63,8 @@ export default function Login() {
                           id="email"
                           placeholder="username"
                           value={email}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            clearError();
-                          }}
+                          onChange={(e) => setEmail(e.target.value)}
                           className="pr-24"
-                          disabled={loading}
                           required
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
@@ -119,21 +82,10 @@ export default function Login() {
                         type="password"
                         placeholder="••••••••"
                         value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          clearError();
-                        }}
-                        disabled={loading}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                       />
                     </div>
-
-                    {error && (
-                      <div className="bg-destructive/15 text-destructive p-3 rounded-md flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <p className="text-sm">{error}</p>
-                      </div>
-                    )}
                   </CardContent>
                   
                   <CardFooter className="flex flex-col space-y-4">
@@ -142,14 +94,7 @@ export default function Login() {
                       className="w-full"
                       disabled={loading}
                     >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : (
-                        "Login"
-                      )}
+                      {loading ? "Logging in..." : "Login"}
                     </Button>
                     
                     <div className="text-center text-sm">
@@ -177,12 +122,8 @@ export default function Login() {
                           id="adminEmail"
                           placeholder="admin"
                           value={email}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            clearError();
-                          }}
+                          onChange={(e) => setEmail(e.target.value)}
                           className="pr-24"
-                          disabled={loading}
                           required
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
@@ -200,21 +141,10 @@ export default function Login() {
                         type="password"
                         placeholder="••••••••"
                         value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          clearError();
-                        }}
-                        disabled={loading}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                       />
                     </div>
-
-                    {error && (
-                      <div className="bg-destructive/15 text-destructive p-3 rounded-md flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <p className="text-sm">{error}</p>
-                      </div>
-                    )}
                   </CardContent>
                   
                   <CardFooter>
@@ -223,14 +153,7 @@ export default function Login() {
                       className="w-full"
                       disabled={loading}
                     >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : (
-                        "Admin Login"
-                      )}
+                      {loading ? "Logging in..." : "Admin Login"}
                     </Button>
                   </CardFooter>
                 </form>
