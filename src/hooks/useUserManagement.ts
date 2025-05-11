@@ -17,30 +17,26 @@ export const useUserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Only fetch non-admin users
+      // Only admins should be able to see this data
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("role", "user") // Only fetch users with role="user"
         .order("created_at", { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      console.log("Fetched users:", data);
       setUsers(data || []);
     } catch (err) {
       console.error("Error fetching users:", err);
       setError("Failed to fetch users");
-      toast.error("Failed to load users");
     } finally {
       setLoading(false);
     }
@@ -48,9 +44,7 @@ export const useUserManagement = () => {
 
   const deleteUser = async (userId: string) => {
     try {
-      setLoading(true);
-      
-      // First delete from auth (this cascades to profiles due to references)
+      // Only admins can delete users
       const { error } = await supabase.auth.admin.deleteUser(userId);
 
       if (error) {
@@ -60,16 +54,15 @@ export const useUserManagement = () => {
       }
 
       toast.success("User deleted successfully");
+      setConfirmingDelete(null);
       
       // Refresh the user list
-      await fetchUsers();
+      fetchUsers();
       return true;
     } catch (err) {
       toast.error("Failed to delete user");
       console.error("Error deleting user:", err);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -80,8 +73,6 @@ export const useUserManagement = () => {
     fetchUsers,
     deleteUser,
     confirmingDelete,
-    setConfirmingDelete,
-    editingUser,
-    setEditingUser
+    setConfirmingDelete
   };
 };

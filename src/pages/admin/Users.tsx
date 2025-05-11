@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Table, 
   TableHeader, 
@@ -11,21 +12,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, UserX } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 import { format } from "date-fns";
 import { useUserManagement } from "@/hooks/useUserManagement";
-import { EditUserDialog } from "@/components/EditUserDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "@/components/ui/sonner";
 
 export default function AdminUsers() {
   const { 
@@ -33,25 +23,18 @@ export default function AdminUsers() {
     loading, 
     error, 
     fetchUsers, 
-    deleteUser
+    deleteUser, 
+    confirmingDelete,
+    setConfirmingDelete
   } = useUserManagement();
 
-  const [editingUser, setEditingUser] = useState<any | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<string | null>(null);
-
   useEffect(() => {
-    // Fetch users when component mounts
     fetchUsers();
   }, [fetchUsers]);
 
-  useEffect(() => {
-    // Handle errors from useUserManagement
-    if (error) {
-      toast.error(error || "Failed to load users");
-    }
-  }, [error]);
+  if (error) {
+    toast.error("Failed to load users");
+  }
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -63,25 +46,8 @@ export default function AdminUsers() {
       .substring(0, 2);
   };
 
-  const handleEditUser = (user: any) => {
-    console.log("Editing user:", user);
-    setEditingUser(user);
-    setEditDialogOpen(true);
-  };
-
-  const handleConfirmDelete = (userId: string) => {
-    setUserToDelete(userId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (userToDelete) {
-      const success = await deleteUser(userToDelete);
-      if (success) {
-        setDeleteDialogOpen(false);
-        setUserToDelete(null);
-      }
-    }
+  const handleDeleteConfirm = async (userId: string) => {
+    await deleteUser(userId);
   };
 
   return (
@@ -120,9 +86,6 @@ export default function AdminUsers() {
                       <div>
                         <div className="font-medium">{user.name || "No name"}</div>
                         <div className="text-sm text-muted-foreground">{user.email}</div>
-                        {user.phone && (
-                          <div className="text-xs text-muted-foreground">{user.phone}</div>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -132,68 +95,41 @@ export default function AdminUsers() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          title="Edit user"
-                          onClick={() => handleEditUser(user)}
-                        >
+                        <Button variant="outline" size="icon" title="Edit user">
                           <Edit className="h-4 w-4" />
                         </Button>
                         
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          title="Delete user" 
-                          onClick={() => handleConfirmDelete(user.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {confirmingDelete === user.id ? (
+                          <Button 
+                            variant="destructive" 
+                            size="icon" 
+                            onClick={() => handleDeleteConfirm(user.id)}
+                          >
+                            <UserX className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            title="Delete user" 
+                            onClick={() => setConfirmingDelete(user.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10">
-                    {error ? `Error: ${error}` : "No users found."}
-                  </TableCell>
+                  <TableCell colSpan={4} className="text-center py-10">No users found.</TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
       </div>
-
-      {/* Edit User Dialog */}
-      <EditUserDialog 
-        user={editingUser} 
-        open={editDialogOpen} 
-        onOpenChange={setEditDialogOpen}
-        onUserUpdated={fetchUsers}
-      />
-
-      {/* Delete User Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user
-              account and all associated data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </DashboardLayout>
   );
 }

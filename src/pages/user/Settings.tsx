@@ -27,18 +27,14 @@ export default function UserSettings() {
     }
     
     setLoading(true);
-    
     try {
       const success = await changePassword(currentPassword, newPassword);
-      
       if (success) {
         toast.success("Password updated successfully");
         // Clear fields
         setCurrentPassword("");
         setNewPassword("");
         setConfirmNewPassword("");
-      } else {
-        toast.error("Failed to update password");
       }
     } catch (error) {
       console.error("Error changing password:", error);
