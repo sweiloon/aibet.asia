@@ -253,26 +253,30 @@ export default function AdminUsers() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  // Fetch users data - modified to correctly fetch users
-  const { data: users, isLoading, isError, refetch } = useQuery({
+  // Fetch users data with better error handling and debugging
+  const { data: users, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Log the start of the fetch process
-      console.log("Fetching users data...");
+      console.log("Starting to fetch users data...");
       
-      // Get all profiles with role 'user'
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'user');
-      
-      if (error) {
-        console.error("Error fetching users:", error);
-        throw error;
+      try {
+        // Get all profiles with role 'user'
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'user');
+        
+        if (error) {
+          console.error("Supabase error fetching users:", error);
+          throw error;
+        }
+        
+        console.log("Successfully fetched profiles:", profiles);
+        return profiles || [];
+      } catch (err) {
+        console.error("Error in query function:", err);
+        throw err;
       }
-      
-      console.log("Fetched profiles:", profiles);
-      return profiles as UserData[];
     }
   });
   
@@ -296,10 +300,29 @@ export default function AdminUsers() {
       .substring(0, 2);
   };
 
-  // Added console log to debug what's in the users array
+  // Log debug information on component mount and when users data changes
   useEffect(() => {
     console.log("Current users data:", users);
-  }, [users]);
+    console.log("Loading state:", isLoading);
+    console.log("Error state:", isError);
+    
+    // Check for session to ensure user is authenticated
+    supabase.auth.getSession().then(({ data }) => {
+      console.log("Current session:", data.session);
+    });
+    
+    // Log all profiles for debugging
+    const logAllProfiles = async () => {
+      const { data, error } = await supabase.from('profiles').select('*');
+      if (error) {
+        console.error("Error fetching all profiles:", error);
+      } else {
+        console.log("All profiles in database:", data);
+      }
+    };
+    
+    logAllProfiles();
+  }, [users, isLoading, isError]);
 
   return (
     <DashboardLayout isAdmin>
@@ -319,10 +342,10 @@ export default function AdminUsers() {
             <div className="p-8 text-center text-muted-foreground">Loading users data...</div>
           ) : isError ? (
             <div className="p-8 text-center text-destructive">
-              Failed to load users. Please try again.
+              Failed to load users. Please try again. {error instanceof Error ? error.message : 'Unknown error'}
             </div>
-          ) : users?.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">No users found.</div>
+          ) : !users || users.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">No users found in the database.</div>
           ) : (
             <Table>
               <TableHeader>
@@ -334,7 +357,7 @@ export default function AdminUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users?.map((user) => (
+                {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
