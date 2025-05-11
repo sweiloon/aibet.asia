@@ -1,25 +1,23 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
 
-export interface User {
+export interface AuthUser {
   id: string;
   email: string;
   role: "user" | "admin";
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string, isAdmin: boolean) => Promise<boolean>;
   signup: (email: string, password: string, phone: string, name: string) => Promise<boolean>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
 }
-
-// Default admin credentials
-const ADMIN_EMAIL = "admin@aibet.asia";
-const ADMIN_PASSWORD = "11111111";
 
 // Create context with a default value
 const AuthContext = createContext<AuthContextType>({
@@ -34,19 +32,76 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   
+  // Initialize auth state
   useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          try {
+            // Get user role from profiles
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error) throw error;
+            
+            setUser({
+              id: session.user.id,
+              email: session.user.email!,
+              role: (profile?.role as "user" | "admin") || "user"
+            });
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      }
+    );
+    
+    // THEN check for existing session
+    const initializeAuth = async () => {
+      try {
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (error) throw error;
+          
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            role: (profile?.role as "user" | "admin") || "user"
+          });
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initializeAuth();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   
-  // Mock login function
+  // Login function
   const login = async (email: string, password: string, isAdmin: boolean): Promise<boolean> => {
     setLoading(true);
     try {
@@ -54,45 +109,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!email.includes("@")) {
         email = `${email}@aibet.asia`;
       }
-
-      // Admin login check
-      if (isAdmin) {
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-          const adminUser = { id: "admin1", email: ADMIN_EMAIL, role: "admin" as const };
-          setUser(adminUser);
-          localStorage.setItem('user', JSON.stringify(adminUser));
-          toast.success("Admin login successful!");
-          return true;
-        } else {
-          toast.error("Invalid admin credentials!");
-          return false;
-        }
-      }
       
-      // User login (mock - in real app would check against database)
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const matchedUser = users.find((u: any) => u.email === email);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      if (matchedUser && matchedUser.password === password) {
-        const userObj = { id: matchedUser.id, email: matchedUser.email, role: "user" as const };
-        setUser(userObj);
-        localStorage.setItem('user', JSON.stringify(userObj));
-        toast.success("Login successful!");
-        return true;
-      } else {
+      if (error) throw error;
+      
+      if (!data.user) {
         toast.error("Invalid credentials!");
         return false;
       }
-    } catch (error) {
+      
+      // Check if user has correct role
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+      
+      if (profileError) throw profileError;
+      
+      const userRole = profile?.role || "user";
+      
+      // Validate role matches login type
+      if ((isAdmin && userRole !== "admin") || (!isAdmin && userRole === "admin")) {
+        await supabase.auth.signOut();
+        toast.error(isAdmin ? "Invalid admin credentials!" : "Please use the user login!");
+        return false;
+      }
+      
+      toast.success("Login successful!");
+      return true;
+    } catch (error: any) {
       console.error("Login error:", error);
-      toast.error("Login failed!");
+      toast.error(error.message || "Login failed!");
       return false;
     } finally {
       setLoading(false);
     }
   };
   
-  // Mock signup function
+  // Signup function
   const signup = async (email: string, password: string, phone: string, name: string): Promise<boolean> => {
     setLoading(true);
     try {
@@ -108,36 +167,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      // Check if user already exists
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      if (users.some((u: any) => u.email === email)) {
-        toast.error("Account already exists with this email!");
-        return false;
-      }
-      
-      // Create new user
-      const newUser = {
-        id: `user${Date.now()}`,
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        phone,
-        name,
-        createdAt: new Date().toISOString()
-      };
+        options: {
+          data: {
+            name,
+            phone
+          }
+        }
+      });
       
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Auto-login after signup
-      const userObj = { id: newUser.id, email: newUser.email, role: "user" as const };
-      setUser(userObj);
-      localStorage.setItem('user', JSON.stringify(userObj));
+      if (error) throw error;
       
       toast.success("Account created successfully!");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error);
-      toast.error("Signup failed!");
+      
+      // Handle user already exists error
+      if (error.message?.includes("User already registered")) {
+        toast.error("Account already exists with this email!");
+      } else {
+        toast.error(error.message || "Signup failed!");
+      }
+      
       return false;
     } finally {
       setLoading(false);
@@ -145,9 +199,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Logout function
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('user');
     toast.success("Logged out successfully");
   };
   
@@ -156,38 +210,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return false;
     
     try {
-      if (user.role === "admin") {
-        // Admin password change
-        if (currentPassword !== ADMIN_PASSWORD) {
-          toast.error("Current password is incorrect!");
-          return false;
-        }
-        // In a real app, you would update the admin password in a database
-        toast.success("Admin password would be updated in a real application!");
-        return true;
-      } else {
-        // User password change
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const userIndex = users.findIndex((u: any) => u.email === user.email);
-        
-        if (userIndex === -1) {
-          toast.error("User not found!");
-          return false;
-        }
-        
-        if (users[userIndex].password !== currentPassword) {
-          toast.error("Current password is incorrect!");
-          return false;
-        }
-        
-        users[userIndex].password = newPassword;
-        localStorage.setItem('users', JSON.stringify(users));
-        toast.success("Password updated successfully!");
-        return true;
+      // First verify the current password by trying to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+      
+      if (signInError) {
+        toast.error("Current password is incorrect!");
+        return false;
       }
-    } catch (error) {
+      
+      // Now update to the new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (updateError) throw updateError;
+      
+      toast.success("Password updated successfully!");
+      return true;
+    } catch (error: any) {
       console.error("Password change error:", error);
-      toast.error("Failed to change password!");
+      toast.error(error.message || "Failed to change password!");
       return false;
     }
   };
