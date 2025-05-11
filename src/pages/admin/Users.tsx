@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   Table, 
   TableHeader, 
@@ -16,6 +15,17 @@ import { Edit, Trash2, UserX } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { format } from "date-fns";
 import { useUserManagement } from "@/hooks/useUserManagement";
+import { EditUserDialog } from "@/components/EditUserDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminUsers() {
   const { 
@@ -27,6 +37,11 @@ export default function AdminUsers() {
     confirmingDelete,
     setConfirmingDelete
   } = useUserManagement();
+
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -46,8 +61,22 @@ export default function AdminUsers() {
       .substring(0, 2);
   };
 
-  const handleDeleteConfirm = async (userId: string) => {
-    await deleteUser(userId);
+  const handleEditUser = (user: any) => {
+    setEditingUser(user);
+    setEditDialogOpen(true);
+  };
+
+  const handleConfirmDelete = (userId: string) => {
+    setUserToDelete(userId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (userToDelete) {
+      await deleteUser(userToDelete);
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    }
   };
 
   return (
@@ -95,28 +124,23 @@ export default function AdminUsers() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="icon" title="Edit user">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          title="Edit user"
+                          onClick={() => handleEditUser(user)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         
-                        {confirmingDelete === user.id ? (
-                          <Button 
-                            variant="destructive" 
-                            size="icon" 
-                            onClick={() => handleDeleteConfirm(user.id)}
-                          >
-                            <UserX className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            title="Delete user" 
-                            onClick={() => setConfirmingDelete(user.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          title="Delete user" 
+                          onClick={() => handleConfirmDelete(user.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -130,6 +154,36 @@ export default function AdminUsers() {
           </Table>
         </div>
       </div>
+
+      {/* Edit User Dialog */}
+      <EditUserDialog 
+        user={editingUser} 
+        open={editDialogOpen} 
+        onOpenChange={setEditDialogOpen}
+        onUserUpdated={fetchUsers}
+      />
+
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user
+              account and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleDeleteConfirm}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

@@ -17,6 +17,7 @@ export const useUserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -73,6 +74,8 @@ export const useUserManagement = () => {
     fetchUsers,
     deleteUser,
     confirmingDelete,
-    setConfirmingDelete
+    setConfirmingDelete,
+    editingUser,
+    setEditingUser
   };
 };
