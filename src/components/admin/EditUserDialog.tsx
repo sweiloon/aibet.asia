@@ -32,7 +32,7 @@ const formSchema = z.object({
   confirmPassword: z.string().optional(),
   role: z.enum(["user", "admin"]),
   status: z.enum(["active", "inactive"]),
-  ranking: z.enum(["customer", "agent", "master", "ranking", ""]).optional(),
+  ranking: z.enum(["", "customer", "agent", "master", "ranking"]).optional(),
 }).refine(data => !data.password || data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -60,7 +60,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
       confirmPassword: "",
       role: user?.role || "user",
       status: user?.status || "active",
-      ranking: user?.ranking || "",
+      ranking: (user?.ranking as "" | "customer" | "agent" | "master" | "ranking") || "",
     },
   });
 
