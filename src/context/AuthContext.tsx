@@ -1,16 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, AuthContextType } from "@/types/auth";
-import {
-  loginUtil,
-  signupUtil,
-  changePasswordUtil,
-  checkAdminExistsUtil,
-  getAllUsersUtil,
-  deleteUserUtil,
-  updateUserStatusUtil,
-  updateUserUtil
-} from "@/utils/authUtils";
+import { useAuthUtils } from "@/hooks/useAuthUtils";
 import { toast } from "@/components/ui/sonner";
 
 // Re-export User type for backward compatibility
@@ -36,6 +27,16 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { 
+    loginUtil, 
+    signupUtil, 
+    changePasswordUtil, 
+    checkAdminExistsUtil, 
+    getAllUsersUtil,
+    deleteUserUtil,
+    updateUserStatusUtil,
+    updateUserUtil
+  } = useAuthUtils();
   
   useEffect(() => {
     // Check for stored user session
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return await checkAdminExistsUtil();
   };
   
-  // Mock login function
+  // Login function
   const login = async (email: string, password: string, isAdmin: boolean): Promise<boolean> => {
     setLoading(true);
     try {
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  // Mock signup function
+  // Signup function
   const signup = async (email: string, password: string, phone: string, name: string, isAdmin = false): Promise<boolean> => {
     setLoading(true);
     try {

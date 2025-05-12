@@ -2,16 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth } from "./AuthContext";
 import { Website, WebsiteContextType, WebsiteManagement } from "@/types/website";
-import {
-  addWebsiteUtil,
-  updateWebsiteStatusUtil,
-  updateWebsiteUtil,
-  addManagementRecordUtil,
-  updateManagementRecordUtil,
-  deleteWebsiteUtil,
-  deleteManagementRecordUtil,
-  clearAllManagementRecordsUtil
-} from "@/utils/websiteUtils";
+import { useWebsiteUtils } from "@/hooks/useWebsiteUtils";
 
 // Re-export types for backward compatibility
 export type { Website, WebsiteManagement, WebsiteContextType };
@@ -38,6 +29,16 @@ export const useWebsites = () => useContext(WebsiteContext);
 export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   const [websites, setWebsites] = useState<Website[]>([]);
   const { user } = useAuth();
+  const { 
+    addWebsiteUtil,
+    updateWebsiteStatusUtil,
+    updateWebsiteUtil,
+    addManagementRecordUtil,
+    updateManagementRecordUtil,
+    deleteWebsiteUtil,
+    deleteManagementRecordUtil,
+    clearAllManagementRecordsUtil 
+  } = useWebsiteUtils();
   
   // Load websites from local storage
   useEffect(() => {
