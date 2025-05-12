@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useWebsites, Website, WebsiteManagement } from "@/context/WebsiteContext";
@@ -21,7 +20,7 @@ import { format } from 'date-fns';
 import { toast } from "@/components/ui/sonner";
 
 const WebsiteRecords = () => {
-  const { websites, addManagementRecord, updateManagementRecord, deleteManagementRecord, updateWebsite } = useWebsites();
+  const { websites, addManagementRecord, updateManagementRecord, deleteManagementRecord, clearAllManagementRecords } = useWebsites();
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<WebsiteManagement | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -93,15 +92,7 @@ const WebsiteRecords = () => {
   // Handle clear all records for a website
   const handleClearAllRecords = (websiteId: string) => {
     if (confirm("Are you sure you want to clear all records for this website? This action cannot be undone.")) {
-      const website = websites.find(w => w.id === websiteId);
-      if (website) {
-        const updatedWebsite = {
-          ...website,
-          managementData: []
-        };
-        updateWebsite(updatedWebsite);
-        toast.success("All records cleared successfully");
-      }
+      clearAllManagementRecords(websiteId);
     }
   };
 

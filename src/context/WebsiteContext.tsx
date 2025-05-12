@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "./AuthContext";
@@ -46,6 +47,7 @@ interface WebsiteContextType {
   deleteWebsite: (id: string) => void;
   deleteManagementRecord: (websiteId: string, recordId: string) => void;
   clearAllManagementRecords: (websiteId: string) => void;
+  updateWebsite: (website: Website) => void; // Add this new method to the interface
 }
 
 const WebsiteContext = createContext<WebsiteContextType>({
@@ -59,6 +61,7 @@ const WebsiteContext = createContext<WebsiteContextType>({
   deleteWebsite: () => {},
   deleteManagementRecord: () => {},
   clearAllManagementRecords: () => {},
+  updateWebsite: () => {}, // Add the empty implementation here
 });
 
 export const useWebsites = () => useContext(WebsiteContext);
@@ -120,6 +123,17 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
       } : website
     ));
     toast.success(`Website status updated to ${status}`);
+  };
+  
+  // Update an entire website
+  const updateWebsite = (updatedWebsite: Website) => {
+    setWebsites(prev => prev.map(website => 
+      website.id === updatedWebsite.id ? {
+        ...updatedWebsite,
+        updatedAt: new Date().toISOString()
+      } : website
+    ));
+    toast.success("Website updated successfully");
   };
   
   // Add management record
@@ -202,7 +216,8 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
       updateManagementRecord,
       deleteWebsite,
       deleteManagementRecord,
-      clearAllManagementRecords
+      clearAllManagementRecords,
+      updateWebsite // Add the new method to the provider value
     }}>
       {children}
     </WebsiteContext.Provider>
