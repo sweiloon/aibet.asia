@@ -6,16 +6,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Eye, Pencil, Trash2, Plus, Mail } from "lucide-react";
 import { WebsiteDetailsDialog } from "./WebsiteDetailsDialog";
 import { EditFieldDialog } from "./EditFieldDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface WebsiteRecordCardProps {
   website: Website;
@@ -34,7 +24,6 @@ export const WebsiteRecordCard = ({
 }: WebsiteRecordCardProps) => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<{recordId: string, field: string, value: any, fieldType?: string} | null>(null);
-  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
 
   const handleEditField = (recordId: string, field: string, value: any) => {
     const fieldType = getFieldType(field);
@@ -53,11 +42,6 @@ export const WebsiteRecordCard = ({
     setEditingRecord(null);
   };
 
-  const handleClearRecordsConfirm = () => {
-    onClearRecords(website.id);
-    setIsClearDialogOpen(false);
-  };
-
   return (
     <div className="border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -72,7 +56,7 @@ export const WebsiteRecordCard = ({
         </div>
         <div className="flex space-x-2">
           <Button 
-            onClick={() => setIsClearDialogOpen(true)} 
+            onClick={() => onClearRecords(website.id)} 
             variant="destructive" 
             size="sm" 
             className="gap-1"
@@ -183,27 +167,6 @@ export const WebsiteRecordCard = ({
           onSave={handleSaveEdit}
         />
       )}
-
-      {/* Confirmation Alert Dialog */}
-      <AlertDialog open={isClearDialogOpen} onOpenChange={setIsClearDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear all records</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to clear all records for this website? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleClearRecordsConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete All Records
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
