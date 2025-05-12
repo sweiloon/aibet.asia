@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useWebsites, Website, WebsiteManagement } from "@/context/WebsiteContext";
@@ -15,7 +16,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Eye, Pencil, Trash2, Plus, Search, X } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, Search, X, Mail } from "lucide-react";
 import { format } from 'date-fns';
 import { toast } from "@/components/ui/sonner";
 
@@ -178,7 +179,15 @@ const WebsiteRecords = () => {
           filteredWebsites.map((website) => (
             <div key={website.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">{website.name}</h2>
+                <div>
+                  <h2 className="text-xl font-semibold">{website.name}</h2>
+                  {website.userEmail && (
+                    <div className="flex items-center text-sm text-muted-foreground mt-1">
+                      <Mail className="h-4 w-4 mr-1" />
+                      <span>{website.userEmail}</span>
+                    </div>
+                  )}
+                </div>
                 <div className="flex space-x-2">
                   <Button 
                     onClick={() => handleClearAllRecords(website.id)} 
@@ -304,6 +313,13 @@ const WebsiteRecords = () => {
                     <div className="font-medium capitalize">{selectedWebsite.status}</div>
                   </div>
                 </div>
+                
+                {selectedWebsite.userEmail && (
+                  <div>
+                    <Label>User Email</Label>
+                    <div className="font-medium">{selectedWebsite.userEmail}</div>
+                  </div>
+                )}
                 
                 <div>
                   <Label>URL</Label>

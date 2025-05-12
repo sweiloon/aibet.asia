@@ -111,6 +111,18 @@ export default function AdminUsers() {
     }
   };
   
+  // Calculate days since account creation
+  const calculateDayCount = (createdAt?: string | number) => {
+    if (!createdAt) return 0;
+    
+    const creationDate = new Date(createdAt);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - creationDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+  
   return (
     <DashboardLayout isAdmin>
       <div className="space-y-6">
@@ -146,6 +158,7 @@ export default function AdminUsers() {
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
+                  <TableHead>Day Count</TableHead>
                   <TableHead>Ranking</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -170,6 +183,7 @@ export default function AdminUsers() {
                         </Badge>
                       </TableCell>
                       <TableCell>{new Date(user.createdAt || Date.now()).toLocaleDateString()}</TableCell>
+                      <TableCell>{calculateDayCount(user.createdAt)}</TableCell>
                       <TableCell>{getRankingBadge(user.ranking || "customer")}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -198,7 +212,7 @@ export default function AdminUsers() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6">
+                    <TableCell colSpan={7} className="text-center py-6">
                       <p>No users found matching your search</p>
                       {searchTerm && (
                         <Button
