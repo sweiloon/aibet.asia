@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,13 +110,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // We need to use raw SQL query here since the types are not updated yet
       const { data, error } = await supabase
-        .rpc('check_admin_exists')
-        .select();
+        .rpc('check_admin_exists') as { data: any, error: any };
       
       if (error) {
         // Type assertion for the 'from' method
         const { data: fallbackData, error: fallbackError } = await supabase
-          .from('user_roles' as unknown as any)
+          .from('user_roles' as any)
           .select('user_id')
           .eq('role', 'admin')
           .limit(1)
@@ -164,13 +164,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isAdmin) {
         // We need to use raw SQL query here since the types are not updated yet
         const { data: roleData, error: roleError } = await supabase
-          .rpc('check_user_is_admin', { user_id: data.user.id })
-          .select();
+          .rpc('check_user_is_admin', { user_id: data.user.id as any }) as { data: any, error: any };
         
         if (roleError || !roleData) {
           // Fallback method
           const { data: fallbackData, error: fallbackError } = await supabase
-            .from('user_roles' as unknown as any)
+            .from('user_roles' as any)
             .select('role')
             .eq('user_id', data.user.id)
             .eq('role', 'admin')
@@ -247,12 +246,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isAdmin && data.user) {
         // We need to use raw SQL query here since the types are not updated yet
         const { error: roleError } = await supabase
-          .rpc('insert_admin_role', { admin_user_id: data.user.id });
+          .rpc('insert_admin_role', { admin_user_id: data.user.id as any }) as { data: any, error: any };
         
         if (roleError) {
           // Fallback method using type assertion for table that doesn't exist in types
           const { error: fallbackError } = await supabase
-            .from('user_roles' as unknown as any)
+            .from('user_roles' as any)
             .insert({
               user_id: data.user.id,
               role: 'admin'
@@ -360,7 +359,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Delete user via RPC function
       const { error } = await supabase
-        .rpc('delete_user', { user_id_to_delete: userId as unknown as any });
+        .rpc('delete_user', { user_id_to_delete: userId as any }) as { data: any, error: any };
       
       if (error) {
         console.error("Error deleting user:", error);
@@ -386,9 +385,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Update user status via RPC function
       const { error } = await supabase
         .rpc('update_user_status', { 
-          user_id_to_update: userId as unknown as any, 
-          new_status: newStatus 
-        });
+          user_id_to_update: userId as any, 
+          new_status: newStatus as any 
+        }) as { data: any, error: any };
       
       if (error) {
         console.error("Error updating user status:", error);
@@ -418,13 +417,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Update user data via RPC function
       const { error } = await supabase
         .rpc('update_user_profile', { 
-          user_id_to_update: userId as unknown as any,
-          user_name: userData.name,
-          user_role: userData.role,
-          user_ranking: userData.ranking,
-          user_phone: userData.phone,
-          user_password: newPassword
-        });
+          user_id_to_update: userId as any,
+          user_name: userData.name as any,
+          user_role: userData.role as any,
+          user_ranking: userData.ranking as any,
+          user_phone: userData.phone as any,
+          user_password: newPassword as any
+        }) as { data: any, error: any };
       
       if (error) {
         // Fallback to direct API

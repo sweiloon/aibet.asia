@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -215,20 +216,20 @@ export default function AdminUsers() {
                             variant="outline"
                             size="sm"
                             className="w-8 h-8 p-0"
-                            title="Edit user"
                             onClick={() => openEditDialog(user)}
                           >
                             <Edit2 className="h-4 w-4" />
+                            <span className="sr-only">Edit user</span>
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             className="w-8 h-8 p-0 hover:bg-red-500/20 hover:text-red-300"
-                            title="Delete user"
                             onClick={() => confirmDelete(user.id)}
                             disabled={user.id === currentUser?.id || (user.role === "admin" && user.id !== currentUser?.id)}
                           >
                             <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete user</span>
                           </Button>
                         </div>
                       </TableCell>
