@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { User, AuthContextType } from "@/types/auth";
 import { useAuthUtils } from "@/hooks/useAuthUtils";
 import { toast } from "@/components/ui/sonner";
+import { useAuthState } from "@/hooks/useAuthState";
 
 // Re-export User type for backward compatibility
 export type { User };
@@ -25,8 +26,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, setUser, setLoading } = useAuthState();
   const { 
     loginUtil, 
     signupUtil, 
@@ -37,20 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateUserStatusUtil,
     updateUserUtil
   } = useAuthUtils();
-  
-  useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
-  
-  // Check if admin exists
-  const checkAdminExists = async (): Promise<boolean> => {
-    return await checkAdminExistsUtil();
-  };
   
   // Login function
   const login = async (email: string, password: string, isAdmin: boolean): Promise<boolean> => {
@@ -92,6 +78,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Change password function
   const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
     return await changePasswordUtil(user, currentPassword, newPassword);
+  };
+
+  // Check if admin exists
+  const checkAdminExists = async (): Promise<boolean> => {
+    return await checkAdminExistsUtil();
   };
 
   // Get all users function

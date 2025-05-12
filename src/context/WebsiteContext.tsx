@@ -1,8 +1,9 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, ReactNode } from "react";
 import { useAuth } from "./AuthContext";
 import { Website, WebsiteContextType, WebsiteManagement } from "@/types/website";
 import { useWebsiteUtils } from "@/hooks/useWebsiteUtils";
+import { useWebsitesState } from "@/hooks/useWebsitesState";
 
 // Re-export types for backward compatibility
 export type { Website, WebsiteManagement, WebsiteContextType };
@@ -27,7 +28,7 @@ export const useWebsites = () => useContext(WebsiteContext);
 
 // Provider component
 export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
-  const [websites, setWebsites] = useState<Website[]>([]);
+  const { websites, setWebsites } = useWebsitesState();
   const { user } = useAuth();
   const { 
     addWebsiteUtil,
@@ -39,19 +40,6 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
     deleteManagementRecordUtil,
     clearAllManagementRecordsUtil 
   } = useWebsiteUtils();
-  
-  // Load websites from local storage
-  useEffect(() => {
-    const storedWebsites = localStorage.getItem('websites');
-    if (storedWebsites) {
-      setWebsites(JSON.parse(storedWebsites));
-    }
-  }, []);
-  
-  // Save websites to local storage whenever they change
-  useEffect(() => {
-    localStorage.setItem('websites', JSON.stringify(websites));
-  }, [websites]);
   
   // Get websites for the current user
   const getUserWebsites = () => {
