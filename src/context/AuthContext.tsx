@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,18 +107,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Check if admin exists
   const checkAdminExists = async (): Promise<boolean> => {
     try {
-      // We need to use raw SQL query here since the types are not updated yet
-      const { data, error } = await supabase
-        .rpc('check_admin_exists') as unknown as { data: any, error: any };
+      // Fixed type assertion for RPC call
+      const { data, error } = await (supabase
+        .rpc('check_admin_exists') as Promise<{ data: any, error: any }>);
       
       if (error) {
-        // Type assertion for the 'from' method
-        const { data: fallbackData, error: fallbackError } = await supabase
+        // Fixed type assertion for from method
+        const { data: fallbackData, error: fallbackError } = await (supabase
           .from('user_roles' as any)
           .select('user_id')
           .eq('role', 'admin')
           .limit(1)
-          .single();
+          .single() as Promise<{ data: any, error: any }>);
         
         if (fallbackError && fallbackError.code !== 'PGRST116') {
           console.error("Error checking admin existence:", fallbackError);
@@ -162,18 +161,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // For admin login, verify the user has admin role
       if (isAdmin) {
-        // We need to use raw SQL query here since the types are not updated yet
-        const { data: roleData, error: roleError } = await supabase
-          .rpc('check_user_is_admin', { user_id: data.user.id }) as unknown as { data: any, error: any };
+        // Fixed type assertion for RPC call
+        const { data: roleData, error: roleError } = await (supabase
+          .rpc('check_user_is_admin', { user_id: data.user.id }) as Promise<{ data: any, error: any }>);
         
         if (roleError || !roleData) {
           // Fallback method
-          const { data: fallbackData, error: fallbackError } = await supabase
+          const { data: fallbackData, error: fallbackError } = await (supabase
             .from('user_roles' as any)
             .select('role')
             .eq('user_id', data.user.id)
             .eq('role', 'admin')
-            .maybeSingle();
+            .maybeSingle() as Promise<{ data: any, error: any }>);
           
           if (fallbackError || !fallbackData) {
             toast.error("You don't have admin permissions");
@@ -244,18 +243,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // If admin signup, create entry in user_roles table
       if (isAdmin && data.user) {
-        // We need to use raw SQL query here since the types are not updated yet
-        const { error: roleError } = await supabase
-          .rpc('insert_admin_role', { admin_user_id: data.user.id }) as unknown as { data: any, error: any };
+        // Fixed type assertion for RPC call
+        const { error: roleError } = await (supabase
+          .rpc('insert_admin_role', { admin_user_id: data.user.id }) as Promise<{ data: any, error: any }>);
         
         if (roleError) {
           // Fallback method using type assertion for table that doesn't exist in types
-          const { error: fallbackError } = await supabase
+          const { error: fallbackError } = await (supabase
             .from('user_roles' as any)
             .insert({
               user_id: data.user.id,
               role: 'admin'
-            });
+            }) as Promise<{ data: any, error: any }>);
           
           if (fallbackError) {
             toast.error(`Error setting admin role: ${fallbackError.message}`);
@@ -324,9 +323,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return [];
       }
       
-      // Using RPC function instead of direct table access for better type safety
-      const { data, error } = await supabase
-        .rpc('get_all_users') as unknown as { data: any[], error: any };
+      // Fixed type assertion for RPC call
+      const { data, error } = await (supabase
+        .rpc('get_all_users') as Promise<{ data: any[], error: any }>);
       
       if (error) {
         throw error;
@@ -357,9 +356,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Delete user (admin only)
   const deleteUser = async (userId: string): Promise<boolean> => {
     try {
-      // Delete user via RPC function
-      const { error } = await supabase
-        .rpc('delete_user', { user_id_to_delete: userId }) as unknown as { data: any, error: any };
+      // Fixed type assertion for RPC call
+      const { error } = await (supabase
+        .rpc('delete_user', { user_id_to_delete: userId }) as Promise<{ data: any, error: any }>);
       
       if (error) {
         console.error("Error deleting user:", error);
@@ -387,12 +386,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Update user status (admin only)
   const updateUserStatus = async (userId: string, newStatus: string): Promise<boolean> => {
     try {
-      // Update user status via RPC function
-      const { error } = await supabase
+      // Fixed type assertion for RPC call
+      const { error } = await (supabase
         .rpc('update_user_status', { 
           user_id_to_update: userId, 
           new_status: newStatus 
-        }) as unknown as { data: any, error: any };
+        }) as Promise<{ data: any, error: any }>);
       
       if (error) {
         console.error("Error updating user status:", error);
@@ -424,8 +423,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Update user (admin only)
   const updateUser = async (userId: string, userData: Partial<User>, newPassword?: string): Promise<boolean> => {
     try {
-      // Update user data via RPC function
-      const { error } = await supabase
+      // Fixed type assertion for RPC call
+      const { error } = await (supabase
         .rpc('update_user_profile', { 
           user_id_to_update: userId,
           user_name: userData.name || null,
@@ -433,7 +432,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           user_ranking: userData.ranking || null,
           user_phone: userData.phone || null,
           user_password: newPassword || null
-        }) as unknown as { data: any, error: any };
+        }) as Promise<{ data: any, error: any }>);
       
       if (error) {
         // Fallback to direct API
