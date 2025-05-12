@@ -63,13 +63,21 @@ export default function AdminSignUp() {
     }
     
     setLoading(true);
-    const success = await signup(email, password, phone, name, true); // Pass true for admin signup
-    setLoading(false);
     
-    if (success) {
-      toast.success("Admin account created successfully!");
-      // Redirect to admin dashboard instead of login page
-      navigate("/admin");
+    try {
+      // Format email if needed
+      const formattedEmail = email.includes("@") ? email : `${email}@aibet.asia`;
+      
+      const success = await signup(formattedEmail, password, phone, name, true); // Pass true for admin signup
+      
+      if (success) {
+        toast.success("Admin account created successfully!");
+        navigate("/admin");
+      }
+    } catch (error: any) {
+      toast.error(`Admin signup failed: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,15 +120,17 @@ export default function AdminSignUp() {
                   <div className="relative">
                     <Input
                       id="email"
-                      placeholder="username"
+                      placeholder="username or full email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pr-24"
                       required
                     />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-                      @aibet.asia
-                    </div>
+                    {!email.includes("@") && (
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+                        @aibet.asia
+                      </div>
+                    )}
                   </div>
                 </div>
                 

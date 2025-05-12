@@ -9,7 +9,110 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      website_management: {
+        Row: {
+          credit: number | null
+          date: string | null
+          day: string | null
+          end_date: string | null
+          gross_profit: number | null
+          id: string
+          net_profit: number | null
+          profit: number | null
+          service_fee: number | null
+          start_date: string | null
+          tasks: Json | null
+          website_id: string
+        }
+        Insert: {
+          credit?: number | null
+          date?: string | null
+          day?: string | null
+          end_date?: string | null
+          gross_profit?: number | null
+          id?: string
+          net_profit?: number | null
+          profit?: number | null
+          service_fee?: number | null
+          start_date?: string | null
+          tasks?: Json | null
+          website_id: string
+        }
+        Update: {
+          credit?: number | null
+          date?: string | null
+          day?: string | null
+          end_date?: string | null
+          gross_profit?: number | null
+          id?: string
+          net_profit?: number | null
+          profit?: number | null
+          service_fee?: number | null
+          start_date?: string | null
+          tasks?: Json | null
+          website_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_management_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      websites: {
+        Row: {
+          created_at: string
+          files: Json | null
+          id: string
+          login_url: string | null
+          name: string
+          password: string | null
+          rejection_reason: string | null
+          status: string
+          type: string | null
+          updated_at: string | null
+          url: string
+          user_email: string | null
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          files?: Json | null
+          id?: string
+          login_url?: string | null
+          name: string
+          password?: string | null
+          rejection_reason?: string | null
+          status: string
+          type?: string | null
+          updated_at?: string | null
+          url: string
+          user_email?: string | null
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          files?: Json | null
+          id?: string
+          login_url?: string | null
+          name?: string
+          password?: string | null
+          rejection_reason?: string | null
+          status?: string
+          type?: string | null
+          updated_at?: string | null
+          url?: string
+          user_email?: string | null
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
