@@ -10,7 +10,6 @@ import {
   LayoutDashboard,
   Globe2,
   ClipboardCheck,
-  Users,
   ListChecks,
 } from "lucide-react";
 
@@ -55,15 +54,6 @@ export function AdminSidebarItems({ className }: AdminSidebarItemsProps) {
           <button onClick={() => navigate("/admin/approvals")}>
             <ClipboardCheck />
             <span>Approvals</span>
-          </button>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild>
-          <button onClick={() => navigate("/admin/users")}>
-            <Users />
-            <span>Users</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>
