@@ -16,49 +16,36 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Eye, Pencil, Trash2, Plus, Filter } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, Search, X } from "lucide-react";
 import { format } from 'date-fns';
 import { toast } from "@/components/ui/sonner";
 
 const WebsiteRecords = () => {
-  const { websites, addManagementRecord, updateManagementRecord, deleteManagementRecord } = useWebsites();
+  const { websites, addManagementRecord, updateManagementRecord, deleteManagementRecord, updateWebsite } = useWebsites();
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<WebsiteManagement | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  // Filter states
-  const [nameFilter, setNameFilter] = useState("");
-  const [emailFilter, setEmailFilter] = useState("");
-  const [filteredWebsites, setFilteredWebsites] = useState<Website[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Only approved websites of type "website"
   const approvedWebsites = websites.filter(website => 
     website.status === "approved" && website.type === "website"
   );
 
-  // Apply filters
-  useEffect(() => {
-    let filtered = approvedWebsites;
-
-    if (nameFilter) {
-      filtered = filtered.filter(website => 
-        website.name.toLowerCase().includes(nameFilter.toLowerCase())
-      );
-    }
-
-    if (emailFilter) {
-      filtered = filtered.filter(website => {
-        // This would need to be updated if you have actual user emails associated with websites
-        const userEmail = website.userId; // Placeholder, in a real app this would be user.email
-        return userEmail.toLowerCase().includes(emailFilter.toLowerCase());
-      });
-    }
-
-    setFilteredWebsites(filtered);
-  }, [nameFilter, emailFilter, approvedWebsites]);
+  // Apply search
+  const filteredWebsites = approvedWebsites.filter(website => {
+    if (!searchTerm) return true;
+    
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    return (
+      website.name.toLowerCase().includes(searchTermLower) ||
+      (website.userId && website.userId.toLowerCase().includes(searchTermLower)) ||
+      (website.userEmail && website.userEmail.toLowerCase().includes(searchTermLower))
+    );
+  });
 
   // Form states
   const [formDate, setFormDate] = useState("");
@@ -100,6 +87,21 @@ const WebsiteRecords = () => {
     if (confirm("Are you sure you want to delete this record?")) {
       deleteManagementRecord(websiteId, recordId);
       toast.success("Record deleted successfully");
+    }
+  };
+  
+  // Handle clear all records for a website
+  const handleClearAllRecords = (websiteId: string) => {
+    if (confirm("Are you sure you want to clear all records for this website? This action cannot be undone.")) {
+      const website = websites.find(w => w.id === websiteId);
+      if (website) {
+        const updatedWebsite = {
+          ...website,
+          managementData: []
+        };
+        updateWebsite(updatedWebsite);
+        toast.success("All records cleared successfully");
+      }
     }
   };
 
@@ -148,41 +150,64 @@ const WebsiteRecords = () => {
     setIsDetailOpen(true);
   };
 
-  // Reset filters
-  const resetFilters = () => {
-    setNameFilter("");
-    setEmailFilter("");
-    setIsFilterOpen(false);
-  };
-
   return (
     <DashboardLayout isAdmin>
       <div className="space-y-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Website Records</h1>
-          <Button 
-            onClick={() => setIsFilterOpen(true)} 
-            variant="outline" 
-            className="flex items-center gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filter
-          </Button>
+        </div>
+        
+        <div className="relative mb-4">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by website name or user email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8 pr-8"
+          />
+          {searchTerm && (
+            <button 
+              className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchTerm("")}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
         
         {filteredWebsites.length === 0 ? (
           <div className="text-center p-10 border rounded-lg">
-            <p className="text-muted-foreground">No approved websites found</p>
+            <p className="text-muted-foreground">
+              {approvedWebsites.length === 0 
+                ? "No approved websites found" 
+                : "No websites found matching your search"}
+            </p>
           </div>
         ) : (
           filteredWebsites.map((website) => (
             <div key={website.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">{website.name}</h2>
-                <Button onClick={() => prepareAddDialog(website)} variant="outline" size="sm" className="gap-1">
-                  <Plus className="h-4 w-4" />
-                  <span>Add Record</span>
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    onClick={() => handleClearAllRecords(website.id)} 
+                    variant="destructive" 
+                    size="sm" 
+                    className="gap-1"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span>Clear Records</span>
+                  </Button>
+                  <Button 
+                    onClick={() => prepareAddDialog(website)} 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Add Record</span>
+                  </Button>
+                </div>
               </div>
               
               <div className="text-sm text-muted-foreground">
@@ -328,44 +353,6 @@ const WebsiteRecords = () => {
                 </div>
               </div>
             )}
-          </DialogContent>
-        </Dialog>
-        
-        {/* Filter Dialog */}
-        <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Filter Websites</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="website-name">Website Name</Label>
-                <Input
-                  id="website-name"
-                  value={nameFilter}
-                  onChange={(e) => setNameFilter(e.target.value)}
-                  placeholder="Filter by website name"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="user-email">User Email</Label>
-                <Input
-                  id="user-email"
-                  value={emailFilter}
-                  onChange={(e) => setEmailFilter(e.target.value)}
-                  placeholder="Filter by user email"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={resetFilters}>
-                Reset
-              </Button>
-              <Button onClick={() => setIsFilterOpen(false)}>
-                Apply Filters
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
         

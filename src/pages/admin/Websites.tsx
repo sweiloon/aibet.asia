@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useWebsites } from "@/context/WebsiteContext";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 export default function AdminWebsites() {
   const { getAllWebsites } = useWebsites();
@@ -77,8 +77,16 @@ export default function AdminWebsites() {
             placeholder="Search by name, URL, status, or user email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
+            className="pl-8 pr-8"
           />
+          {searchTerm && (
+            <button 
+              className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchTerm("")}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
         
         <Card className="glass-morphism">

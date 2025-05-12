@@ -11,7 +11,6 @@ import {
   Globe2,
   ClipboardCheck,
   Users,
-  FileText,
   ListChecks,
 } from "lucide-react";
 
@@ -65,15 +64,6 @@ export function AdminSidebarItems({ className }: AdminSidebarItemsProps) {
           <button onClick={() => navigate("/admin/users")}>
             <Users />
             <span>Users</span>
-          </button>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild>
-          <button onClick={() => navigate("/admin/reports")}>
-            <FileText />
-            <span>Reports</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>

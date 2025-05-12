@@ -45,6 +45,7 @@ interface WebsiteContextType {
   updateManagementRecord: (websiteId: string, recordId: string, tasks: WebsiteManagement["tasks"]) => void;
   deleteWebsite: (id: string) => void;
   deleteManagementRecord: (websiteId: string, recordId: string) => void;
+  clearAllManagementRecords: (websiteId: string) => void;
 }
 
 const WebsiteContext = createContext<WebsiteContextType>({
@@ -57,6 +58,7 @@ const WebsiteContext = createContext<WebsiteContextType>({
   updateManagementRecord: () => {},
   deleteWebsite: () => {},
   deleteManagementRecord: () => {},
+  clearAllManagementRecords: () => {},
 });
 
 export const useWebsites = () => useContext(WebsiteContext);
@@ -175,6 +177,20 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
     toast.success("Management record deleted");
   };
   
+  // Clear all management records for a website
+  const clearAllManagementRecords = (websiteId: string) => {
+    setWebsites(prev => prev.map(website => 
+      website.id === websiteId 
+        ? { 
+            ...website, 
+            managementData: []
+          }
+        : website
+    ));
+    
+    toast.success("All management records cleared");
+  };
+  
   return (
     <WebsiteContext.Provider value={{
       websites,
@@ -185,7 +201,8 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
       addManagementRecord,
       updateManagementRecord,
       deleteWebsite,
-      deleteManagementRecord
+      deleteManagementRecord,
+      clearAllManagementRecords
     }}>
       {children}
     </WebsiteContext.Provider>
