@@ -3,6 +3,27 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "./AuthContext";
 
+// Types
+export interface WebsiteManagement {
+  id: string;
+  websiteId: string;
+  day: string;
+  credit: number;
+  profit: number;
+  grossProfit: number;
+  serviceFee: number;
+  startDate: string;
+  endDate: string;
+  netProfit: number;
+  // Support for legacy code
+  date?: string;
+  tasks?: Array<{
+    type: string;
+    description: string;
+    status: string;
+  }>;
+}
+
 export interface Website {
   id: string;
   userId: string;
@@ -25,31 +46,13 @@ export interface Website {
   rejectionReason?: string;
 }
 
-export interface WebsiteManagement {
-  id: string;
-  websiteId: string;
-  day: string;
-  credit: number;
-  profit: number;
-  grossProfit: number;
-  serviceFee: number;
-  startDate: string;
-  endDate: string;
-  netProfit: number;
-  date?: string; // Added this to support existing code
-  tasks?: Array<{
-    type: string;
-    description: string;
-    status: string;
-  }>; // Added this to support existing code
-}
-
+// Context type definition
 interface WebsiteContextType {
   websites: Website[];
   getUserWebsites: () => Website[];
   getAllWebsites: () => Website[];
   addWebsite: (website: Omit<Website, "id" | "userId" | "status" | "managementData" | "createdAt">) => void;
-  updateWebsiteStatus: (id: string, status: Website["status"]) => void;
+  updateWebsiteStatus: (id: string, status: Website["status"], rejectionReason?: string) => void;
   addManagementRecord: (websiteId: string, record: Omit<WebsiteManagement, "id" | "websiteId">) => void;
   updateManagementRecord: (websiteId: string, recordId: string, updatedRecord: Partial<WebsiteManagement>) => void;
   deleteWebsite: (id: string) => void;
@@ -58,6 +61,7 @@ interface WebsiteContextType {
   updateWebsite: (website: Website) => void;
 }
 
+// Create context with default values
 const WebsiteContext = createContext<WebsiteContextType>({
   websites: [],
   getUserWebsites: () => [],
@@ -72,8 +76,10 @@ const WebsiteContext = createContext<WebsiteContextType>({
   updateWebsite: () => {},
 });
 
+// Custom hook to use the website context
 export const useWebsites = () => useContext(WebsiteContext);
 
+// Provider component
 export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   const [websites, setWebsites] = useState<Website[]>([]);
   const { user } = useAuth();
@@ -122,11 +128,12 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Update website status
-  const updateWebsiteStatus = (id: string, status: Website["status"]) => {
+  const updateWebsiteStatus = (id: string, status: Website["status"], rejectionReason?: string) => {
     setWebsites(prev => prev.map(website => 
       website.id === id ? { 
         ...website, 
         status,
+        rejectionReason: status === "rejected" ? rejectionReason : undefined,
         updatedAt: new Date().toISOString()
       } : website
     ));

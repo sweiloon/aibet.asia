@@ -96,7 +96,7 @@ export const ApprovalsTable = ({
             <TableRow key={item.id}>
               <TableCell className="font-medium">{item.name}</TableCell>
               <TableCell>{getItemTypeDisplay(item)}</TableCell>
-              <TableCell>{item.userId}</TableCell>
+              <TableCell>{item.userEmail || "Unknown User"}</TableCell>
               <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
               {showActions ? (
                 <TableCell>

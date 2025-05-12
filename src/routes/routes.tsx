@@ -26,7 +26,6 @@ import AdminWebsites from "@/pages/admin/Websites";
 import AdminWebsiteDetail from "@/pages/admin/WebsiteDetail";
 import AdminUsers from "@/pages/admin/Users";
 import AdminReports from "@/pages/admin/Reports";
-import AdminSecurity from "@/pages/admin/Security";
 import AdminApprovals from "@/pages/admin/Approvals";
 import AdminWebsiteRecords from "@/pages/admin/WebsiteRecords";
 
@@ -184,14 +183,6 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <AdminReports />
-          </ProtectedRoute>
-        }
-      />
-      <Route 
-        path="/admin/security" 
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminSecurity />
           </ProtectedRoute>
         }
       />
