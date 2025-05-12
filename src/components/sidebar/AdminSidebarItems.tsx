@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   Users,
   ListChecks,
+  Shield,
 } from "lucide-react";
 
 interface AdminSidebarItemsProps {
@@ -64,6 +65,15 @@ export function AdminSidebarItems({ className }: AdminSidebarItemsProps) {
           <button onClick={() => navigate("/admin/users")}>
             <Users />
             <span>Users</span>
+          </button>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <button onClick={() => navigate("/admin/security")}>
+            <Shield />
+            <span>Security</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>

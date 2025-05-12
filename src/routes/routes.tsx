@@ -28,6 +28,7 @@ import AdminUsers from "@/pages/admin/Users";
 import AdminReports from "@/pages/admin/Reports";
 import AdminApprovals from "@/pages/admin/Approvals";
 import AdminWebsiteRecords from "@/pages/admin/WebsiteRecords";
+import AdminSecurity from "@/pages/admin/Security";
 
 // Protected route component
 const ProtectedRoute = ({ 
@@ -143,6 +144,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <AdminSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/admin/security" 
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminSecurity />
           </ProtectedRoute>
         }
       />
