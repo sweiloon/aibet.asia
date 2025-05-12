@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,8 +70,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 id: session.user.id,
                 email: session.user.email || "",
                 name: profile.name,
-                role: profile.role || "user",
-                status: profile.status,
+                role: (profile.role as "user" | "admin") || "user",
+                status: (profile.status as "active" | "inactive") || "active",
                 createdAt: profile.created_at,
                 ranking: profile.ranking || "customer",
                 phone: profile.phone
@@ -109,8 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 id: session.user.id,
                 email: session.user.email || "",
                 name: profile.name,
-                role: profile.role || "user",
-                status: profile.status,
+                role: (profile.role as "user" | "admin") || "user",
+                status: (profile.status as "active" | "inactive") || "active",
                 createdAt: profile.created_at,
                 ranking: profile.ranking || "customer",
                 phone: profile.phone
@@ -461,10 +460,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Store the updated user list in localStorage for future use
             const supabaseUsers = profiles.map(profile => ({
               id: profile.id,
-              email: profile.email || "",
+              // Get email from auth.users is not possible directly, 
+              // so we'll use the profile data which doesn't have email yet
+              email: profile.id, // We'll use ID as a placeholder since email isn't in profile table
               name: profile.name || "",
-              role: profile.role || "user",
-              status: profile.status || "active",
+              role: (profile.role as "user" | "admin") || "user",
+              status: (profile.status as "active" | "inactive") || "active",
               createdAt: profile.created_at || new Date().toISOString(),
               websites: [],
               ranking: profile.ranking || "customer",
