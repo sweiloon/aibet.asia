@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -114,8 +113,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .select();
       
       if (error) {
+        // Type assertion for the 'from' method
         const { data: fallbackData, error: fallbackError } = await supabase
-          .from('user_roles' as any)
+          .from('user_roles' as unknown as any)
           .select('user_id')
           .eq('role', 'admin')
           .limit(1)
@@ -170,7 +170,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (roleError || !roleData) {
           // Fallback method
           const { data: fallbackData, error: fallbackError } = await supabase
-            .from('user_roles' as any)
+            .from('user_roles' as unknown as any)
             .select('role')
             .eq('user_id', data.user.id)
             .eq('role', 'admin')
@@ -252,11 +252,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (roleError) {
           // Fallback method using type assertion for table that doesn't exist in types
           const { error: fallbackError } = await supabase
-            .from('user_roles' as any)
+            .from('user_roles' as unknown as any)
             .insert({
               user_id: data.user.id,
               role: 'admin'
-            } as any);
+            });
           
           if (fallbackError) {
             toast.error(`Error setting admin role: ${fallbackError.message}`);
@@ -325,11 +325,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return [];
       }
       
-      // In a real application, this would fetch from a profiles table
-      // or an admin-only function since auth.users cannot be directly queried
-      
       // Using RPC function instead of direct table access for better type safety
-      const { data, error } = await supabase.rpc('get_all_users');
+      const { data, error } = await supabase
+        .rpc('get_all_users') as { data: any[], error: any };
       
       if (error) {
         throw error;
@@ -361,12 +359,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const deleteUser = async (userId: string): Promise<boolean> => {
     try {
       // Delete user via RPC function
-      const { error } = await supabase.rpc('delete_user', { user_id_to_delete: userId });
+      const { error } = await supabase
+        .rpc('delete_user', { user_id_to_delete: userId as unknown as any });
       
       if (error) {
         console.error("Error deleting user:", error);
         // Try the direct admin API as fallback - type assert to avoid TypeScript errors
-        const { error: directError } = await supabase.auth.admin.deleteUser(userId as any);
+        const { error: directError } = await (supabase.auth.admin as any).deleteUser(userId);
         
         if (directError) {
           console.error("Direct API error:", directError);
@@ -385,18 +384,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserStatus = async (userId: string, newStatus: string): Promise<boolean> => {
     try {
       // Update user status via RPC function
-      const { error } = await supabase.rpc('update_user_status', { 
-        user_id_to_update: userId, 
-        new_status: newStatus 
-      });
+      const { error } = await supabase
+        .rpc('update_user_status', { 
+          user_id_to_update: userId as unknown as any, 
+          new_status: newStatus 
+        });
       
       if (error) {
         console.error("Error updating user status:", error);
         
         // Fallback to direct API - type assert to avoid TypeScript errors
-        const { error: directError } = await supabase.auth.admin.updateUserById(
+        const { error: directError } = await (supabase.auth.admin as any).updateUserById(
           userId,
-          { user_metadata: { status: newStatus } } as any
+          { user_metadata: { status: newStatus } }
         );
         
         if (directError) {
@@ -416,14 +416,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUser = async (userId: string, userData: Partial<User>, newPassword?: string): Promise<boolean> => {
     try {
       // Update user data via RPC function
-      const { error } = await supabase.rpc('update_user_profile', { 
-        user_id_to_update: userId,
-        user_name: userData.name,
-        user_role: userData.role,
-        user_ranking: userData.ranking,
-        user_phone: userData.phone,
-        user_password: newPassword
-      });
+      const { error } = await supabase
+        .rpc('update_user_profile', { 
+          user_id_to_update: userId as unknown as any,
+          user_name: userData.name,
+          user_role: userData.role,
+          user_ranking: userData.ranking,
+          user_phone: userData.phone,
+          user_password: newPassword
+        });
       
       if (error) {
         // Fallback to direct API

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,10 +44,7 @@ export default function AdminUsers() {
         setUsers(allUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
-        toast("Error", {
-          description: "Failed to load users. Please refresh the page.",
-          variant: "destructive"
-        });
+        toast.error("Failed to load users. Please refresh the page.");
       } finally {
         setIsLoading(false);
       }
@@ -68,19 +64,14 @@ export default function AdminUsers() {
     
     try {
       await deleteUser(userToDelete);
-      toast("User deleted", {
-        description: "The user has been successfully deleted."
-      });
+      toast.success("The user has been successfully deleted.");
       setIsDeleteDialogOpen(false);
       setUserToDelete(null);
       
       // Update the users list
       setUsers(users.filter(u => u.id !== userToDelete));
     } catch (error) {
-      toast("Error", {
-        description: "Failed to delete user. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete user. Please try again.");
     }
   };
   
@@ -89,19 +80,14 @@ export default function AdminUsers() {
     
     try {
       await updateUserStatus(userId, newStatus);
-      toast("Status updated", {
-        description: `User status changed to ${newStatus}.`
-      });
+      toast.success(`User status changed to ${newStatus}.`);
       
       // Update user in the list
       setUsers(users.map(u => 
         u.id === userId ? { ...u, status: newStatus as "active" | "inactive" } : u
       ));
     } catch (error) {
-      toast("Error", {
-        description: "Failed to update user status. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to update user status. Please try again.");
     }
   };
   
