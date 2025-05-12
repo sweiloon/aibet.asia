@@ -1,13 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useWebsites, Website, WebsiteManagement } from "@/context/WebsiteContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Table, 
   TableBody, 
@@ -23,11 +21,11 @@ import { toast } from "@/components/ui/sonner";
 const WebsiteRecords = () => {
   const { websites, addManagementRecord, updateManagementRecord, deleteManagementRecord, clearAllManagementRecords } = useWebsites();
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
-  const [selectedRecord, setSelectedRecord] = useState<WebsiteManagement | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingRecord, setEditingRecord] = useState<{recordId: string, field: string} | null>(null);
 
   // Only approved websites of type "website"
   const approvedWebsites = websites.filter(website => 
@@ -42,51 +40,97 @@ const WebsiteRecords = () => {
     
     return (
       website.name.toLowerCase().includes(searchTermLower) ||
-      (website.userId && website.userId.toLowerCase().includes(searchTermLower)) ||
       (website.userEmail && website.userEmail.toLowerCase().includes(searchTermLower))
     );
   });
 
-  // Form states
-  const [formDate, setFormDate] = useState("");
-  const [formTasks, setFormTasks] = useState<{ type: string; description: string; status: "completed" | "in-progress" | "pending" }[]>([
-    { type: "", description: "", status: "pending" }
-  ]);
+  // Form states for adding a new record
+  const [formValues, setFormValues] = useState<Omit<WebsiteManagement, "id" | "websiteId">>({
+    day: "",
+    credit: 0,
+    profit: 0,
+    grossProfit: 0,
+    serviceFee: 0,
+    startDate: format(new Date(), 'yyyy-MM-dd'),
+    endDate: format(new Date(), 'yyyy-MM-dd'),
+    netProfit: 0
+  });
+
+  // Form state for editing a single field
+  const [editValue, setEditValue] = useState<string | number>("");
 
   // Reset form
   const resetForm = () => {
-    setFormDate("");
-    setFormTasks([{ type: "", description: "", status: "pending" }]);
+    setFormValues({
+      day: "",
+      credit: 0,
+      profit: 0,
+      grossProfit: 0,
+      serviceFee: 0,
+      startDate: format(new Date(), 'yyyy-MM-dd'),
+      endDate: format(new Date(), 'yyyy-MM-dd'),
+      netProfit: 0
+    });
+  };
+
+  // Handle input change for add form
+  const handleInputChange = (field: keyof Omit<WebsiteManagement, "id" | "websiteId">, value: string | number) => {
+    const numericFields = ["credit", "profit", "grossProfit", "serviceFee", "netProfit"];
+    
+    if (numericFields.includes(field)) {
+      setFormValues({
+        ...formValues,
+        [field]: Number(value)
+      });
+    } else {
+      setFormValues({
+        ...formValues,
+        [field]: value
+      });
+    }
   };
 
   // Handle add record
   const handleAddRecord = () => {
     if (!selectedWebsite) return;
     
-    addManagementRecord(selectedWebsite.id, {
-      date: formDate,
-      tasks: formTasks,
-    });
+    addManagementRecord(selectedWebsite.id, formValues);
     
     setIsAddDialogOpen(false);
     resetForm();
   };
 
-  // Handle edit record
-  const handleEditRecord = () => {
-    if (!selectedWebsite || !selectedRecord) return;
+  // Handle edit field (open dialog)
+  const handleEditField = (websiteId: string, recordId: string, field: string, currentValue: any) => {
+    setSelectedWebsite(websites.find(w => w.id === websiteId) || null);
+    setEditingRecord({ recordId, field });
+    setEditValue(currentValue);
+    setIsEditDialogOpen(true);
+  };
+
+  // Handle save edit
+  const handleSaveEdit = () => {
+    if (!selectedWebsite || !editingRecord) return;
+
+    const field = editingRecord.field as keyof WebsiteManagement;
+    const numericFields = ["credit", "profit", "grossProfit", "serviceFee", "netProfit"];
+    let value = editValue;
     
-    updateManagementRecord(selectedWebsite.id, selectedRecord.id, formTasks);
+    if (numericFields.includes(field)) {
+      value = Number(editValue);
+    }
+
+    updateManagementRecord(selectedWebsite.id, editingRecord.recordId, { [field]: value });
     
     setIsEditDialogOpen(false);
-    setSelectedRecord(null);
+    setEditingRecord(null);
+    setEditValue("");
   };
 
   // Handle delete record
   const handleDeleteRecord = (websiteId: string, recordId: string) => {
     if (confirm("Are you sure you want to delete this record?")) {
       deleteManagementRecord(websiteId, recordId);
-      toast.success("Record deleted successfully");
     }
   };
   
@@ -95,38 +139,6 @@ const WebsiteRecords = () => {
     if (confirm("Are you sure you want to clear all records for this website? This action cannot be undone.")) {
       clearAllManagementRecords(websiteId);
     }
-  };
-
-  // Add task field
-  const addTaskField = () => {
-    setFormTasks([...formTasks, { type: "", description: "", status: "pending" }]);
-  };
-
-  // Remove task field
-  const removeTaskField = (index: number) => {
-    const newTasks = [...formTasks];
-    newTasks.splice(index, 1);
-    setFormTasks(newTasks);
-  };
-
-  // Update task field
-  const updateTaskField = (index: number, field: keyof typeof formTasks[0], value: string) => {
-    const newTasks = [...formTasks];
-    if (field === "status") {
-      newTasks[index][field] = value as "completed" | "in-progress" | "pending";
-    } else {
-      newTasks[index][field] = value;
-    }
-    setFormTasks(newTasks);
-  };
-
-  // Prepare edit dialog
-  const prepareEditDialog = (website: Website, record: WebsiteManagement) => {
-    setSelectedWebsite(website);
-    setSelectedRecord(record);
-    setFormDate(record.date);
-    setFormTasks(record.tasks);
-    setIsEditDialogOpen(true);
   };
 
   // Prepare add dialog
@@ -205,7 +217,7 @@ const WebsiteRecords = () => {
                     className="gap-1"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>Add Record</span>
+                    <span>Add Day</span>
                   </Button>
                 </div>
               </div>
@@ -224,70 +236,46 @@ const WebsiteRecords = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Tasks</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Day</TableHead>
+                      <TableHead>Credit</TableHead>
+                      <TableHead>Profit</TableHead>
+                      <TableHead>Gross Profit</TableHead>
+                      <TableHead>Service Fee</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                      <TableHead>Net Profit</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {website.managementData
-                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                      .map((record) => (
-                        <TableRow key={record.id}>
-                          <TableCell className="font-medium">
-                            {record.date}
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-h-24 overflow-auto">
-                              {record.tasks.map((task, idx) => (
-                                <div key={idx} className="mb-1">
-                                  <span className="font-semibold">{task.type || "Task"}: </span>
-                                  {task.description}
-                                </div>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {record.tasks.some(t => t.status === "completed") ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800">
-                                Completed
-                              </span>
-                            ) : record.tasks.some(t => t.status === "in-progress") ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
-                                In Progress
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Pending
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right space-x-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => showWebsiteDetails(website)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => prepareEditDialog(website, record)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleDeleteRecord(website.id, record.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                    {website.managementData.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell>{record.day}</TableCell>
+                        <TableCell>{record.credit}</TableCell>
+                        <TableCell>{record.profit}</TableCell>
+                        <TableCell>{record.grossProfit}</TableCell>
+                        <TableCell>{record.serviceFee}</TableCell>
+                        <TableCell>{record.startDate}</TableCell>
+                        <TableCell>{record.endDate}</TableCell>
+                        <TableCell>{record.netProfit}</TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => showWebsiteDetails(website)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleDeleteRecord(website.id, record.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               )}
@@ -370,72 +358,88 @@ const WebsiteRecords = () => {
               <DialogTitle>Add Management Record</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formDate}
-                  onChange={(e) => setFormDate(e.target.value)}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="day">Day</Label>
+                  <Input
+                    id="day"
+                    value={formValues.day}
+                    onChange={(e) => handleInputChange("day", e.target.value)}
+                    placeholder="Day number or name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="credit">Credit</Label>
+                  <Input
+                    id="credit"
+                    type="number"
+                    value={formValues.credit}
+                    onChange={(e) => handleInputChange("credit", e.target.value)}
+                  />
+                </div>
               </div>
-              
-              <div className="space-y-4">
-                <Label>Tasks</Label>
-                {formTasks.map((task, index) => (
-                  <div key={index} className="grid gap-3 pt-2">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor={`task-type-${index}`}>Type</Label>
-                        <Input
-                          id={`task-type-${index}`}
-                          value={task.type}
-                          onChange={(e) => updateTaskField(index, "type", e.target.value)}
-                          placeholder="Maintenance, Update, etc."
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`task-status-${index}`}>Status</Label>
-                        <Select
-                          value={task.status}
-                          onValueChange={(value) => updateTaskField(index, "status", value)}
-                        >
-                          <SelectTrigger id={`task-status-${index}`}>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in-progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor={`task-desc-${index}`}>Description</Label>
-                      <Textarea
-                        id={`task-desc-${index}`}
-                        value={task.description}
-                        onChange={(e) => updateTaskField(index, "description", e.target.value)}
-                        placeholder="Task description"
-                        rows={2}
-                      />
-                    </div>
-                    {formTasks.length > 1 && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeTaskField(index)}
-                        className="w-full"
-                      >
-                        Remove Task
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" onClick={addTaskField} className="w-full">
-                  Add Task
-                </Button>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="profit">Profit</Label>
+                  <Input
+                    id="profit"
+                    type="number"
+                    value={formValues.profit}
+                    onChange={(e) => handleInputChange("profit", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="grossProfit">Gross Profit</Label>
+                  <Input
+                    id="grossProfit"
+                    type="number"
+                    value={formValues.grossProfit}
+                    onChange={(e) => handleInputChange("grossProfit", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="serviceFee">Service Fee</Label>
+                  <Input
+                    id="serviceFee"
+                    type="number"
+                    value={formValues.serviceFee}
+                    onChange={(e) => handleInputChange("serviceFee", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="netProfit">Net Profit</Label>
+                  <Input
+                    id="netProfit"
+                    type="number"
+                    value={formValues.netProfit}
+                    onChange={(e) => handleInputChange("netProfit", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={formValues.startDate}
+                    onChange={(e) => handleInputChange("startDate", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="endDate">End Date</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={formValues.endDate}
+                    onChange={(e) => handleInputChange("endDate", e.target.value)}
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -445,85 +449,41 @@ const WebsiteRecords = () => {
           </DialogContent>
         </Dialog>
         
-        {/* Edit Record Dialog */}
+        {/* Edit Field Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Edit Management Record</DialogTitle>
+              <DialogTitle>Edit {editingRecord?.field}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-date">Date</Label>
-                <Input
-                  id="edit-date"
-                  type="date"
-                  value={formDate}
-                  onChange={(e) => setFormDate(e.target.value)}
-                  disabled
-                />
-              </div>
-              
-              <div className="space-y-4">
-                <Label>Tasks</Label>
-                {formTasks.map((task, index) => (
-                  <div key={index} className="grid gap-3 pt-2">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor={`edit-task-type-${index}`}>Type</Label>
-                        <Input
-                          id={`edit-task-type-${index}`}
-                          value={task.type}
-                          onChange={(e) => updateTaskField(index, "type", e.target.value)}
-                          placeholder="Maintenance, Update, etc."
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`edit-task-status-${index}`}>Status</Label>
-                        <Select
-                          value={task.status}
-                          onValueChange={(value) => updateTaskField(index, "status", value)}
-                        >
-                          <SelectTrigger id={`edit-task-status-${index}`}>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in-progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor={`edit-task-desc-${index}`}>Description</Label>
-                      <Textarea
-                        id={`edit-task-desc-${index}`}
-                        value={task.description}
-                        onChange={(e) => updateTaskField(index, "description", e.target.value)}
-                        placeholder="Task description"
-                        rows={2}
-                      />
-                    </div>
-                    {formTasks.length > 1 && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeTaskField(index)}
-                        className="w-full"
-                      >
-                        Remove Task
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" onClick={addTaskField} className="w-full">
-                  Add Task
-                </Button>
+                <Label htmlFor="edit-value">Value</Label>
+                {editingRecord?.field === "startDate" || editingRecord?.field === "endDate" ? (
+                  <Input
+                    id="edit-value"
+                    type="date"
+                    value={editValue as string}
+                    onChange={(e) => setEditValue(e.target.value)}
+                  />
+                ) : ["credit", "profit", "grossProfit", "serviceFee", "netProfit"].includes(editingRecord?.field || "") ? (
+                  <Input
+                    id="edit-value"
+                    type="number"
+                    value={editValue as number}
+                    onChange={(e) => setEditValue(Number(e.target.value))}
+                  />
+                ) : (
+                  <Input
+                    id="edit-value"
+                    value={editValue as string}
+                    onChange={(e) => setEditValue(e.target.value)}
+                  />
+                )}
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleEditRecord}>Update</Button>
+              <Button onClick={handleSaveEdit}>Update</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

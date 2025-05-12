@@ -102,56 +102,39 @@ const WebsiteRecords = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Tasks</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Day</TableHead>
+                      <TableHead>Credit</TableHead>
+                      <TableHead>Profit</TableHead>
+                      <TableHead>Gross Profit</TableHead>
+                      <TableHead>Service Fee</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                      <TableHead>Net Profit</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {website.managementData
-                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                      .map((record) => (
-                        <TableRow key={record.id}>
-                          <TableCell className="font-medium">
-                            {record.date}
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-h-24 overflow-auto">
-                              {record.tasks.map((task, idx) => (
-                                <div key={idx} className="mb-1">
-                                  <span className="font-semibold">{task.type || "Task"}: </span>
-                                  {task.description}
-                                </div>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {record.tasks.some(t => t.status === "completed") ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800">
-                                Completed
-                              </span>
-                            ) : record.tasks.some(t => t.status === "in-progress") ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
-                                In Progress
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Pending
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => showWebsiteDetails(website)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                    {website.managementData.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell>{record.day}</TableCell>
+                        <TableCell>{record.credit}</TableCell>
+                        <TableCell>{record.profit}</TableCell>
+                        <TableCell>{record.grossProfit}</TableCell>
+                        <TableCell>{record.serviceFee}</TableCell>
+                        <TableCell>{record.startDate}</TableCell>
+                        <TableCell>{record.endDate}</TableCell>
+                        <TableCell>{record.netProfit}</TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => showWebsiteDetails(website)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               )}

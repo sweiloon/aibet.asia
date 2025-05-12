@@ -6,7 +6,7 @@ import { useAuth } from "./AuthContext";
 export interface Website {
   id: string;
   userId: string;
-  userEmail?: string; // Add userEmail property
+  userEmail?: string;
   name: string;
   url: string;
   loginUrl?: string;
@@ -28,12 +28,14 @@ export interface Website {
 export interface WebsiteManagement {
   id: string;
   websiteId: string;
-  date: string;
-  tasks: {
-    type: string;
-    description: string;
-    status: "completed" | "in-progress" | "pending";
-  }[];
+  day: string;
+  credit: number;
+  profit: number;
+  grossProfit: number;
+  serviceFee: number;
+  startDate: string;
+  endDate: string;
+  netProfit: number;
 }
 
 interface WebsiteContextType {
@@ -43,11 +45,11 @@ interface WebsiteContextType {
   addWebsite: (website: Omit<Website, "id" | "userId" | "status" | "managementData" | "createdAt">) => void;
   updateWebsiteStatus: (id: string, status: Website["status"]) => void;
   addManagementRecord: (websiteId: string, record: Omit<WebsiteManagement, "id" | "websiteId">) => void;
-  updateManagementRecord: (websiteId: string, recordId: string, tasks: WebsiteManagement["tasks"]) => void;
+  updateManagementRecord: (websiteId: string, recordId: string, updatedRecord: Partial<WebsiteManagement>) => void;
   deleteWebsite: (id: string) => void;
   deleteManagementRecord: (websiteId: string, recordId: string) => void;
   clearAllManagementRecords: (websiteId: string) => void;
-  updateWebsite: (website: Website) => void; // Add this new method to the interface
+  updateWebsite: (website: Website) => void;
 }
 
 const WebsiteContext = createContext<WebsiteContextType>({
@@ -61,7 +63,7 @@ const WebsiteContext = createContext<WebsiteContextType>({
   deleteWebsite: () => {},
   deleteManagementRecord: () => {},
   clearAllManagementRecords: () => {},
-  updateWebsite: () => {}, // Add the empty implementation here
+  updateWebsite: () => {},
 });
 
 export const useWebsites = () => useContext(WebsiteContext);
@@ -101,7 +103,7 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
       ...website,
       id: `website-${Date.now()}`,
       userId: user.id,
-      userEmail: user.email, // Add user email to the website
+      userEmail: user.email,
       status: "pending",
       managementData: [],
       createdAt: now,
@@ -154,14 +156,14 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Update management record
-  const updateManagementRecord = (websiteId: string, recordId: string, tasks: WebsiteManagement["tasks"]) => {
+  const updateManagementRecord = (websiteId: string, recordId: string, updatedRecord: Partial<WebsiteManagement>) => {
     setWebsites(prev => prev.map(website => 
       website.id === websiteId 
         ? { 
             ...website, 
             managementData: website.managementData.map(record => 
               record.id === recordId 
-                ? { ...record, tasks }
+                ? { ...record, ...updatedRecord }
                 : record
             )
           }
@@ -217,7 +219,7 @@ export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
       deleteWebsite,
       deleteManagementRecord,
       clearAllManagementRecords,
-      updateWebsite // Add the new method to the provider value
+      updateWebsite
     }}>
       {children}
     </WebsiteContext.Provider>
