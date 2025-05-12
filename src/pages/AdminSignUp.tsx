@@ -21,15 +21,11 @@ export default function AdminSignUp() {
 
   useEffect(() => {
     const checkAdmin = async () => {
-      try {
-        const exists = await checkAdminExists();
-        setAdminExists(exists);
-        if (exists) {
-          toast.error("Admin account already exists");
-          navigate("/login");
-        }
-      } catch (error) {
-        console.error("Error checking admin existence:", error);
+      const exists = await checkAdminExists();
+      setAdminExists(exists);
+      if (exists) {
+        toast.error("Admin account already exists");
+        navigate("/login");
       }
     };
     
@@ -66,20 +62,14 @@ export default function AdminSignUp() {
       return;
     }
     
-    try {
-      setLoading(true);
-      const success = await signup(email, password, phone, name, true); // Pass true for admin signup
-      setLoading(false);
-      
-      if (success) {
-        toast.success("Admin account created successfully!");
-        // Redirect to admin dashboard instead of login page
-        navigate("/admin");
-      }
-    } catch (error) {
-      console.error("Admin signup error:", error);
-      setLoading(false);
-      toast.error("Admin signup failed. Please try again.");
+    setLoading(true);
+    const success = await signup(email, password, phone, name, true); // Pass true for admin signup
+    setLoading(false);
+    
+    if (success) {
+      toast.success("Admin account created successfully!");
+      // Redirect to admin dashboard instead of login page
+      navigate("/admin");
     }
   };
 
