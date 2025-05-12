@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // We need to use raw SQL query here since the types are not updated yet
       const { data, error } = await supabase
-        .rpc('check_admin_exists') as { data: any, error: any };
+        .rpc('check_admin_exists') as unknown as { data: any, error: any };
       
       if (error) {
         // Type assertion for the 'from' method
@@ -164,7 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isAdmin) {
         // We need to use raw SQL query here since the types are not updated yet
         const { data: roleData, error: roleError } = await supabase
-          .rpc('check_user_is_admin', { user_id: data.user.id as any }) as { data: any, error: any };
+          .rpc('check_user_is_admin', { user_id: data.user.id }) as unknown as { data: any, error: any };
         
         if (roleError || !roleData) {
           // Fallback method
@@ -246,7 +246,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isAdmin && data.user) {
         // We need to use raw SQL query here since the types are not updated yet
         const { error: roleError } = await supabase
-          .rpc('insert_admin_role', { admin_user_id: data.user.id as any }) as { data: any, error: any };
+          .rpc('insert_admin_role', { admin_user_id: data.user.id }) as unknown as { data: any, error: any };
         
         if (roleError) {
           // Fallback method using type assertion for table that doesn't exist in types
@@ -326,7 +326,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Using RPC function instead of direct table access for better type safety
       const { data, error } = await supabase
-        .rpc('get_all_users') as { data: any[], error: any };
+        .rpc('get_all_users') as unknown as { data: any[], error: any };
       
       if (error) {
         throw error;
@@ -359,15 +359,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Delete user via RPC function
       const { error } = await supabase
-        .rpc('delete_user', { user_id_to_delete: userId as any }) as { data: any, error: any };
+        .rpc('delete_user', { user_id_to_delete: userId }) as unknown as { data: any, error: any };
       
       if (error) {
         console.error("Error deleting user:", error);
         // Try the direct admin API as fallback - type assert to avoid TypeScript errors
-        const { error: directError } = await (supabase.auth.admin as any).deleteUser(userId);
-        
-        if (directError) {
-          console.error("Direct API error:", directError);
+        const adminAuth = supabase.auth.admin as any;
+        if (adminAuth && adminAuth.deleteUser) {
+          const { error: directError } = await adminAuth.deleteUser(userId);
+          
+          if (directError) {
+            console.error("Direct API error:", directError);
+            return false;
+          }
+        } else {
           return false;
         }
       }
@@ -385,21 +390,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Update user status via RPC function
       const { error } = await supabase
         .rpc('update_user_status', { 
-          user_id_to_update: userId as any, 
-          new_status: newStatus as any 
-        }) as { data: any, error: any };
+          user_id_to_update: userId, 
+          new_status: newStatus 
+        }) as unknown as { data: any, error: any };
       
       if (error) {
         console.error("Error updating user status:", error);
         
         // Fallback to direct API - type assert to avoid TypeScript errors
-        const { error: directError } = await (supabase.auth.admin as any).updateUserById(
-          userId,
-          { user_metadata: { status: newStatus } }
-        );
-        
-        if (directError) {
-          console.error("Direct API error:", directError);
+        const adminAuth = supabase.auth.admin as any;
+        if (adminAuth && adminAuth.updateUserById) {
+          const { error: directError } = await adminAuth.updateUserById(
+            userId,
+            { user_metadata: { status: newStatus } }
+          );
+          
+          if (directError) {
+            console.error("Direct API error:", directError);
+            return false;
+          }
+        } else {
           return false;
         }
       }
@@ -417,13 +427,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Update user data via RPC function
       const { error } = await supabase
         .rpc('update_user_profile', { 
-          user_id_to_update: userId as any,
-          user_name: userData.name as any,
-          user_role: userData.role as any,
-          user_ranking: userData.ranking as any,
-          user_phone: userData.phone as any,
-          user_password: newPassword as any
-        }) as { data: any, error: any };
+          user_id_to_update: userId,
+          user_name: userData.name || null,
+          user_role: userData.role || null,
+          user_ranking: userData.ranking || null,
+          user_phone: userData.phone || null,
+          user_password: newPassword || null
+        }) as unknown as { data: any, error: any };
       
       if (error) {
         // Fallback to direct API
@@ -441,10 +451,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           updateData.password = newPassword;
         }
         
-        const { error: directError } = await supabase.auth.admin.updateUserById(userId, updateData);
-        
-        if (directError) {
-          toast.error(`User update error: ${directError.message}`);
+        const adminAuth = supabase.auth.admin as any;
+        if (adminAuth && adminAuth.updateUserById) {
+          const { error: directError } = await adminAuth.updateUserById(userId, updateData);
+          
+          if (directError) {
+            toast.error(`User update error: ${directError.message}`);
+            return false;
+          }
+        } else {
           return false;
         }
       }
