@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,39 +23,23 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/sonner";
+import { useToast } from "@/hooks/use-toast";
 import { EditUserDialog } from "@/components/admin/EditUserDialog";
-import { User } from "@/context/AuthContext";
 
 export default function AdminUsers() {
   const { user: currentUser, getAllUsers, deleteUser, updateUserStatus, updateUser } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [userToEdit, setUserToEdit] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userToEdit, setUserToEdit] = useState<any | null>(null);
   
-  // Fetch users when component mounts
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const allUsers = await getAllUsers();
-        setUsers(allUsers);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        toast.error("Failed to load users. Please refresh the page.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchUsers();
-  }, [getAllUsers]);
+  // Get all users from auth context
+  const allUsers = getAllUsers();
   
   // Filter users based on search term
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = allUsers.filter(u => 
     (u.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -65,14 +49,18 @@ export default function AdminUsers() {
     
     try {
       await deleteUser(userToDelete);
-      toast.success("The user has been successfully deleted.");
+      toast({
+        title: "User deleted",
+        description: "The user has been successfully deleted.",
+      });
       setIsDeleteDialogOpen(false);
       setUserToDelete(null);
-      
-      // Update the users list
-      setUsers(users.filter(u => u.id !== userToDelete));
     } catch (error) {
-      toast.error("Failed to delete user. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to delete user. Please try again.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -81,14 +69,16 @@ export default function AdminUsers() {
     
     try {
       await updateUserStatus(userId, newStatus);
-      toast.success(`User status changed to ${newStatus}.`);
-      
-      // Update user in the list
-      setUsers(users.map(u => 
-        u.id === userId ? { ...u, status: newStatus as "active" | "inactive" } : u
-      ));
+      toast({
+        title: "Status updated",
+        description: `User status changed to ${newStatus}.`,
+      });
     } catch (error) {
-      toast.error("Failed to update user status. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to update user status. Please try again.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -97,22 +87,13 @@ export default function AdminUsers() {
     setIsDeleteDialogOpen(true);
   };
 
-  const openEditDialog = (user: User) => {
+  const openEditDialog = (user: any) => {
     setUserToEdit(user);
     setIsEditDialogOpen(true);
   };
   
-  const handleSaveUser = async (userId: string, userData: Partial<User>, newPassword?: string) => {
-    const result = await updateUser(userId, userData, newPassword);
-    
-    if (result) {
-      // Update the user in the list
-      setUsers(users.map(u => 
-        u.id === userId ? { ...u, ...userData } : u
-      ));
-    }
-    
-    return result;
+  const handleSaveUser = async (userId: string, userData: Partial<any>, newPassword?: string) => {
+    return await updateUser(userId, userData, newPassword);
   };
   
   const getRankingBadge = (ranking: string) => {
@@ -183,13 +164,7 @@ export default function AdminUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6">
-                      <p>Loading users...</p>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredUsers.length > 0 ? (
+                {filteredUsers.length > 0 ? (
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.email}</TableCell>
@@ -216,20 +191,20 @@ export default function AdminUsers() {
                             variant="outline"
                             size="sm"
                             className="w-8 h-8 p-0"
+                            title="Edit user"
                             onClick={() => openEditDialog(user)}
                           >
                             <Edit2 className="h-4 w-4" />
-                            <span className="sr-only">Edit user</span>
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             className="w-8 h-8 p-0 hover:bg-red-500/20 hover:text-red-300"
+                            title="Delete user"
                             onClick={() => confirmDelete(user.id)}
                             disabled={user.id === currentUser?.id || (user.role === "admin" && user.id !== currentUser?.id)}
                           >
                             <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete user</span>
                           </Button>
                         </div>
                       </TableCell>

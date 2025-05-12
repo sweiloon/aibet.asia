@@ -1,7 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
@@ -11,8 +9,8 @@ export interface User {
   status?: "active" | "inactive";
   createdAt?: string;
   websites?: any[];
-  ranking?: string;
-  phone?: string;
+  ranking?: string; // Add ranking property
+  phone?: string; // Add phone property
 }
 
 interface AuthContextType {
@@ -23,12 +21,17 @@ interface AuthContextType {
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   checkAdminExists: () => Promise<boolean>;
-  getAllUsers: () => Promise<User[]>;
+  getAllUsers: () => User[];
   deleteUser: (userId: string) => Promise<boolean>;
   updateUserStatus: (userId: string, newStatus: string) => Promise<boolean>;
   updateUser: (userId: string, userData: Partial<User>, newPassword?: string) => Promise<boolean>;
 }
 
+// Default admin credentials
+const ADMIN_EMAIL = "admin@aibet.asia";
+const ADMIN_PASSWORD = "admin123";
+
+// Create context with a default value
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
@@ -37,7 +40,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   changePassword: async () => false,
   checkAdminExists: async () => false,
-  getAllUsers: async () => [],
+  getAllUsers: () => [],
   deleteUser: async () => false,
   updateUserStatus: async () => false,
   updateUser: async () => false,
@@ -49,93 +52,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Set up auth state subscription
-  useEffect(() => {
-    // First, set up the auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session && session.user) {
-          // Convert Supabase user to our User format
-          const currentUser = mapSupabaseUser(session.user);
-          setUser(currentUser);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    // Then, check for existing session
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.user) {
-          // Convert Supabase user to our User format
-          const currentUser = mapSupabaseUser(session.user);
-          setUser(currentUser);
-        }
-      } catch (error) {
-        console.error("Error checking auth session:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    // Cleanup subscription
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Helper function to map Supabase user to our format
-  const mapSupabaseUser = (supabaseUser: SupabaseUser): User => {
-    const metadata = supabaseUser.user_metadata || {};
-    
-    return {
-      id: supabaseUser.id,
-      email: supabaseUser.email || '',
-      name: metadata.name || metadata.full_name,
-      role: metadata.role || "user",
-      phone: metadata.phone,
-      ranking: metadata.ranking || "customer",
-      createdAt: supabaseUser.created_at,
-    };
-  };
-  
   // Check if admin exists
   const checkAdminExists = async (): Promise<boolean> => {
     try {
-      // Fixed type assertion for RPC call
-      const { data, error } = await (supabase
-        .rpc('check_admin_exists') as Promise<{ data: any, error: any }>);
-      
-      if (error) {
-        // Fixed type assertion for from method
-        const { data: fallbackData, error: fallbackError } = await (supabase
-          .from('user_roles' as any)
-          .select('user_id')
-          .eq('role', 'admin')
-          .limit(1)
-          .single() as Promise<{ data: any, error: any }>);
-        
-        if (fallbackError && fallbackError.code !== 'PGRST116') {
-          console.error("Error checking admin existence:", fallbackError);
-          return false;
-        }
-        
-        return !!fallbackData;
-      }
-      
-      return data && data.length > 0;
+      // In a real app, this would check the database for admin accounts
+      // For this mock implementation, we'll check localStorage
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      return users.some((user: any) => user.role === "admin");
     } catch (error) {
       console.error("Error checking admin existence:", error);
       return false;
     }
   };
   
-  // Sign in with email and password
+  useEffect(() => {
+    // Check for stored user session
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+  
+  // Mock login function
   const login = async (email: string, password: string, isAdmin: boolean): Promise<boolean> => {
     setLoading(true);
     try {
@@ -144,55 +83,68 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email = `${email}@aibet.asia`;
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      });
-      
-      if (error) {
-        toast.error(error.message);
-        return false;
-      }
-      
-      if (!data.user) {
-        toast.error("Login failed: No user data returned");
-        return false;
-      }
-
-      // For admin login, verify the user has admin role
+      // Admin login check
       if (isAdmin) {
-        // Fixed type assertion for RPC call
-        const { data: roleData, error: roleError } = await (supabase
-          .rpc('check_user_is_admin', { user_id: data.user.id }) as Promise<{ data: any, error: any }>);
-        
-        if (roleError || !roleData) {
-          // Fallback method
-          const { data: fallbackData, error: fallbackError } = await (supabase
-            .from('user_roles' as any)
-            .select('role')
-            .eq('user_id', data.user.id)
-            .eq('role', 'admin')
-            .maybeSingle() as Promise<{ data: any, error: any }>);
+        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+          const adminUser = { id: "admin1", email: ADMIN_EMAIL, role: "admin" as const };
+          setUser(adminUser);
+          localStorage.setItem('user', JSON.stringify(adminUser));
+          toast.success("Admin login successful!");
+          return true;
+        } else {
+          // Check for custom admin accounts in localStorage
+          const users = JSON.parse(localStorage.getItem('users') || '[]');
+          const adminUser = users.find((u: any) => u.email === email && u.role === "admin");
           
-          if (fallbackError || !fallbackData) {
-            toast.error("You don't have admin permissions");
-            await supabase.auth.signOut();
+          if (adminUser && adminUser.password === password) {
+            const userObj = { 
+              id: adminUser.id, 
+              email: adminUser.email, 
+              role: "admin" as const,
+              ranking: adminUser.ranking || "customer" // Ensure ranking is preserved
+            };
+            setUser(userObj);
+            localStorage.setItem('user', JSON.stringify(userObj));
+            toast.success("Admin login successful!");
+            return true;
+          } else {
+            toast.error("Invalid admin credentials!");
             return false;
           }
         }
       }
       
-      toast.success("Login successful!");
-      return true;
-    } catch (error: any) {
-      toast.error(`Login error: ${error.message}`);
+      // User login (mock - in real app would check against database)
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const matchedUser = users.find((u: any) => u.email === email);
+      
+      if (matchedUser && matchedUser.password === password) {
+        const userObj = { 
+          id: matchedUser.id, 
+          email: matchedUser.email, 
+          role: matchedUser.role || "user" as const,
+          ranking: matchedUser.ranking || "customer", // Ensure ranking is preserved
+          name: matchedUser.name,
+          phone: matchedUser.phone
+        };
+        setUser(userObj);
+        localStorage.setItem('user', JSON.stringify(userObj));
+        toast.success("Login successful!");
+        return true;
+      } else {
+        toast.error("Invalid credentials!");
+        return false;
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Login failed!");
       return false;
     } finally {
       setLoading(false);
     }
   };
   
-  // Sign up with email, password, and additional user data
+  // Mock signup function
   const signup = async (email: string, password: string, phone: string, name: string, isAdmin = false): Promise<boolean> => {
     setLoading(true);
     try {
@@ -208,6 +160,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
+      // Check if user already exists
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      if (users.some((u: any) => u.email === email)) {
+        toast.error("Account already exists with this email!");
+        return false;
+      }
+      
+      // Check if phone number already exists
+      if (users.some((u: any) => u.phone === phone)) {
+        toast.error("This phone number has already been registered!");
+        return false;
+      }
+      
       // For admin signup, check if admin already exists
       if (isAdmin) {
         const adminExists = await checkAdminExists();
@@ -217,134 +182,122 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // Sign up with Supabase
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
+      // Create new user
+      const newUser = {
+        id: `user${Date.now()}`,
+        email,
         password,
-        options: {
-          data: {
-            name,
-            phone,
-            role: isAdmin ? "admin" : "user",
-            ranking: "customer", // Default ranking
-          }
-        }
-      });
+        phone,
+        name,
+        role: isAdmin ? "admin" : "user",
+        createdAt: new Date().toISOString(),
+        ranking: "customer" // Set default ranking
+      };
       
-      if (error) {
-        toast.error(error.message);
-        return false;
-      }
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
       
-      if (!data.user) {
-        toast.error("Signup failed: No user data returned");
-        return false;
-      }
-      
-      // If admin signup, create entry in user_roles table
-      if (isAdmin && data.user) {
-        // Fixed type assertion for RPC call
-        const { error: roleError } = await (supabase
-          .rpc('insert_admin_role', { admin_user_id: data.user.id }) as Promise<{ data: any, error: any }>);
-        
-        if (roleError) {
-          // Fallback method using type assertion for table that doesn't exist in types
-          const { error: fallbackError } = await (supabase
-            .from('user_roles' as any)
-            .insert({
-              user_id: data.user.id,
-              role: 'admin'
-            }) as Promise<{ data: any, error: any }>);
-          
-          if (fallbackError) {
-            toast.error(`Error setting admin role: ${fallbackError.message}`);
-            return false;
-          }
-        }
-      }
+      // Auto-login after signup
+      const userObj = { 
+        id: newUser.id, 
+        email: newUser.email, 
+        role: isAdmin ? "admin" as const : "user" as const,
+        ranking: "customer", // Set default ranking
+        name: newUser.name,
+        phone: newUser.phone
+      };
+      setUser(userObj);
+      localStorage.setItem('user', JSON.stringify(userObj));
       
       toast.success(isAdmin ? "Admin account created successfully!" : "Account created successfully!");
       return true;
-    } catch (error: any) {
-      toast.error(`Signup error: ${error.message}`);
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast.error("Signup failed!");
       return false;
     } finally {
       setLoading(false);
     }
   };
   
-  // Log out
-  const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      toast.success("Logged out successfully");
-    } catch (error: any) {
-      toast.error(`Logout error: ${error.message}`);
-    }
+  // Logout function
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+    toast.success("Logged out successfully");
   };
   
-  // Change password
+  // Change password function
   const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
     if (!user) return false;
     
     try {
-      // First, verify current password by trying to sign in
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword
-      });
-      
-      if (verifyError) {
-        toast.error("Current password is incorrect!");
-        return false;
+      if (user.role === "admin") {
+        // Admin password change
+        if (user.email === ADMIN_EMAIL && currentPassword !== ADMIN_PASSWORD) {
+          toast.error("Current password is incorrect!");
+          return false;
+        }
+        
+        // Check for custom admin account
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const userIndex = users.findIndex((u: any) => u.email === user.email);
+        
+        if (userIndex !== -1) {
+          if (users[userIndex].password !== currentPassword) {
+            toast.error("Current password is incorrect!");
+            return false;
+          }
+          
+          users[userIndex].password = newPassword;
+          localStorage.setItem('users', JSON.stringify(users));
+          toast.success("Password updated successfully!");
+          return true;
+        }
+        
+        // In a real app, you would update the admin password in a database
+        toast.success("Admin password would be updated in a real application!");
+        return true;
+      } else {
+        // User password change
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const userIndex = users.findIndex((u: any) => u.email === user.email);
+        
+        if (userIndex === -1) {
+          toast.error("User not found!");
+          return false;
+        }
+        
+        if (users[userIndex].password !== currentPassword) {
+          toast.error("Current password is incorrect!");
+          return false;
+        }
+        
+        users[userIndex].password = newPassword;
+        localStorage.setItem('users', JSON.stringify(users));
+        toast.success("Password updated successfully!");
+        return true;
       }
-      
-      // Update password
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      
-      if (error) {
-        toast.error(`Failed to change password: ${error.message}`);
-        return false;
-      }
-      
-      toast.success("Password updated successfully!");
-      return true;
-    } catch (error: any) {
-      toast.error(`Password change error: ${error.message}`);
+    } catch (error) {
+      console.error("Password change error:", error);
+      toast.error("Failed to change password!");
       return false;
     }
   };
 
-  // Get all users (admin only)
-  const getAllUsers = async (): Promise<User[]> => {
+  // Get all users function
+  const getAllUsers = (): User[] => {
     try {
-      if (!user || user.role !== "admin") {
-        return [];
-      }
-      
-      // Fixed type assertion for RPC call
-      const { data, error } = await (supabase
-        .rpc('get_all_users') as Promise<{ data: any[], error: any }>);
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (!data) {
-        return [];
-      }
-      
-      // Map returned data to our User format
-      return data.map((u: any) => ({
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      return users.map((u: any) => ({
         id: u.id,
-        email: u.email || '',
+        email: u.email,
         name: u.name || "",
         role: u.role || "user",
-        status: (u.status === 'inactive' ? "inactive" : "active") as "active" | "inactive",
-        createdAt: u.created_at,
-        websites: [],
-        ranking: u.ranking || "customer",
+        status: u.status || "active",
+        createdAt: u.createdAt || new Date().toISOString(),
+        websites: u.websites || [],
+        ranking: u.ranking || "customer", // Default to customer instead of empty string
         phone: u.phone
       }));
     } catch (error) {
@@ -353,29 +306,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Delete user (admin only)
+  // Delete user function
   const deleteUser = async (userId: string): Promise<boolean> => {
     try {
-      // Fixed type assertion for RPC call
-      const { error } = await (supabase
-        .rpc('delete_user', { user_id_to_delete: userId }) as Promise<{ data: any, error: any }>);
-      
-      if (error) {
-        console.error("Error deleting user:", error);
-        // Try the direct admin API as fallback - type assert to avoid TypeScript errors
-        const adminAuth = supabase.auth.admin as any;
-        if (adminAuth && adminAuth.deleteUser) {
-          const { error: directError } = await adminAuth.deleteUser(userId);
-          
-          if (directError) {
-            console.error("Direct API error:", directError);
-            return false;
-          }
-        } else {
-          return false;
-        }
-      }
-      
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const updatedUsers = users.filter((u: any) => u.id !== userId);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
       return true;
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -383,99 +319,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Update user status (admin only)
+  // Update user status function
   const updateUserStatus = async (userId: string, newStatus: string): Promise<boolean> => {
     try {
-      // Fixed type assertion for RPC call
-      const { error } = await (supabase
-        .rpc('update_user_status', { 
-          user_id_to_update: userId, 
-          new_status: newStatus 
-        }) as Promise<{ data: any, error: any }>);
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const userIndex = users.findIndex((u: any) => u.id === userId);
       
-      if (error) {
-        console.error("Error updating user status:", error);
-        
-        // Fallback to direct API - type assert to avoid TypeScript errors
-        const adminAuth = supabase.auth.admin as any;
-        if (adminAuth && adminAuth.updateUserById) {
-          const { error: directError } = await adminAuth.updateUserById(
-            userId,
-            { user_metadata: { status: newStatus } }
-          );
-          
-          if (directError) {
-            console.error("Direct API error:", directError);
-            return false;
-          }
-        } else {
-          return false;
-        }
+      if (userIndex !== -1) {
+        users[userIndex].status = newStatus;
+        localStorage.setItem('users', JSON.stringify(users));
+        return true;
       }
-      
-      return true;
+      return false;
     } catch (error) {
       console.error("Error updating user status:", error);
       return false;
     }
   };
 
-  // Update user (admin only)
+  // Update user function
   const updateUser = async (userId: string, userData: Partial<User>, newPassword?: string): Promise<boolean> => {
     try {
-      // Fixed type assertion for RPC call
-      const { error } = await (supabase
-        .rpc('update_user_profile', { 
-          user_id_to_update: userId,
-          user_name: userData.name || null,
-          user_role: userData.role || null,
-          user_ranking: userData.ranking || null,
-          user_phone: userData.phone || null,
-          user_password: newPassword || null
-        }) as Promise<{ data: any, error: any }>);
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const userIndex = users.findIndex((u: any) => u.id === userId);
       
-      if (error) {
-        // Fallback to direct API
-        const updateData: any = {
-          user_metadata: {}
-        };
-        
-        if (userData.name) updateData.user_metadata.name = userData.name;
-        if (userData.role) updateData.user_metadata.role = userData.role;
-        if (userData.ranking) updateData.user_metadata.ranking = userData.ranking;
-        if (userData.phone) updateData.user_metadata.phone = userData.phone;
-        
-        // Update password if provided
-        if (newPassword) {
-          updateData.password = newPassword;
-        }
-        
-        const adminAuth = supabase.auth.admin as any;
-        if (adminAuth && adminAuth.updateUserById) {
-          const { error: directError } = await adminAuth.updateUserById(userId, updateData);
-          
-          if (directError) {
-            toast.error(`User update error: ${directError.message}`);
-            return false;
-          }
-        } else {
-          return false;
-        }
+      if (userIndex === -1) {
+        toast.error("User not found!");
+        return false;
       }
       
-      // If current user is being updated, update the user in state
+      // Update user data
+      const updatedUser = {
+        ...users[userIndex],
+        ...userData,
+      };
+      
+      // Update password if provided
+      if (newPassword) {
+        updatedUser.password = newPassword;
+      }
+      
+      users[userIndex] = updatedUser;
+      localStorage.setItem('users', JSON.stringify(users));
+      
+      // If current user is being updated, update the user in state and localStorage
       if (user && user.id === userId) {
         const currentUserObj = {
           ...user,
           ...userData,
         };
         setUser(currentUserObj);
+        localStorage.setItem('user', JSON.stringify(currentUserObj));
       }
       
       toast.success("User updated successfully!");
       return true;
-    } catch (error: any) {
-      toast.error(`User update error: ${error.message}`);
+    } catch (error) {
+      console.error("User update error:", error);
+      toast.error("Failed to update user!");
       return false;
     }
   };

@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
-import { toast } from "@/components/ui/sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -20,20 +19,11 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const success = await login(email, password, activeTab === "admin");
+    setLoading(false);
     
-    try {
-      // Format email if needed
-      const formattedEmail = email.includes("@") ? email : `${email}@aibet.asia`;
-      
-      const success = await login(formattedEmail, password, activeTab === "admin");
-      
-      if (success) {
-        navigate(activeTab === "admin" ? "/admin" : "/dashboard");
-      }
-    } catch (error: any) {
-      toast.error(`Login failed: ${error.message}`);
-    } finally {
-      setLoading(false);
+    if (success) {
+      navigate(activeTab === "admin" ? "/admin" : "/dashboard");
     }
   };
 
@@ -71,17 +61,15 @@ export default function Login() {
                       <div className="relative">
                         <Input
                           id="email"
-                          placeholder="username or full email"
+                          placeholder="username"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className="pr-24"
                           required
                         />
-                        {!email.includes("@") && (
-                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-                            @aibet.asia
-                          </div>
-                        )}
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+                          @aibet.asia
+                        </div>
                       </div>
                     </div>
                     
@@ -132,17 +120,15 @@ export default function Login() {
                       <div className="relative">
                         <Input
                           id="adminEmail"
-                          placeholder="admin or full email"
+                          placeholder="admin"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className="pr-24"
                           required
                         />
-                        {!email.includes("@") && (
-                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-                            @aibet.asia
-                          </div>
-                        )}
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+                          @aibet.asia
+                        </div>
                       </div>
                     </div>
                     

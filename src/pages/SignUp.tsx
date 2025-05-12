@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("+60");
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup, getAllUsers } = useAuth();
   const navigate = useNavigate();
 
   const validatePhone = (value: string) => {
@@ -48,21 +47,20 @@ export default function SignUp() {
       return;
     }
     
-    setLoading(true);
+    // Check if phone number already exists
+    const users = getAllUsers();
+    const phoneExists = users.some(user => user.phone === phone);
+    if (phoneExists) {
+      toast.error("This phone number has already been registered!");
+      return;
+    }
     
-    try {
-      // Format email if needed
-      const formattedEmail = email.includes("@") ? email : `${email}@aibet.asia`;
-      
-      const success = await signup(formattedEmail, password, phone, name);
-      
-      if (success) {
-        navigate("/dashboard");
-      }
-    } catch (error: any) {
-      toast.error(`Signup failed: ${error.message}`);
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const success = await signup(email, password, phone, name);
+    setLoading(false);
+    
+    if (success) {
+      navigate("/dashboard");
     }
   };
 
@@ -101,17 +99,15 @@ export default function SignUp() {
                   <div className="relative">
                     <Input
                       id="email"
-                      placeholder="username or full email"
+                      placeholder="username"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pr-24"
                       required
                     />
-                    {!email.includes("@") && (
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-                        @aibet.asia
-                      </div>
-                    )}
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+                      @aibet.asia
+                    </div>
                   </div>
                 </div>
                 
