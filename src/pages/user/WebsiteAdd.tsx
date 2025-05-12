@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useWebsites } from "@/context/WebsiteContext";
+import { toast } from "@/components/ui/sonner";
 
 export default function WebsiteAdd() {
   const [name, setName] = useState("");
@@ -15,10 +16,36 @@ export default function WebsiteAdd() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [urlError, setUrlError] = useState("");
   const [loading, setLoading] = useState(false);
   
   const { addWebsite } = useWebsites();
   const navigate = useNavigate();
+  
+  // Validate URL format
+  const validateUrl = (url: string) => {
+    // Basic URL validation
+    let formattedUrl = url.trim();
+    
+    if (!formattedUrl) {
+      setUrlError("URL is required");
+      return null;
+    }
+    
+    // Add protocol if missing
+    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+      formattedUrl = "https://" + formattedUrl;
+    }
+    
+    try {
+      new URL(formattedUrl);
+      setUrlError("");
+      return formattedUrl;
+    } catch (err) {
+      setUrlError("Please enter a valid URL");
+      return null;
+    }
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,25 +56,31 @@ export default function WebsiteAdd() {
       return;
     }
     
-    setLoading(true);
-    
-    // Format URL if needed
-    let formattedUrl = url;
-    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
-      formattedUrl = "https://" + formattedUrl;
+    // Validate URL
+    const formattedUrl = validateUrl(url);
+    if (!formattedUrl) {
+      return;
     }
     
-    // Create website object
-    const websiteData = {
-      name,
-      url: formattedUrl,
-      username,
-      password
-    };
+    setLoading(true);
     
-    addWebsite(websiteData);
-    setLoading(false);
-    navigate("/dashboard/websites");
+    try {
+      // Create website object
+      const websiteData = {
+        name,
+        url: formattedUrl,
+        username,
+        password
+      };
+      
+      addWebsite(websiteData);
+      navigate("/dashboard/websites");
+    } catch (error) {
+      console.error("Error adding website:", error);
+      toast.error("Failed to add website. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
   
   return (
@@ -85,9 +118,16 @@ export default function WebsiteAdd() {
                     id="url"
                     placeholder="www.example.com"
                     value={url}
-                    onChange={(e) => setUrl(e.target.value)}
+                    onChange={(e) => {
+                      setUrl(e.target.value);
+                      if (urlError) validateUrl(e.target.value);
+                    }}
+                    className={urlError ? "border-red-500" : ""}
                     required
                   />
+                  {urlError && (
+                    <p className="text-xs text-red-500">{urlError}</p>
+                  )}
                 </div>
               </div>
               
