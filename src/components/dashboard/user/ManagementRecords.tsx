@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Website } from "@/context/WebsiteContext";
 import { useNavigate } from "react-router-dom";
+import { FileUp } from "lucide-react";
 
 interface ManagementRecordsProps {
   approvedWebsites: Website[];
@@ -131,7 +132,7 @@ export function ManagementRecords({ approvedWebsites }: ManagementRecordsProps) 
                 onClick={() => navigate("/dashboard/websites/add")}
                 className="mt-4"
               >
-                <Upload className="mr-2 h-4 w-4" />
+                <FileUp className="mr-2 h-4 w-4" />
                 Upload Website
               </Button>
             </div>

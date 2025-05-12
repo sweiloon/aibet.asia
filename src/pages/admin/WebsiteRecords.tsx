@@ -57,18 +57,14 @@ const WebsiteRecords = () => {
 
   // Handle delete record
   const handleDeleteRecord = (websiteId: string, recordId: string) => {
-    if (confirm("Are you sure you want to delete this record?")) {
-      deleteManagementRecord(websiteId, recordId);
-      toast.success("Record deleted successfully");
-    }
+    deleteManagementRecord(websiteId, recordId);
+    toast.success("Record deleted successfully");
   };
   
   // Handle clear all records for a website
   const handleClearAllRecords = (websiteId: string) => {
-    if (confirm("Are you sure you want to clear all records for this website? This action cannot be undone.")) {
-      clearAllManagementRecords(websiteId);
-      toast.success("All records cleared successfully");
-    }
+    clearAllManagementRecords(websiteId);
+    toast.success("All records cleared successfully");
   };
 
   return (
