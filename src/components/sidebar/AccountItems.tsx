@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Settings, ShieldCheck } from "lucide-react";
@@ -22,7 +23,10 @@ export function AccountItems({
       
       {isAdmin && <SidebarMenuItem>
           <SidebarMenuButton asChild>
-            
+            <button onClick={() => navigate("/admin/users")}>
+              <ShieldCheck />
+              <span>User Management</span>
+            </button>
           </SidebarMenuButton>
         </SidebarMenuItem>}
     </SidebarMenu>;

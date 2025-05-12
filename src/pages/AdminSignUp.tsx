@@ -68,8 +68,8 @@ export default function AdminSignUp() {
     
     if (success) {
       toast.success("Admin account created successfully!");
-      // Change this line to redirect to the admin dashboard instead of the login page
-      navigate("/admin/dashboard");
+      // Redirect to admin dashboard instead of login page
+      navigate("/admin");
     }
   };
 
