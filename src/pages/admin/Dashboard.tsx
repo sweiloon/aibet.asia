@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -24,9 +23,19 @@ export default function AdminDashboard() {
   const websitesWithRecords = websites
     .filter(site => site.status === "approved" && site.managementData.length > 0)
     .sort((a, b) => {
-      const latestA = [...a.managementData].sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime())[0];
-      const latestB = [...b.managementData].sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime())[0];
-      return new Date(latestB.date).getTime() - new Date(latestA.date).getTime();
+      const latestA = [...a.managementData].sort((x, y) => {
+        const dateA = x.date || x.startDate;
+        const dateB = y.date || y.startDate;
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      })[0];
+      const latestB = [...b.managementData].sort((x, y) => {
+        const dateA = x.date || x.startDate;
+        const dateB = y.date || y.startDate;
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      })[0];
+      const dateA = latestA.date || latestA.startDate;
+      const dateB = latestB.date || latestB.startDate;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
     })
     .slice(0, 3);
 
@@ -174,11 +183,22 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                   {websitesWithRecords.map(website => {
                     const latestRecord = [...website.managementData].sort(
-                      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+                      (a, b) => {
+                        const dateA = a.date || a.startDate;
+                        const dateB = b.date || b.startDate;
+                        return new Date(dateB).getTime() - new Date(dateA).getTime();
+                      }
                     )[0];
-                    const completedTasks = latestRecord.tasks.filter(
-                      task => task.status === "completed"
-                    ).length;
+                    
+                    let completedTasks = 0;
+                    let totalTasks = 0;
+                    
+                    if (latestRecord.tasks && latestRecord.tasks.length > 0) {
+                      totalTasks = latestRecord.tasks.length;
+                      completedTasks = latestRecord.tasks.filter(
+                        task => task.status === "completed"
+                      ).length;
+                    }
                     
                     return (
                       <div key={website.id} className="p-3 border border-border rounded-lg">
@@ -186,7 +206,7 @@ export default function AdminDashboard() {
                           <div>
                             <div className="font-medium">{website.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              Updated {new Date(latestRecord.date).toLocaleDateString()}
+                              Updated {new Date(latestRecord.date || latestRecord.startDate).toLocaleDateString()}
                             </div>
                           </div>
                           <Button 
@@ -197,10 +217,12 @@ export default function AdminDashboard() {
                             Details
                           </Button>
                         </div>
-                        <div className="mt-2 text-xs">
-                          <span className="text-green-300">{completedTasks}</span>
-                          <span className="text-muted-foreground">/{latestRecord.tasks.length} tasks completed</span>
-                        </div>
+                        {latestRecord.tasks && latestRecord.tasks.length > 0 && (
+                          <div className="mt-2 text-xs">
+                            <span className="text-green-300">{completedTasks}</span>
+                            <span className="text-muted-foreground">/{totalTasks} tasks completed</span>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

@@ -36,6 +36,12 @@ export interface WebsiteManagement {
   startDate: string;
   endDate: string;
   netProfit: number;
+  date?: string; // Added this to support existing code
+  tasks?: Array<{
+    type: string;
+    description: string;
+    status: string;
+  }>; // Added this to support existing code
 }
 
 interface WebsiteContextType {

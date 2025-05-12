@@ -172,8 +172,18 @@ export default function WebsiteDetail() {
                     {website.managementData.length > 0
                       ? new Date(
                           [...website.managementData].sort(
-                            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-                          )[0].date
+                            (a, b) => {
+                              const dateA = a.date || a.startDate;
+                              const dateB = b.date || b.startDate;
+                              return new Date(dateB).getTime() - new Date(dateA).getTime();
+                            }
+                          )[0].date || [...website.managementData].sort(
+                            (a, b) => {
+                              const dateA = a.date || a.startDate;
+                              const dateB = b.date || b.startDate;
+                              return new Date(dateB).getTime() - new Date(dateA).getTime();
+                            }
+                          )[0].startDate
                         ).toLocaleDateString()
                       : "No updates yet"}
                   </div>
@@ -192,30 +202,47 @@ export default function WebsiteDetail() {
             {website.managementData.length > 0 ? (
               <div className="space-y-6">
                 {[...website.managementData]
-                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .sort((a, b) => {
+                    const dateA = a.date || a.startDate;
+                    const dateB = b.date || b.startDate;
+                    return new Date(dateB).getTime() - new Date(dateA).getTime();
+                  })
                   .map((record) => (
                     <div key={record.id} className="border border-border rounded-lg p-4">
                       <div className="font-medium text-lg mb-3">
-                        {new Date(record.date).toLocaleDateString()}
+                        {new Date(record.date || record.startDate).toLocaleDateString()}
                       </div>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Task Type</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {record.tasks.map((task, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-medium">{task.type}</TableCell>
-                              <TableCell>{task.description}</TableCell>
-                              <TableCell>{getStatusBadge(task.status)}</TableCell>
+                      {record.tasks && record.tasks.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Task Type</TableHead>
+                              <TableHead>Description</TableHead>
+                              <TableHead>Status</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {record.tasks.map((task, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-medium">{task.type}</TableCell>
+                                <TableCell>{task.description}</TableCell>
+                                <TableCell>{getStatusBadge(task.status)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <div className="space-y-2">
+                          <div><strong>Day:</strong> {record.day}</div>
+                          <div><strong>Credit:</strong> {record.credit}</div>
+                          <div><strong>Profit:</strong> {record.profit}</div>
+                          <div><strong>Gross Profit:</strong> {record.grossProfit}</div>
+                          <div><strong>Service Fee:</strong> {record.serviceFee}</div>
+                          <div><strong>Start Date:</strong> {record.startDate}</div>
+                          <div><strong>End Date:</strong> {record.endDate}</div>
+                          <div><strong>Net Profit:</strong> {record.netProfit}</div>
+                        </div>
+                      )}
                     </div>
                   ))}
               </div>

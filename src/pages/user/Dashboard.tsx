@@ -89,38 +89,69 @@ export default function UserDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {site.managementData.slice(0, 3).map(record => (
-                          <div key={record.id} className="border border-border p-4 rounded-md">
-                            <div className="flex justify-between items-center mb-2">
-                              <strong>Date: {new Date(record.date).toLocaleDateString()}</strong>
-                            </div>
-                            <div className="space-y-2">
-                              {record.tasks.map((task, index) => (
-                                <div 
-                                  key={index}
-                                  className="flex items-center justify-between text-sm"
-                                >
-                                  <div>
-                                    <span className="font-semibold">{task.type}:</span> {task.description}
+                        {site.managementData
+                          .sort((a, b) => {
+                            const dateA = a.date || a.startDate;
+                            const dateB = b.date || b.startDate;
+                            return new Date(dateB).getTime() - new Date(dateA).getTime();
+                          })
+                          .slice(0, 3)
+                          .map(record => {
+                            if (record.tasks && record.tasks.length > 0) {
+                              return (
+                                <div key={record.id} className="border border-border p-4 rounded-md">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <strong>Date: {new Date(record.date || record.startDate).toLocaleDateString()}</strong>
                                   </div>
-                                  <div>
-                                    <span 
-                                      className={`px-2 py-1 rounded-full text-xs ${
-                                        task.status === "completed"
-                                          ? "bg-green-500/20 text-green-300"
-                                          : task.status === "in-progress"
-                                          ? "bg-yellow-500/20 text-yellow-300"
-                                          : "bg-blue-500/20 text-blue-300"
-                                      }`}
-                                    >
-                                      {task.status}
-                                    </span>
+                                  <div className="space-y-2">
+                                    {record.tasks.map((task, index) => (
+                                      <div 
+                                        key={index}
+                                        className="flex items-center justify-between text-sm"
+                                      >
+                                        <div>
+                                          <span className="font-semibold">{task.type}:</span> {task.description}
+                                        </div>
+                                        <div>
+                                          <span 
+                                            className={`px-2 py-1 rounded-full text-xs ${
+                                              task.status === "completed"
+                                                ? "bg-green-500/20 text-green-300"
+                                                : task.status === "in-progress"
+                                                ? "bg-yellow-500/20 text-yellow-300"
+                                                : "bg-blue-500/20 text-blue-300"
+                                            }`}
+                                          >
+                                            {task.status}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
+                              );
+                            } else {
+                              // For the new management record format
+                              return (
+                                <div key={record.id} className="border border-border p-4 rounded-md">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <strong>Day: {record.day}</strong>
+                                    <span>{record.startDate} - {record.endDate}</span>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span>Credit: {record.credit}</span>
+                                      <span>Profit: {record.profit}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span>Gross Profit: {record.grossProfit}</span>
+                                      <span>Net Profit: {record.netProfit}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                          })}
                       </div>
                       
                       <div className="mt-4 flex justify-end">

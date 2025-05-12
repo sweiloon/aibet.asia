@@ -94,13 +94,24 @@ export default function AdminWebsiteDetail() {
     if (website) {
       if (editRecordId) {
         // Update existing record
-        updateManagementRecord(website.id, editRecordId, tasks);
+        updateManagementRecord(website.id, editRecordId, {
+          tasks: tasks,
+          date: new Date(newRecordDate).toISOString()
+        });
         toast.success("Management record updated successfully");
       } else {
         // Add new record
         addManagementRecord(website.id, {
           date: new Date(newRecordDate).toISOString(),
-          tasks
+          tasks: tasks,
+          day: "Day 1", // Adding default values for the new fields
+          credit: 0,
+          profit: 0,
+          grossProfit: 0,
+          serviceFee: 0,
+          startDate: newRecordDate,
+          endDate: newRecordDate,
+          netProfit: 0
         });
         toast.success("Management record added successfully");
       }
@@ -124,8 +135,8 @@ export default function AdminWebsiteDetail() {
   
   const handleEditRecord = (record: WebsiteManagement) => {
     setEditRecordId(record.id);
-    setNewRecordDate(new Date(record.date).toISOString().split("T")[0]);
-    setTasks(record.tasks);
+    setNewRecordDate(new Date(record.date || record.startDate).toISOString().split("T")[0]);
+    setTasks(record.tasks || []);
     setDialogOpen(true);
   };
   
@@ -283,13 +294,17 @@ export default function AdminWebsiteDetail() {
                 {website.managementData.length > 0 ? (
                   <div className="space-y-4">
                     {[...website.managementData]
-                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                      .sort((a, b) => {
+                        const dateA = a.date || a.startDate;
+                        const dateB = b.date || b.startDate;
+                        return new Date(dateB).getTime() - new Date(dateA).getTime();
+                      })
                       .slice(0, 3)
                       .map(record => (
                         <div key={record.id} className="border border-border rounded-lg p-4">
                           <div className="flex justify-between items-center mb-2">
                             <div className="font-medium">
-                              {new Date(record.date).toLocaleDateString()}
+                              {new Date(record.date || record.startDate).toLocaleDateString()}
                             </div>
                             <div className="flex gap-2">
                               <Button 
@@ -309,21 +324,23 @@ export default function AdminWebsiteDetail() {
                             </div>
                           </div>
                           
-                          <div className="space-y-2">
-                            {record.tasks.map((task, index) => (
-                              <div 
-                                key={index}
-                                className="flex items-center justify-between text-sm"
-                              >
-                                <div>
-                                  <span className="font-semibold">{task.type}:</span> {task.description}
+                          {record.tasks && record.tasks.length > 0 && (
+                            <div className="space-y-2">
+                              {record.tasks.map((task, index) => (
+                                <div 
+                                  key={index}
+                                  className="flex items-center justify-between text-sm"
+                                >
+                                  <div>
+                                    <span className="font-semibold">{task.type}:</span> {task.description}
+                                  </div>
+                                  <div>
+                                    {getStatusBadge(task.status)}
+                                  </div>
                                 </div>
-                                <div>
-                                  {getStatusBadge(task.status)}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                       
@@ -374,20 +391,30 @@ export default function AdminWebsiteDetail() {
                     </TableHeader>
                     <TableBody>
                       {[...website.managementData]
-                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        .sort((a, b) => {
+                          const dateA = a.date || a.startDate;
+                          const dateB = b.date || b.startDate;
+                          return new Date(dateB).getTime() - new Date(dateA).getTime();
+                        })
                         .map(record => {
-                          const completedCount = record.tasks.filter(
-                            task => task.status === "completed"
-                          ).length;
+                          let completedCount = 0;
+                          let totalTasks = 0;
+                          
+                          if (record.tasks && record.tasks.length > 0) {
+                            totalTasks = record.tasks.length;
+                            completedCount = record.tasks.filter(
+                              task => task.status === "completed"
+                            ).length;
+                          }
                           
                           return (
                             <TableRow key={record.id}>
                               <TableCell className="font-medium">
-                                {new Date(record.date).toLocaleDateString()}
+                                {new Date(record.date || record.startDate).toLocaleDateString()}
                               </TableCell>
-                              <TableCell>{record.tasks.length} tasks</TableCell>
+                              <TableCell>{record.tasks ? record.tasks.length : 0} tasks</TableCell>
                               <TableCell>
-                                {completedCount}/{record.tasks.length}
+                                {record.tasks ? `${completedCount}/${totalTasks}` : "N/A"}
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end gap-2">
