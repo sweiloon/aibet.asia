@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         const { data: fallbackData, error: fallbackError } = await supabase
-          .from('user_roles')
+          .from('user_roles' as any)
           .select('user_id')
           .eq('role', 'admin')
           .limit(1)
@@ -170,7 +170,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (roleError || !roleData) {
           // Fallback method
           const { data: fallbackData, error: fallbackError } = await supabase
-            .from('user_roles')
+            .from('user_roles' as any)
             .select('role')
             .eq('user_id', data.user.id)
             .eq('role', 'admin')
@@ -250,13 +250,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .rpc('insert_admin_role', { admin_user_id: data.user.id });
         
         if (roleError) {
-          // Fallback method
+          // Fallback method using type assertion for table that doesn't exist in types
           const { error: fallbackError } = await supabase
-            .from('user_roles')
+            .from('user_roles' as any)
             .insert({
               user_id: data.user.id,
               role: 'admin'
-            });
+            } as any);
           
           if (fallbackError) {
             toast.error(`Error setting admin role: ${fallbackError.message}`);
@@ -335,13 +335,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
       
+      if (!data) {
+        return [];
+      }
+      
       // Map returned data to our User format
       return data.map((u: any) => ({
         id: u.id,
         email: u.email || '',
         name: u.name || "",
         role: u.role || "user",
-        status: u.status === 'inactive' ? "inactive" : "active",
+        status: (u.status === 'inactive' ? "inactive" : "active") as "active" | "inactive",
         createdAt: u.created_at,
         websites: [],
         ranking: u.ranking || "customer",
@@ -361,8 +365,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         console.error("Error deleting user:", error);
-        // Try the direct admin API as fallback
-        const { error: directError } = await supabase.auth.admin.deleteUser(userId);
+        // Try the direct admin API as fallback - type assert to avoid TypeScript errors
+        const { error: directError } = await supabase.auth.admin.deleteUser(userId as any);
         
         if (directError) {
           console.error("Direct API error:", directError);
@@ -389,10 +393,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error("Error updating user status:", error);
         
-        // Fallback to direct API
+        // Fallback to direct API - type assert to avoid TypeScript errors
         const { error: directError } = await supabase.auth.admin.updateUserById(
           userId,
-          { user_metadata: { status: newStatus } }
+          { user_metadata: { status: newStatus } } as any
         );
         
         if (directError) {

@@ -45,8 +45,7 @@ export default function AdminUsers() {
         setUsers(allUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
-        toast({
-          title: "Error",
+        toast("Error", {
           description: "Failed to load users. Please refresh the page.",
           variant: "destructive"
         });
@@ -69,9 +68,8 @@ export default function AdminUsers() {
     
     try {
       await deleteUser(userToDelete);
-      toast({
-        title: "User deleted",
-        description: "The user has been successfully deleted.",
+      toast("User deleted", {
+        description: "The user has been successfully deleted."
       });
       setIsDeleteDialogOpen(false);
       setUserToDelete(null);
@@ -79,8 +77,7 @@ export default function AdminUsers() {
       // Update the users list
       setUsers(users.filter(u => u.id !== userToDelete));
     } catch (error) {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to delete user. Please try again.",
         variant: "destructive"
       });
@@ -92,9 +89,8 @@ export default function AdminUsers() {
     
     try {
       await updateUserStatus(userId, newStatus);
-      toast({
-        title: "Status updated",
-        description: `User status changed to ${newStatus}.`,
+      toast("Status updated", {
+        description: `User status changed to ${newStatus}.`
       });
       
       // Update user in the list
@@ -102,8 +98,7 @@ export default function AdminUsers() {
         u.id === userId ? { ...u, status: newStatus as "active" | "inactive" } : u
       ));
     } catch (error) {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to update user status. Please try again.",
         variant: "destructive"
       });
