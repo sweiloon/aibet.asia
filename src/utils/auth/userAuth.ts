@@ -62,6 +62,7 @@ export const signupUtil = async (
     
     const { validatePhoneNumber } = require("./validation");
     if (!validatePhoneNumber(phone)) {
+      toast.error("Invalid phone number format!");
       return { success: false, user: null };
     }
     

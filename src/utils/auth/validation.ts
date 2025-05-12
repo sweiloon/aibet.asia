@@ -1,15 +1,15 @@
 
-import { toast } from "@/components/ui/sonner";
-
-// Validate phone number format
+// Validations
 export const validatePhoneNumber = (phone: string): boolean => {
-  // Phone must start with +60 followed by a digit from 1-9
-  const phonePattern = /^\+60[1-9]/;
+  // Must start with +60 followed by any number of digits (at least 1)
+  const phonePattern = /^\+60\d+$/;
   
-  if (!phonePattern.test(phone)) {
-    toast.error("Phone number must start with +60 followed by a digit from 1-9");
-    return false;
+  // Test if the phone matches the pattern and is at least 10 characters long (+60 plus at least 8 digits)
+  const isValid = phonePattern.test(phone) && phone.length >= 10;
+  
+  if (!isValid) {
+    console.log("Phone validation failed for:", phone);
   }
   
-  return true;
+  return isValid;
 };

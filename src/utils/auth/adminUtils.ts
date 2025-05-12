@@ -8,7 +8,9 @@ export const checkAdminExistsUtil = async (): Promise<boolean> => {
     // In a real app, this would check the database for admin accounts
     // For this mock implementation, we'll check localStorage
     const users = JSON.parse(localStorage.getItem('users') || '[]');
-    return users.some((user: any) => user.role === "admin");
+    const adminExists = users.some((user: any) => user.role === "admin");
+    console.log("Admin exists check:", adminExists);
+    return adminExists;
   } catch (error) {
     console.error("Error checking admin existence:", error);
     return false;
@@ -32,7 +34,9 @@ export const checkAdminLogin = (email: string, password: string) => {
         id: adminUser.id, 
         email: adminUser.email, 
         role: "admin" as const,
-        ranking: adminUser.ranking || "customer" // Ensure ranking is preserved
+        ranking: adminUser.ranking || "customer", // Ensure ranking is preserved
+        name: adminUser.name,
+        phone: adminUser.phone
       };
       toast.success("Admin login successful!");
       return { success: true, user: userObj };
