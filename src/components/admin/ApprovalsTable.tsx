@@ -16,7 +16,8 @@ import {
   KeyRound, 
   Eye,
   FileText,
-  File
+  File,
+  Download
 } from "lucide-react";
 import { Website } from "@/context/WebsiteContext";
 
@@ -74,6 +75,39 @@ export const ApprovalsTable = ({
     );
   };
 
+  // Function to check if file is downloadable (PDF or image)
+  const isDownloadable = (item: Website) => {
+    return item.files && item.files.length > 0 && 
+           (item.type === 'id-card' || item.type === 'bank-statement' || item.type === 'document');
+  };
+
+  // Function to handle download of files
+  const handleDownload = (item: Website) => {
+    if (!item.files || item.files.length === 0) return;
+
+    // For each file in the item, create an anchor and trigger download
+    item.files.forEach((file, index) => {
+      // Check if file has a valid URL
+      if (file.url) {
+        const link = document.createElement('a');
+        link.href = file.url;
+        link.download = `${item.name}-file-${index + 1}${getFileExtension(file.url)}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+  };
+
+  // Helper function to get file extension
+  const getFileExtension = (url: string) => {
+    const parts = url.split('.');
+    if (parts.length > 1) {
+      return `.${parts[parts.length - 1]}`;
+    }
+    return '';
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -124,6 +158,19 @@ export const ApprovalsTable = ({
                     <Eye className="h-4 w-4 mr-1" />
                     Details
                   </Button>
+                  
+                  {/* Download button for PDF and images */}
+                  {isDownloadable(item) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300"
+                      onClick={() => handleDownload(item)}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Download
+                    </Button>
+                  )}
                   
                   {showActions && onApprove && onReject && (
                     <>
