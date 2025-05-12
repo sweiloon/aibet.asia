@@ -432,14 +432,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Get all users function
   const getAllUsers = (): User[] => {
     try {
-      // First try to get users from Supabase
-      // Note: This is a synchronous function, so we return cached data first,
-      // then fetch fresh data asynchronously
-      
-      // Start with data from localStorage as fallback
+      // First try to get users from localStorage as fallback
       const localUsers = JSON.parse(localStorage.getItem('users') || '[]').map((u: any) => ({
         id: u.id,
-        email: u.email,
+        email: u.email || "",
         name: u.name || "",
         role: u.role || "user",
         status: u.status || "active",
@@ -452,29 +448,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Fetch Supabase users asynchronously (will be used on next render)
       (async () => {
         try {
+          // First get profiles
           const { data: profiles } = await supabase
             .from("profiles")
             .select("*");
-            
+          
           if (profiles && profiles.length > 0) {
-            // Store the updated user list in localStorage for future use
-            const supabaseUsers = profiles.map(profile => ({
-              id: profile.id,
-              // Get email from auth.users is not possible directly, 
-              // so we'll use the profile data which doesn't have email yet
-              email: profile.id, // We'll use ID as a placeholder since email isn't in profile table
-              name: profile.name || "",
-              role: (profile.role as "user" | "admin") || "user",
-              status: (profile.status as "active" | "inactive") || "active",
-              createdAt: profile.created_at || new Date().toISOString(),
-              websites: [],
-              ranking: profile.ranking || "customer",
-              phone: profile.phone
+            // Then fetch each user's email from auth.users via admin API or using the current session
+            const usersWithEmails = await Promise.all(profiles.map(async (profile) => {
+              try {
+                // Try to get user email from auth meta
+                const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
+                return {
+                  id: profile.id,
+                  email: authUser?.user?.email || profile.id, // Fallback to ID if no email found
+                  name: profile.name || "",
+                  role: (profile.role as "user" | "admin") || "user",
+                  status: (profile.status as "active" | "inactive") || "active",
+                  createdAt: profile.created_at || new Date().toISOString(),
+                  websites: [],
+                  ranking: profile.ranking || "customer",
+                  phone: profile.phone
+                };
+              } catch (error) {
+                // If admin API fails, check if this is the current user and use their email
+                if (session?.user && profile.id === session.user.id) {
+                  return {
+                    id: profile.id,
+                    email: session.user.email || profile.id,
+                    name: profile.name || "",
+                    role: (profile.role as "user" | "admin") || "user",
+                    status: (profile.status as "active" | "inactive") || "active",
+                    createdAt: profile.created_at || new Date().toISOString(),
+                    websites: [],
+                    ranking: profile.ranking || "customer",
+                    phone: profile.phone
+                  };
+                }
+                
+                // Otherwise use the ID as email (fallback)
+                return {
+                  id: profile.id,
+                  email: profile.id, // Using ID as placeholder
+                  name: profile.name || "",
+                  role: (profile.role as "user" | "admin") || "user",
+                  status: (profile.status as "active" | "inactive") || "active",
+                  createdAt: profile.created_at || new Date().toISOString(),
+                  websites: [],
+                  ranking: profile.ranking || "customer",
+                  phone: profile.phone
+                };
+              }
             }));
-            localStorage.setItem('users', JSON.stringify(supabaseUsers));
+            
+            localStorage.setItem('users', JSON.stringify(usersWithEmails));
+            return usersWithEmails;
           }
+          
+          return localUsers;
         } catch (error) {
           console.error("Error fetching users from Supabase:", error);
+          return localUsers;
         }
       })();
       

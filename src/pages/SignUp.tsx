@@ -60,7 +60,9 @@ export default function SignUp() {
     setLoading(false);
     
     if (success) {
-      navigate("/dashboard");
+      toast.success("Account created successfully! Redirecting to dashboard...");
+      // Add a small delay before redirecting to ensure toast is visible
+      setTimeout(() => navigate("/dashboard"), 1000);
     }
   };
 

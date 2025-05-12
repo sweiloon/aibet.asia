@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -69,7 +68,7 @@ export default function AdminSignUp() {
     if (success) {
       toast.success("Admin account created successfully!");
       // Redirect to admin dashboard instead of login page
-      navigate("/admin");
+      setTimeout(() => navigate("/admin"), 1000);
     }
   };
 
