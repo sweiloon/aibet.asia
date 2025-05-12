@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,23 +23,43 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { EditUserDialog } from "@/components/admin/EditUserDialog";
+import { User } from "@/context/AuthContext";
 
 export default function AdminUsers() {
   const { user: currentUser, getAllUsers, deleteUser, updateUserStatus, updateUser } = useAuth();
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [userToEdit, setUserToEdit] = useState<any | null>(null);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Get all users from auth context
-  const allUsers = getAllUsers();
+  // Fetch users when component mounts
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const allUsers = await getAllUsers();
+        setUsers(allUsers);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load users. Please refresh the page.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUsers();
+  }, [getAllUsers]);
   
   // Filter users based on search term
-  const filteredUsers = allUsers.filter(u => 
+  const filteredUsers = users.filter(u => 
     (u.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -55,6 +75,9 @@ export default function AdminUsers() {
       });
       setIsDeleteDialogOpen(false);
       setUserToDelete(null);
+      
+      // Update the users list
+      setUsers(users.filter(u => u.id !== userToDelete));
     } catch (error) {
       toast({
         title: "Error",
@@ -73,6 +96,11 @@ export default function AdminUsers() {
         title: "Status updated",
         description: `User status changed to ${newStatus}.`,
       });
+      
+      // Update user in the list
+      setUsers(users.map(u => 
+        u.id === userId ? { ...u, status: newStatus as "active" | "inactive" } : u
+      ));
     } catch (error) {
       toast({
         title: "Error",
@@ -87,13 +115,22 @@ export default function AdminUsers() {
     setIsDeleteDialogOpen(true);
   };
 
-  const openEditDialog = (user: any) => {
+  const openEditDialog = (user: User) => {
     setUserToEdit(user);
     setIsEditDialogOpen(true);
   };
   
-  const handleSaveUser = async (userId: string, userData: Partial<any>, newPassword?: string) => {
-    return await updateUser(userId, userData, newPassword);
+  const handleSaveUser = async (userId: string, userData: Partial<User>, newPassword?: string) => {
+    const result = await updateUser(userId, userData, newPassword);
+    
+    if (result) {
+      // Update the user in the list
+      setUsers(users.map(u => 
+        u.id === userId ? { ...u, ...userData } : u
+      ));
+    }
+    
+    return result;
   };
   
   const getRankingBadge = (ranking: string) => {
@@ -164,7 +201,13 @@ export default function AdminUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length > 0 ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-6">
+                      <p>Loading users...</p>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredUsers.length > 0 ? (
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.email}</TableCell>

@@ -108,17 +108,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Check if admin exists
   const checkAdminExists = async (): Promise<boolean> => {
     try {
+      // We need to use raw SQL query here since the types are not updated yet
       const { data, error } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin')
-        .limit(1);
+        .rpc('check_admin_exists')
+        .select();
       
       if (error) {
-        throw error;
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('role', 'admin')
+          .limit(1)
+          .single();
+        
+        if (fallbackError && fallbackError.code !== 'PGRST116') {
+          console.error("Error checking admin existence:", fallbackError);
+          return false;
+        }
+        
+        return !!fallbackData;
       }
       
-      return (data && data.length > 0);
+      return data && data.length > 0;
     } catch (error) {
       console.error("Error checking admin existence:", error);
       return false;
@@ -151,17 +162,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // For admin login, verify the user has admin role
       if (isAdmin) {
+        // We need to use raw SQL query here since the types are not updated yet
         const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .eq('role', 'admin')
-          .single();
+          .rpc('check_user_is_admin', { user_id: data.user.id })
+          .select();
         
         if (roleError || !roleData) {
-          toast.error("You don't have admin permissions");
-          await supabase.auth.signOut();
-          return false;
+          // Fallback method
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
+          
+          if (fallbackError || !fallbackData) {
+            toast.error("You don't have admin permissions");
+            await supabase.auth.signOut();
+            return false;
+          }
         }
       }
       
@@ -226,16 +245,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // If admin signup, create entry in user_roles table
       if (isAdmin && data.user) {
+        // We need to use raw SQL query here since the types are not updated yet
         const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: data.user.id,
-            role: 'admin'
-          });
+          .rpc('insert_admin_role', { admin_user_id: data.user.id });
         
         if (roleError) {
-          toast.error(`Error setting admin role: ${roleError.message}`);
-          return false;
+          // Fallback method
+          const { error: fallbackError } = await supabase
+            .from('user_roles')
+            .insert({
+              user_id: data.user.id,
+              role: 'admin'
+            });
+          
+          if (fallbackError) {
+            toast.error(`Error setting admin role: ${fallbackError.message}`);
+            return false;
+          }
         }
       }
       
@@ -301,23 +327,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // In a real application, this would fetch from a profiles table
       // or an admin-only function since auth.users cannot be directly queried
-      const { data, error } = await supabase.auth.admin.listUsers();
+      
+      // Using RPC function instead of direct table access for better type safety
+      const { data, error } = await supabase.rpc('get_all_users');
       
       if (error) {
         throw error;
       }
       
-      // Map Supabase users to our User format
-      return data.users.map(u => ({
+      // Map returned data to our User format
+      return data.map((u: any) => ({
         id: u.id,
         email: u.email || '',
-        name: u.user_metadata?.name || "",
-        role: u.user_metadata?.role || "user",
-        status: u.banned ? "inactive" : "active",
+        name: u.name || "",
+        role: u.role || "user",
+        status: u.status === 'inactive' ? "inactive" : "active",
         createdAt: u.created_at,
         websites: [],
-        ranking: u.user_metadata?.ranking || "customer",
-        phone: u.user_metadata?.phone
+        ranking: u.ranking || "customer",
+        phone: u.phone
       }));
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -328,11 +356,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Delete user (admin only)
   const deleteUser = async (userId: string): Promise<boolean> => {
     try {
-      // Delete user via admin API
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      // Delete user via RPC function
+      const { error } = await supabase.rpc('delete_user', { user_id_to_delete: userId });
       
       if (error) {
-        throw error;
+        console.error("Error deleting user:", error);
+        // Try the direct admin API as fallback
+        const { error: directError } = await supabase.auth.admin.deleteUser(userId);
+        
+        if (directError) {
+          console.error("Direct API error:", directError);
+          return false;
+        }
       }
       
       return true;
@@ -345,14 +380,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Update user status (admin only)
   const updateUserStatus = async (userId: string, newStatus: string): Promise<boolean> => {
     try {
-      // Update user banned status based on newStatus
-      const { error } = await supabase.auth.admin.updateUserById(
-        userId,
-        { banned: newStatus === "inactive" }
-      );
+      // Update user status via RPC function
+      const { error } = await supabase.rpc('update_user_status', { 
+        user_id_to_update: userId, 
+        new_status: newStatus 
+      });
       
       if (error) {
-        throw error;
+        console.error("Error updating user status:", error);
+        
+        // Fallback to direct API
+        const { error: directError } = await supabase.auth.admin.updateUserById(
+          userId,
+          { user_metadata: { status: newStatus } }
+        );
+        
+        if (directError) {
+          console.error("Direct API error:", directError);
+          return false;
+        }
       }
       
       return true;
@@ -365,25 +411,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Update user (admin only)
   const updateUser = async (userId: string, userData: Partial<User>, newPassword?: string): Promise<boolean> => {
     try {
-      // Update user data
-      const updateData: any = {
-        user_metadata: {}
-      };
-      
-      if (userData.name) updateData.user_metadata.name = userData.name;
-      if (userData.role) updateData.user_metadata.role = userData.role;
-      if (userData.ranking) updateData.user_metadata.ranking = userData.ranking;
-      if (userData.phone) updateData.user_metadata.phone = userData.phone;
-      
-      // Update password if provided
-      if (newPassword) {
-        updateData.password = newPassword;
-      }
-      
-      const { error } = await supabase.auth.admin.updateUserById(userId, updateData);
+      // Update user data via RPC function
+      const { error } = await supabase.rpc('update_user_profile', { 
+        user_id_to_update: userId,
+        user_name: userData.name,
+        user_role: userData.role,
+        user_ranking: userData.ranking,
+        user_phone: userData.phone,
+        user_password: newPassword
+      });
       
       if (error) {
-        throw error;
+        // Fallback to direct API
+        const updateData: any = {
+          user_metadata: {}
+        };
+        
+        if (userData.name) updateData.user_metadata.name = userData.name;
+        if (userData.role) updateData.user_metadata.role = userData.role;
+        if (userData.ranking) updateData.user_metadata.ranking = userData.ranking;
+        if (userData.phone) updateData.user_metadata.phone = userData.phone;
+        
+        // Update password if provided
+        if (newPassword) {
+          updateData.password = newPassword;
+        }
+        
+        const { error: directError } = await supabase.auth.admin.updateUserById(userId, updateData);
+        
+        if (directError) {
+          toast.error(`User update error: ${directError.message}`);
+          return false;
+        }
       }
       
       // If current user is being updated, update the user in state
