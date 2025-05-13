@@ -1,6 +1,11 @@
-
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Website } from "@/context/WebsiteContext";
 import { useNavigate } from "react-router-dom";
 import { FileUp } from "lucide-react";
@@ -9,18 +14,20 @@ interface ManagementRecordsProps {
   approvedWebsites: Website[];
 }
 
-export function ManagementRecords({ approvedWebsites }: ManagementRecordsProps) {
+export function ManagementRecords({
+  approvedWebsites,
+}: ManagementRecordsProps) {
   const navigate = useNavigate();
-  
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Recent Management Records</h2>
-      
+
       {approvedWebsites.length > 0 ? (
         <div className="space-y-4">
           {approvedWebsites
-            .filter(site => site.managementData.length > 0)
-            .map(site => (
+            .filter((site) => site.managementData.length > 0)
+            .map((site) => (
               <Card key={site.id} className="glass-morphism overflow-hidden">
                 <CardHeader>
                   <CardTitle>{site.name}</CardTitle>
@@ -30,29 +37,42 @@ export function ManagementRecords({ approvedWebsites }: ManagementRecordsProps) 
                   <div className="space-y-4">
                     {site.managementData
                       .sort((a, b) => {
-                        const dateA = a.date || a.startDate;
-                        const dateB = b.date || b.startDate;
-                        return new Date(dateB).getTime() - new Date(dateA).getTime();
+                        const dateA = a.date || a.start_date;
+                        const dateB = b.date || b.start_date;
+                        return (
+                          new Date(dateB).getTime() - new Date(dateA).getTime()
+                        );
                       })
                       .slice(0, 3)
-                      .map(record => {
+                      .map((record) => {
                         if (record.tasks && record.tasks.length > 0) {
                           return (
-                            <div key={record.id} className="border border-border p-4 rounded-md">
+                            <div
+                              key={record.id}
+                              className="border border-border p-4 rounded-md"
+                            >
                               <div className="flex justify-between items-center mb-2">
-                                <strong>Date: {new Date(record.date || record.startDate).toLocaleDateString()}</strong>
+                                <strong>
+                                  Date:{" "}
+                                  {new Date(
+                                    record.date || record.start_date
+                                  ).toLocaleDateString()}
+                                </strong>
                               </div>
                               <div className="space-y-2">
                                 {record.tasks.map((task, index) => (
-                                  <div 
+                                  <div
                                     key={index}
                                     className="flex items-center justify-between text-sm"
                                   >
                                     <div>
-                                      <span className="font-semibold">{task.type}:</span> {task.description}
+                                      <span className="font-semibold">
+                                        {task.type}:
+                                      </span>{" "}
+                                      {task.description}
                                     </div>
                                     <div>
-                                      <span 
+                                      <span
                                         className={`px-2 py-1 rounded-full text-xs ${
                                           task.status === "completed"
                                             ? "bg-green-500/20 text-green-300"
@@ -72,19 +92,53 @@ export function ManagementRecords({ approvedWebsites }: ManagementRecordsProps) 
                         } else {
                           // For the new management record format
                           return (
-                            <div key={record.id} className="border border-border p-4 rounded-md">
-                              <div className="flex justify-between items-center mb-2">
-                                <strong>Day: {record.day}</strong>
-                                <span>{record.startDate} - {record.endDate}</span>
+                            <div
+                              key={record.id}
+                              className="border border-border p-4 rounded-md"
+                            >
+                              <div className="font-medium text-lg mb-3">
+                                {record.start_date
+                                  ? new Date(
+                                      record.start_date
+                                    ).toLocaleDateString()
+                                  : "Invalid Date"}
                               </div>
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span>Credit: {record.credit}</span>
-                                  <span>Profit: {record.profit}</span>
+                              <div className="space-y-1 text-sm">
+                                <div>
+                                  <b>Day:</b> {record.day ?? "-"}
                                 </div>
-                                <div className="flex items-center justify-between text-sm">
-                                  <span>Gross Profit: {record.grossProfit}</span>
-                                  <span>Net Profit: {record.netProfit}</span>
+                                <div>
+                                  <b>Credit:</b> {record.credit ?? "-"}
+                                </div>
+                                <div>
+                                  <b>Profit:</b> {record.profit ?? "-"}
+                                </div>
+                                <div>
+                                  <b>Gross Profit:</b>{" "}
+                                  {record.gross_profit ?? "-"}
+                                </div>
+                                <div>
+                                  <b>Service Fee:</b>{" "}
+                                  {record.service_fee ?? "-"}
+                                </div>
+                                <div>
+                                  <b>Start Date:</b>{" "}
+                                  {record.start_date
+                                    ? new Date(
+                                        record.start_date
+                                      ).toLocaleDateString()
+                                    : "-"}
+                                </div>
+                                <div>
+                                  <b>End Date:</b>{" "}
+                                  {record.end_date
+                                    ? new Date(
+                                        record.end_date
+                                      ).toLocaleDateString()
+                                    : "-"}
+                                </div>
+                                <div>
+                                  <b>Net Profit:</b> {record.net_profit ?? "-"}
                                 </div>
                               </div>
                             </div>
@@ -92,9 +146,9 @@ export function ManagementRecords({ approvedWebsites }: ManagementRecordsProps) 
                         }
                       })}
                   </div>
-                  
+
                   <div className="mt-4 flex justify-end">
-                    <Button 
+                    <Button
                       variant="outline"
                       onClick={() => navigate(`/dashboard/websites/${site.id}`)}
                     >
@@ -104,16 +158,16 @@ export function ManagementRecords({ approvedWebsites }: ManagementRecordsProps) 
                 </CardContent>
               </Card>
             ))}
-          
-          {approvedWebsites.filter(site => 
-            site.managementData.length > 0
-          ).length === 0 && (
+
+          {approvedWebsites.filter((site) => site.managementData.length > 0)
+            .length === 0 && (
             <Card className="glass-morphism">
               <CardContent className="pt-6">
                 <div className="text-center py-6">
                   <p>No management records available yet.</p>
                   <p className="text-muted-foreground text-sm mt-1">
-                    Management records will appear once our team starts working on your websites.
+                    Management records will appear once our team starts working
+                    on your websites.
                   </p>
                 </div>
               </CardContent>
@@ -126,9 +180,10 @@ export function ManagementRecords({ approvedWebsites }: ManagementRecordsProps) 
             <div className="text-center py-6">
               <p className="text-xl">No approved websites yet</p>
               <p className="text-muted-foreground mt-2">
-                Submit your websites for approval to see management records here.
+                Submit your websites for approval to see management records
+                here.
               </p>
-              <Button 
+              <Button
                 onClick={() => navigate("/dashboard/websites/add")}
                 className="mt-4"
               >

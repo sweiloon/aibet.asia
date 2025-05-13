@@ -1,8 +1,16 @@
-
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { useWebsites, Website } from "@/context/WebsiteContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  useWebsites,
+  Website,
+  WebsiteManagement,
+} from "@/context/WebsiteContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
@@ -10,25 +18,32 @@ import { WebsiteRecordCard } from "@/components/admin/WebsiteRecordCard";
 import { RecordForm } from "@/components/admin/RecordForm";
 
 const WebsiteRecords = () => {
-  const { websites, addManagementRecord, updateManagementRecord, deleteManagementRecord, clearAllManagementRecords } = useWebsites();
+  const {
+    websites,
+    addManagementRecord,
+    updateManagementRecord,
+    deleteManagementRecord,
+    clearAllManagementRecords,
+  } = useWebsites();
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Only approved websites of type "website"
-  const approvedWebsites = websites.filter(website => 
-    website.status === "approved" && website.type === "website"
+  const approvedWebsites = websites.filter(
+    (website) => website.status === "approved" && website.type === "website"
   );
 
   // Apply search
-  const filteredWebsites = approvedWebsites.filter(website => {
+  const filteredWebsites = approvedWebsites.filter((website) => {
     if (!searchTerm) return true;
-    
+
     const searchTermLower = searchTerm.toLowerCase();
-    
+
     return (
       website.name.toLowerCase().includes(searchTermLower) ||
-      (website.userEmail && website.userEmail.toLowerCase().includes(searchTermLower))
+      (website.useremail &&
+        website.useremail.toLowerCase().includes(searchTermLower))
     );
   });
 
@@ -39,18 +54,28 @@ const WebsiteRecords = () => {
   };
 
   // Handle add record
-  const handleAddRecord = (formValues: any) => {
+  const handleAddRecord = (
+    formValues: Omit<WebsiteManagement, "id" | "website_id">
+  ) => {
     if (!selectedWebsite) return;
-    
+
     addManagementRecord(selectedWebsite.id, formValues);
-    
+
     setIsAddDialogOpen(false);
     setSelectedWebsite(null);
     toast.success("Record added successfully");
   };
 
   // Handle edit field
-  const handleEditField = (websiteId: string, recordId: string, field: string, value: any) => {
+  const handleEditField = (
+    websiteId: string,
+    recordId: string,
+    field: string,
+    value:
+      | string
+      | number
+      | Array<{ type: string; description: string; status: string }>
+  ) => {
     updateManagementRecord(websiteId, recordId, { [field]: value });
     toast.success(`${field} updated successfully`);
   };
@@ -60,9 +85,18 @@ const WebsiteRecords = () => {
     deleteManagementRecord(websiteId, recordId);
     toast.success("Record deleted successfully");
   };
-  
+
   // Handle clear all records for a website
   const handleClearAllRecords = (websiteId: string) => {
+    const website = websites.find((w) => w.id === websiteId);
+    if (
+      !website ||
+      !website.managementData ||
+      website.managementData.length === 0
+    ) {
+      toast.info("There are no records to clear for this website.");
+      return;
+    }
     clearAllManagementRecords(websiteId);
     toast.success("All records cleared successfully");
   };
@@ -73,7 +107,7 @@ const WebsiteRecords = () => {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Website Records</h1>
         </div>
-        
+
         <div className="relative mb-4">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -83,7 +117,7 @@ const WebsiteRecords = () => {
             className="pl-8 pr-8"
           />
           {searchTerm && (
-            <button 
+            <button
               className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground hover:text-foreground"
               onClick={() => setSearchTerm("")}
             >
@@ -91,12 +125,12 @@ const WebsiteRecords = () => {
             </button>
           )}
         </div>
-        
+
         {filteredWebsites.length === 0 ? (
           <div className="text-center p-10 border rounded-lg">
             <p className="text-muted-foreground">
-              {approvedWebsites.length === 0 
-                ? "No approved websites found" 
+              {approvedWebsites.length === 0
+                ? "No approved websites found"
                 : "No websites found matching your search"}
             </p>
           </div>
@@ -114,14 +148,14 @@ const WebsiteRecords = () => {
             ))}
           </div>
         )}
-        
+
         {/* Add Record Dialog */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Management Record</DialogTitle>
             </DialogHeader>
-            <RecordForm 
+            <RecordForm
               onSave={handleAddRecord}
               onCancel={() => setIsAddDialogOpen(false)}
             />

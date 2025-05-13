@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase environment variables
+VITE_SUPABASE_URL= https://arpgegsbguhchlaflxrv.supabase.co
+VITE_SUPABASE_ANON_KEY= eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycGdlZ3NiZ3VoY2hsYWZseHJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNTI5ODcsImV4cCI6MjA2MjYyODk4N30.nYspfw_DViuu31Vm8uSjjAFO4UDtNkOuZLed5SMCdZM

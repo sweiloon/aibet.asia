@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -10,26 +9,63 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Website } from "@/context/WebsiteContext";
 import { useNavigate } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 interface UploadDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: Website | null;
+  deleteWebsite: (id: string) => void;
+  onClose: () => void;
+  onDownload: (file: { name: string; url: string }) => void;
 }
 
-export const UploadDetailsDialog = ({ open, onOpenChange, item }: UploadDetailsDialogProps) => {
+export const UploadDetailsDialog = ({
+  open,
+  onOpenChange,
+  item,
+  deleteWebsite,
+  onClose,
+  onDownload,
+}: UploadDetailsDialogProps) => {
   const navigate = useNavigate();
+  const downloadLinkRef = useRef<HTMLAnchorElement | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   if (!item) return null;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return <Badge className="bg-green-500/20 text-green-300 hover:bg-green-500/30">Approved</Badge>;
+        return (
+          <Badge className="bg-green-500/20 text-green-300 hover:bg-green-500/30">
+            Approved
+          </Badge>
+        );
       case "rejected":
-        return <Badge className="bg-red-500/20 text-red-300 hover:bg-red-500/30">Rejected</Badge>;
+        return (
+          <Badge className="bg-red-500/20 text-red-300 hover:bg-red-500/30">
+            Rejected
+          </Badge>
+        );
       case "pending":
-        return <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">Pending</Badge>;
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
+            Pending
+          </Badge>
+        );
       default:
         return null;
     }
@@ -37,7 +73,7 @@ export const UploadDetailsDialog = ({ open, onOpenChange, item }: UploadDetailsD
 
   const handleResubmit = () => {
     onOpenChange(false);
-    
+
     // Navigate to appropriate upload page based on type
     if (item.type === "website") {
       navigate("/dashboard/websites/add");
@@ -47,101 +83,229 @@ export const UploadDetailsDialog = ({ open, onOpenChange, item }: UploadDetailsD
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Submission Details</DialogTitle>
-          <DialogDescription>
-            Details for your submitted item
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
-              <p className="text-base">{item.name}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Type</p>
-              <p className="text-base capitalize">{item.type || "Website"}</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Status</p>
-              <div className="mt-1">{getStatusBadge(item.status)}</div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Date Submitted</p>
-              <p className="text-base">{new Date(item.createdAt).toLocaleDateString()}</p>
-            </div>
-          </div>
-          
-          {item.url && item.url !== "N/A" && (
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">URL</p>
-              <a 
-                href={item.url.startsWith("http") ? item.url : `https://${item.url}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-400 hover:underline"
+    <>
+      <a ref={downloadLinkRef} style={{ display: "none" }} />
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Submission Details</DialogTitle>
+            <DialogDescription>
+              Details for your submitted item
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Submission Details</h2>
+              <AlertDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
               >
-                {item.url}
-              </a>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => setDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this submission? This
+                      action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => {
+                        if (item) deleteWebsite(item.id);
+                        setDeleteDialogOpen(false);
+                        onClose();
+                      }}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
-          )}
-          
-          {item.username && (
-            <div className="pt-2 border-t border-border">
-              <p className="text-sm font-medium text-muted-foreground mb-2">Login Credentials</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Username</p>
-                  <p className="text-base">{item.username}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Password</p>
-                  <p className="text-base">{item.password}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Name
+                </p>
+                <p className="text-base">{item.name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Type
+                </p>
+                <p className="text-base capitalize">{item.type || "Website"}</p>
               </div>
             </div>
-          )}
-          
-          {item.files && item.files.length > 0 && (
-            <div className="pt-2 border-t border-border">
-              <p className="text-sm font-medium text-muted-foreground mb-2">Files</p>
-              <div className="grid grid-cols-2 gap-4">
-                {item.files.map((file: any, index: number) => (
-                  <div key={index} className="flex items-center gap-2">
-                    {file.type.includes("image") ? (
-                      <img src={file.url} alt={file.name} className="w-16 h-16 object-cover rounded" />
-                    ) : (
-                      <div className="p-2 bg-muted rounded">PDF</div>
-                    )}
-                    <div className="text-sm truncate">{file.name}</div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Status
+                </p>
+                <div className="mt-1">{getStatusBadge(item.status)}</div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Date Submitted
+                </p>
+                <p className="text-base">
+                  {new Date(item.createdat).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            {item.url && item.url !== "N/A" && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">URL</p>
+                <a
+                  href={
+                    item.url.startsWith("http")
+                      ? item.url
+                      : `https://${item.url}`
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-400 hover:underline"
+                >
+                  {item.url}
+                </a>
+              </div>
+            )}
+
+            {item.username && (
+              <div className="pt-2 border-t border-border">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Login Credentials
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Username
+                    </p>
+                    <p className="text-base">{item.username}</p>
                   </div>
-                ))}
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Password
+                    </p>
+                    <p className="text-base">{item.password}</p>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
-          
-          {item.status === "rejected" && item.rejectionReason && (
-            <div className="pt-2 border-t border-border">
-              <p className="text-sm font-medium text-muted-foreground">Rejection Reason</p>
-              <p className="text-base text-red-400">{item.rejectionReason}</p>
-            </div>
-          )}
-          
-          {item.status === "rejected" && (
-            <div className="flex justify-end pt-4">
-              <Button onClick={handleResubmit}>
-                Resubmit
-              </Button>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            )}
+
+            {Array.isArray(item.files) && item.files.length > 0 ? (
+              <div className="pt-2 border-t border-border">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Files
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  {item.files.map(
+                    (
+                      file: { name: string; url: string; type: string },
+                      index: number
+                    ) => {
+                      const handleDialogDownload = () => {
+                        onDownload(file);
+                        onOpenChange(false);
+                      };
+                      if (file.type && file.type.includes("image")) {
+                        return (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center gap-2"
+                          >
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              className="w-32 h-32 object-contain rounded border"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="mt-2 w-full"
+                              onClick={handleDialogDownload}
+                            >
+                              Download Image
+                            </Button>
+                          </div>
+                        );
+                      } else if (file.type && file.type.includes("pdf")) {
+                        return (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center gap-2"
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={handleDialogDownload}
+                            >
+                              Download PDF
+                            </Button>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center gap-2"
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={handleDialogDownload}
+                            >
+                              Download File
+                            </Button>
+                          </div>
+                        );
+                      }
+                    }
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="pt-2 border-t border-border">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Files
+                </p>
+                <div className="text-xs text-muted-foreground">
+                  No files available or files are not in the correct format.
+                </div>
+              </div>
+            )}
+
+            {item.status === "rejected" && item.rejectionReason && (
+              <div className="pt-2 border-t border-border">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Rejection Reason
+                </p>
+                <p className="text-base text-red-400">{item.rejectionReason}</p>
+              </div>
+            )}
+
+            {item.status === "rejected" && (
+              <div className="flex justify-end pt-4">
+                <Button onClick={handleResubmit}>Resubmit</Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

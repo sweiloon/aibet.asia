@@ -1,9 +1,15 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
@@ -19,11 +25,15 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await login(email, password, activeTab === "admin");
-    setLoading(false);
-    
-    if (success) {
-      navigate(activeTab === "admin" ? "/admin" : "/dashboard");
+    try {
+      const success = await login(email, password, activeTab === "admin");
+      if (success) {
+        navigate(activeTab === "admin" ? "/admin" : "/dashboard");
+      }
+    } catch (error) {
+      // Optionally show a toast here if needed
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,10 +49,10 @@ export default function Login() {
                 Enter your credentials to access your account
               </CardDescription>
             </CardHeader>
-            
-            <Tabs 
-              defaultValue="user" 
-              value={activeTab} 
+
+            <Tabs
+              defaultValue="user"
+              value={activeTab}
               onValueChange={setActiveTab}
               className="w-full"
             >
@@ -50,7 +60,7 @@ export default function Login() {
                 <TabsTrigger value="user">User</TabsTrigger>
                 <TabsTrigger value="admin">Admin</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="user">
                 <form onSubmit={handleSubmit}>
                   <CardContent className="space-y-4">
@@ -72,7 +82,7 @@ export default function Login() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label className="text-sm font-medium" htmlFor="password">
                         Password
@@ -87,16 +97,12 @@ export default function Login() {
                       />
                     </div>
                   </CardContent>
-                  
+
                   <CardFooter className="flex flex-col space-y-4">
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loading}
-                    >
+                    <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? "Logging in..." : "Login"}
                     </Button>
-                    
+
                     <div className="text-center text-sm">
                       Don't have an account?{" "}
                       <Link
@@ -109,12 +115,15 @@ export default function Login() {
                   </CardFooter>
                 </form>
               </TabsContent>
-              
+
               <TabsContent value="admin">
                 <form onSubmit={handleSubmit}>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium" htmlFor="adminEmail">
+                      <label
+                        className="text-sm font-medium"
+                        htmlFor="adminEmail"
+                      >
                         Admin Email
                       </label>
                       <div className="relative">
@@ -131,9 +140,12 @@ export default function Login() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
-                      <label className="text-sm font-medium" htmlFor="adminPassword">
+                      <label
+                        className="text-sm font-medium"
+                        htmlFor="adminPassword"
+                      >
                         Password
                       </label>
                       <Input
@@ -146,13 +158,9 @@ export default function Login() {
                       />
                     </div>
                   </CardContent>
-                  
+
                   <CardFooter>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loading}
-                    >
+                    <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? "Logging in..." : "Admin Login"}
                     </Button>
                   </CardFooter>

@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+**Done**
+Migrated all website data management to Supabase. All CRUD operations now use Supabase queries with async logic and robust error handling. Local storage usage removed.
+

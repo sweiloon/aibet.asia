@@ -1,17 +1,21 @@
-
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useWebsites, Website } from "@/context/WebsiteContext";
 import { useAuth } from "@/context/AuthContext";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -24,19 +28,22 @@ const WebsiteRecords = () => {
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Only show approved websites of type "website" that belong to the current user
-  const userApprovedWebsites = user ? 
-    websites.filter(website => 
-      website.userId === user.id && 
-      website.status === "approved" &&
-      website.type === "website"
-    ) : 
-    [];
+  const userApprovedWebsites = user
+    ? websites.filter(
+        (website) =>
+          website.userid === user.id &&
+          website.status === "approved" &&
+          website.type === "website"
+      )
+    : [];
 
   // Filter websites based on search term
-  const filteredWebsites = userApprovedWebsites.filter(website =>
-    !searchTerm || website.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredWebsites = userApprovedWebsites.filter(
+    (website) =>
+      !searchTerm ||
+      website.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Show website details
@@ -51,7 +58,7 @@ const WebsiteRecords = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Website Records</h1>
         </div>
-        
+
         {userApprovedWebsites.length > 0 && (
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -63,12 +70,12 @@ const WebsiteRecords = () => {
             />
           </div>
         )}
-        
+
         {filteredWebsites.length === 0 ? (
           <div className="text-center p-10 border rounded-lg">
             <p className="text-muted-foreground">
-              {userApprovedWebsites.length === 0 
-                ? "You don't have any approved websites yet" 
+              {userApprovedWebsites.length === 0
+                ? "You don't have any approved websites yet"
                 : "No websites found matching your search"}
             </p>
             {searchTerm && (
@@ -87,16 +94,23 @@ const WebsiteRecords = () => {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">{website.name}</h2>
               </div>
-              
+
               <div className="text-sm text-muted-foreground">
-                <a href={website.url} target="_blank" rel="noopener noreferrer" className="underline">
+                <a
+                  href={website.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
                   {website.url}
                 </a>
               </div>
-              
+
               {website.managementData.length === 0 ? (
                 <div className="text-center p-6 border rounded-lg">
-                  <p className="text-muted-foreground">No management records yet</p>
+                  <p className="text-muted-foreground">
+                    No management records yet
+                  </p>
                 </div>
               ) : (
                 <Table>
@@ -119,15 +133,27 @@ const WebsiteRecords = () => {
                         <TableCell>{record.day}</TableCell>
                         <TableCell>{record.credit}</TableCell>
                         <TableCell>{record.profit}</TableCell>
-                        <TableCell>{record.grossProfit}</TableCell>
-                        <TableCell>{record.serviceFee}</TableCell>
-                        <TableCell>{record.startDate}</TableCell>
-                        <TableCell>{record.endDate}</TableCell>
-                        <TableCell>{record.netProfit}</TableCell>
+                        <TableCell>{record.gross_profit}</TableCell>
+                        <TableCell>{record.service_fee}</TableCell>
+                        <TableCell>
+                          {record.start_date
+                            ? new Date(record.start_date)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""}
+                        </TableCell>
+                        <TableCell>
+                          {record.end_date
+                            ? new Date(record.end_date)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""}
+                        </TableCell>
+                        <TableCell>{record.net_profit}</TableCell>
                         <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => showWebsiteDetails(website)}
                           >
                             <Eye className="h-4 w-4" />
@@ -141,7 +167,7 @@ const WebsiteRecords = () => {
             </div>
           ))
         )}
-        
+
         {/* Website Details Dialog */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
           <DialogContent className="sm:max-w-md">
@@ -157,32 +183,49 @@ const WebsiteRecords = () => {
                   </div>
                   <div>
                     <Label>Status</Label>
-                    <div className="font-medium capitalize">{selectedWebsite.status}</div>
+                    <div className="font-medium capitalize">
+                      {selectedWebsite.status}
+                    </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>URL</Label>
                   <div className="font-medium">
-                    <a href={selectedWebsite.url} target="_blank" rel="noopener noreferrer" className="underline">
+                    <a
+                      href={selectedWebsite.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
                       {selectedWebsite.url}
                     </a>
                   </div>
                 </div>
-                
+
                 {selectedWebsite.loginUrl && (
                   <div>
                     <Label>Login URL</Label>
                     <div className="font-medium">
-                      <a href={selectedWebsite.loginUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                      <a
+                        href={selectedWebsite.loginUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                      >
                         {selectedWebsite.loginUrl}
                       </a>
                     </div>
                   </div>
                 )}
-                
+
                 <div className="pt-4">
-                  <Button onClick={() => setIsDetailOpen(false)} className="w-full">Close</Button>
+                  <Button
+                    onClick={() => setIsDetailOpen(false)}
+                    className="w-full"
+                  >
+                    Close
+                  </Button>
                 </div>
               </div>
             )}

@@ -1,10 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Website, WebsiteManagement, useWebsites } from "@/context/WebsiteContext";
+import {
+  Website,
+  WebsiteManagement,
+  useWebsites,
+} from "@/context/WebsiteContext";
 import { toast } from "@/components/ui/sonner";
 
 // Import our new components
@@ -26,21 +29,21 @@ export default function AdminWebsiteDetail() {
     updateWebsiteStatus,
     addManagementRecord,
     updateManagementRecord,
-    deleteManagementRecord
+    deleteManagementRecord,
   } = useWebsites();
-  
+
   const [website, setWebsite] = useState<Website | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<WebsiteManagement | null>(null);
-  
+
   // Load website data
   useEffect(() => {
     const websites = getAllWebsites();
-    const foundWebsite = websites.find(site => site.id === id);
+    const foundWebsite = websites.find((site) => site.id === id);
     setWebsite(foundWebsite || null);
   }, [id, getAllWebsites]);
-  
+
   const handleStatusChange = (status: Website["status"]) => {
     if (website) {
       updateWebsiteStatus(website.id, status);
@@ -48,111 +51,109 @@ export default function AdminWebsiteDetail() {
       toast.success(`Website status updated to ${status}`);
     }
   };
-  
+
   const handleAddRecord = () => {
     setEditRecord(null);
     setDialogOpen(true);
   };
-  
+
   const handleEditRecord = (record: WebsiteManagement) => {
     setEditRecord(record);
     setDialogOpen(true);
   };
-  
+
   const handleDeleteRecord = (recordId: string) => {
     if (website) {
       if (confirm("Are you sure you want to delete this record?")) {
         deleteManagementRecord(website.id, recordId);
-        
+
         // Refresh website data
         const websites = getAllWebsites();
-        const updatedWebsite = websites.find(site => site.id === id);
+        const updatedWebsite = websites.find((site) => site.id === id);
         setWebsite(updatedWebsite || null);
-        
+
         toast.success("Management record deleted successfully");
       }
     }
   };
-  
-  const handleSaveRecord = (date: string, tasks: any[]) => {
+
+  const handleSaveRecord = (
+    date: string,
+    tasks: Array<{ type: string; description: string; status: string }>
+  ) => {
     if (website) {
       if (editRecord) {
         // Update existing record
         updateManagementRecord(website.id, editRecord.id, {
           tasks: tasks,
-          date: new Date(date).toISOString()
         });
         toast.success("Management record updated successfully");
       } else {
         // Add new record
         addManagementRecord(website.id, {
-          date: new Date(date).toISOString(),
-          tasks: tasks,
-          day: "Day 1", // Adding default values for the new fields
+          day: "Day 1",
           credit: 0,
           profit: 0,
-          grossProfit: 0,
-          serviceFee: 0,
-          startDate: date,
-          endDate: date,
-          netProfit: 0
+          gross_profit: 0,
+          service_fee: 0,
+          start_date: new Date(date).toISOString(),
+          end_date: new Date(date).toISOString(),
+          net_profit: 0,
+          tasks: tasks,
         });
         toast.success("Management record added successfully");
       }
-      
+
       // Reset form and close dialog
       setDialogOpen(false);
       setEditRecord(null);
-      
+
       // Refresh website data
       const websites = getAllWebsites();
-      const updatedWebsite = websites.find(site => site.id === id);
+      const updatedWebsite = websites.find((site) => site.id === id);
       setWebsite(updatedWebsite || null);
     }
   };
-  
+
   if (!website) {
     return (
       <DashboardLayout isAdmin>
         <div className="text-center py-10">
           <h2 className="text-2xl font-bold">Website not found</h2>
-          <Button 
-            onClick={() => navigate("/admin/websites")}
-            className="mt-4"
-          >
+          <Button onClick={() => navigate("/admin/websites")} className="mt-4">
             Back to Websites
           </Button>
         </div>
       </DashboardLayout>
     );
   }
-  
+
   return (
     <DashboardLayout isAdmin>
       <div className="space-y-6">
-        <WebsiteHeader 
-          website={website} 
-          onBack={() => navigate("/admin/websites")} 
+        <WebsiteHeader
+          website={website}
+          onBack={() => navigate("/admin/websites")}
         />
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="manage">Management</TabsTrigger>
             <TabsTrigger value="credentials">Credentials</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <WebsiteStatusCard 
-                website={website} 
-                onStatusChange={handleStatusChange} 
+              <WebsiteStatusCard
+                website={website}
+                onStatusChange={handleStatusChange}
               />
               <UserInfoCard website={website} />
               <SubmissionInfoCard website={website} />
             </div>
-            
-            <RecentManagementCard 
+
+            <RecentManagementCard
               website={website}
               onEditRecord={handleEditRecord}
               onDeleteRecord={handleDeleteRecord}
@@ -161,22 +162,22 @@ export default function AdminWebsiteDetail() {
               getStatusBadge={getStatusBadge}
             />
           </TabsContent>
-          
+
           <TabsContent value="manage" className="space-y-6 mt-6">
-            <ManagementTabContent 
+            <ManagementTabContent
               website={website}
               onEditRecord={handleEditRecord}
               onDeleteRecord={handleDeleteRecord}
               onAddRecord={handleAddRecord}
             />
           </TabsContent>
-          
+
           <TabsContent value="credentials" className="mt-6">
             <CredentialsTabContent website={website} />
           </TabsContent>
         </Tabs>
-        
-        <ManagementRecordDialog 
+
+        <ManagementRecordDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           onSave={handleSaveRecord}
