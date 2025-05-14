@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, User } from "@/context/AuthContext";
 import { Search, Edit2, Trash2, X } from "lucide-react";
 import {
   Dialog,
@@ -38,8 +38,8 @@ export default function AdminUsers() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [userToEdit, setUserToEdit] = useState<any | null>(null);
-  const [users, setUsers] = useState<any[]>([]);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,17 +109,30 @@ export default function AdminUsers() {
     setIsDeleteDialogOpen(true);
   };
 
-  const openEditDialog = (user: any) => {
+  const openEditDialog = (user: User) => {
     setUserToEdit(user);
     setIsEditDialogOpen(true);
   };
 
   const handleSaveUser = async (
     userId: string,
-    userData: Partial<any>,
+    userData: Partial<User>,
     newPassword?: string
   ) => {
-    return await updateUser(userId, userData, newPassword);
+    const success = await updateUser(userId, userData, newPassword);
+    if (success) {
+      // Refresh only the users table
+      setLoading(true);
+      try {
+        const data = await getAllUsers();
+        setUsers(data);
+      } catch (err) {
+        setError("Failed to load users");
+      } finally {
+        setLoading(false);
+      }
+    }
+    return success;
   };
 
   const getRankingBadge = (ranking: string) => {

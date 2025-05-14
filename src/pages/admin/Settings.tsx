@@ -92,107 +92,18 @@ export default function AdminSettings() {
           <div className="col-span-1 md:col-span-2">
             <Card className="glass-morphism">
               <CardHeader>
-                <CardTitle>Change Admin Password</CardTitle>
+                <CardTitle>Change Password</CardTitle>
                 <CardDescription>
-                  Update your password to keep your account secure
+                  Change Password Feature Coming Soon
                 </CardDescription>
               </CardHeader>
-              <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label
-                      className="text-sm font-medium"
-                      htmlFor="currentPassword"
-                    >
-                      Current Password
-                    </label>
-                    <div className="relative">
-                      <Input
-                        id="currentPassword"
-                        type={showCurrent ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowCurrent((v) => !v)}
-                        className="absolute right-2 top-2 text-muted-foreground"
-                      >
-                        {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      className="text-sm font-medium"
-                      htmlFor="newPassword"
-                    >
-                      New Password
-                    </label>
-                    <div className="relative">
-                      <Input
-                        id="newPassword"
-                        type={showNew ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNew((v) => !v)}
-                        className="absolute right-2 top-2 text-muted-foreground"
-                      >
-                        {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      className="text-sm font-medium"
-                      htmlFor="confirmNewPassword"
-                    >
-                      Confirm New Password
-                    </label>
-                    <div className="relative">
-                      <Input
-                        id="confirmNewPassword"
-                        type={showConfirm ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={confirmNewPassword}
-                        onChange={(e) => setConfirmNewPassword(e.target.value)}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirm((v) => !v)}
-                        className="absolute right-2 top-2 text-muted-foreground"
-                      >
-                        {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                    {newPassword !== confirmNewPassword &&
-                      confirmNewPassword && (
-                        <p className="text-xs text-red-500 mt-1">
-                          Passwords do not match
-                        </p>
-                      )}
-                  </div>
-                </CardContent>
-
-                <CardFooter>
-                  <Button
-                    type="submit"
-                    disabled={loading || newPassword !== confirmNewPassword}
-                  >
-                    {loading ? "Updating..." : "Update Password"}
-                  </Button>
-                </CardFooter>
-              </form>
+              <CardContent>
+                <div className="flex items-center justify-center py-8">
+                  <span className="text-muted-foreground text-lg font-semibold">
+                    Change Password Feature Coming Soon
+                  </span>
+                </div>
+              </CardContent>
             </Card>
           </div>
         </div>

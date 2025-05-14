@@ -1,4 +1,3 @@
-
 import { Route } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -13,76 +12,76 @@ import UploadDocument from "@/pages/user/UploadDocument";
 import UserWebsiteRecords from "@/pages/user/WebsiteRecords";
 
 export const userRoutes = [
-  <Route 
+  <Route
     key="user-dashboard"
-    path="/dashboard" 
+    path="/dashboard"
     element={
       <ProtectedRoute requiredRole="user">
         <UserDashboard />
       </ProtectedRoute>
     }
   />,
-  <Route 
+  <Route
     key="user-settings"
-    path="/dashboard/settings" 
+    path="/dashboard/settings"
     element={
       <ProtectedRoute requiredRole="user">
         <UserSettings />
       </ProtectedRoute>
     }
   />,
-  <Route 
+  <Route
     key="user-websites"
-    path="/dashboard/websites" 
+    path="/dashboard/websites"
     element={
       <ProtectedRoute requiredRole="user">
         <UserWebsites />
       </ProtectedRoute>
     }
   />,
-  <Route 
+  <Route
     key="website-add"
-    path="/dashboard/websites/add" 
+    path="/dashboard/websites/add"
     element={
       <ProtectedRoute requiredRole="user">
         <WebsiteAdd />
       </ProtectedRoute>
     }
   />,
-  <Route 
+  <Route
     key="website-detail"
-    path="/dashboard/websites/:id" 
+    path="/dashboard/websites/:id"
     element={
       <ProtectedRoute requiredRole="user">
         <WebsiteDetail />
       </ProtectedRoute>
     }
   />,
-  <Route 
+  <Route
     key="upload-history"
-    path="/dashboard/upload-history" 
+    path="/dashboard/upload-history"
     element={
       <ProtectedRoute requiredRole="user">
         <UploadHistory />
       </ProtectedRoute>
     }
   />,
-  <Route 
+  <Route
     key="upload-document"
-    path="/dashboard/upload-document" 
+    path="/dashboard/upload-document"
     element={
       <ProtectedRoute requiredRole="user">
         <UploadDocument />
       </ProtectedRoute>
     }
   />,
-  <Route 
+  <Route
     key="website-records"
-    path="/dashboard/website-records" 
+    path="/dashboard/website-records"
     element={
       <ProtectedRoute requiredRole="user">
         <UserWebsiteRecords />
       </ProtectedRoute>
     }
-  />
+  />,
 ];

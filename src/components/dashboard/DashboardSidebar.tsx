@@ -59,9 +59,9 @@ export function DashboardSidebar({
       <SidebarHeader className="flex flex-col items-start py-4">
         <div className="px-4 cursor-pointer" onClick={() => navigate("/")}>
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-gradient">WebManage</span>
+            <span className="text-2xl font-bold text-gradient">AIBET.ASIA</span>
             <span className="text-xs rounded-full px-2 bg-blue-500/30 text-blue-200">
-              CRM
+              AI
             </span>
           </div>
           <div className="text-xs text-muted-foreground mt-1">

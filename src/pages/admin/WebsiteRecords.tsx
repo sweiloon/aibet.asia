@@ -158,6 +158,19 @@ const WebsiteRecords = () => {
             <RecordForm
               onSave={handleAddRecord}
               onCancel={() => setIsAddDialogOpen(false)}
+              initialValues={
+                selectedWebsite
+                  ? {
+                      day: (() => {
+                        const days = selectedWebsite.managementData.map(
+                          (r) => Number(r.day) || 0
+                        );
+                        const maxDay = days.length > 0 ? Math.max(...days) : 0;
+                        return String(maxDay + 1);
+                      })(),
+                    }
+                  : {}
+              }
             />
           </DialogContent>
         </Dialog>

@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { openInNewTab } from "@/lib/openInNewTab";
 
 interface WebsiteRecordCardProps {
   website: Website;
@@ -121,9 +122,14 @@ export const WebsiteRecordCard = ({
       <div className="text-sm text-muted-foreground">
         <a
           href={website.url}
-          target="_blank"
-          rel="noopener noreferrer"
           className="underline"
+          tabIndex={0}
+          role="link"
+          style={{ cursor: "pointer" }}
+          onClick={(e) => {
+            e.preventDefault();
+            openInNewTab(website.url);
+          }}
         >
           {website.url}
         </a>
@@ -149,118 +155,136 @@ export const WebsiteRecordCard = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {website.managementData.map((record) => (
-              <TableRow key={record.id}>
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/30"
-                  onClick={() => handleEditField(record.id, "day", record.day)}
-                >
-                  {record.day}
-                </TableCell>
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/30"
-                  onClick={() =>
-                    handleEditField(record.id, "credit", record.credit)
-                  }
-                >
-                  {record.credit}
-                </TableCell>
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/30"
-                  onClick={() =>
-                    handleEditField(record.id, "profit", record.profit)
-                  }
-                >
-                  {record.profit}
-                </TableCell>
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/30"
-                  onClick={() =>
-                    handleEditField(
-                      record.id,
-                      "gross_profit",
-                      record.gross_profit
-                    )
-                  }
-                >
-                  {record.gross_profit}
-                </TableCell>
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/30"
-                  onClick={() =>
-                    handleEditField(
-                      record.id,
-                      "service_fee",
-                      record.service_fee
-                    )
-                  }
-                >
-                  {record.service_fee}
-                </TableCell>
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/30"
-                  onClick={() =>
-                    handleEditField(record.id, "net_profit", record.net_profit)
-                  }
-                >
-                  {record.net_profit}
-                </TableCell>
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/30"
-                  onClick={() =>
-                    handleEditField(record.id, "start_date", record.start_date)
-                  }
-                >
-                  {record.start_date
-                    ? new Date(record.start_date).toISOString().split("T")[0]
-                    : ""}
-                </TableCell>
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/30"
-                  onClick={() =>
-                    handleEditField(record.id, "end_date", record.end_date)
-                  }
-                >
-                  {record.end_date
-                    ? new Date(record.end_date).toISOString().split("T")[0]
-                    : ""}
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsDetailOpen(true)}
+            {[...website.managementData]
+              .sort((a: WebsiteManagement, b: WebsiteManagement) => {
+                const dayA = Number(a.day) || 0;
+                const dayB = Number(b.day) || 0;
+                return dayB - dayA;
+              })
+              .map((record: WebsiteManagement) => (
+                <TableRow key={record.id}>
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/30"
+                    onClick={() =>
+                      handleEditField(record.id, "day", record.day)
+                    }
                   >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Record</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this record? This
-                          action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => onDeleteRecord(website.id, record.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
-            ))}
+                    {record.day}
+                  </TableCell>
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/30"
+                    onClick={() =>
+                      handleEditField(record.id, "credit", record.credit)
+                    }
+                  >
+                    {record.credit}
+                  </TableCell>
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/30"
+                    onClick={() =>
+                      handleEditField(record.id, "profit", record.profit)
+                    }
+                  >
+                    {record.profit}
+                  </TableCell>
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/30"
+                    onClick={() =>
+                      handleEditField(
+                        record.id,
+                        "gross_profit",
+                        record.gross_profit
+                      )
+                    }
+                  >
+                    {record.gross_profit}
+                  </TableCell>
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/30"
+                    onClick={() =>
+                      handleEditField(
+                        record.id,
+                        "service_fee",
+                        record.service_fee
+                      )
+                    }
+                  >
+                    {record.service_fee}
+                  </TableCell>
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/30"
+                    onClick={() =>
+                      handleEditField(
+                        record.id,
+                        "net_profit",
+                        record.net_profit
+                      )
+                    }
+                  >
+                    {record.net_profit}
+                  </TableCell>
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/30"
+                    onClick={() =>
+                      handleEditField(
+                        record.id,
+                        "start_date",
+                        record.start_date
+                      )
+                    }
+                  >
+                    {record.start_date
+                      ? new Date(record.start_date).toISOString().split("T")[0]
+                      : ""}
+                  </TableCell>
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/30"
+                    onClick={() =>
+                      handleEditField(record.id, "end_date", record.end_date)
+                    }
+                  >
+                    {record.end_date
+                      ? new Date(record.end_date).toISOString().split("T")[0]
+                      : ""}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsDetailOpen(true)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Record</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this record? This
+                            action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() =>
+                              onDeleteRecord(website.id, record.id)
+                            }
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       )}

@@ -168,15 +168,14 @@ export default function UploadHistory() {
                       <button
                         className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded"
                         onClick={() => {
-                          window.dispatchEvent(
-                            new CustomEvent("trigger-download", {
-                              detail: {
-                                url: `http://localhost:4000/download?url=${encodeURIComponent(
-                                  file.url
-                                )}&name=${encodeURIComponent(file.name)}`,
-                              },
-                            })
-                          );
+                          const a = document.createElement("a");
+                          a.href = `http://localhost:4000/download?url=${encodeURIComponent(
+                            file.url
+                          )}&name=${encodeURIComponent(file.name)}`;
+                          a.download = file.name;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
                         }}
                       >
                         Download

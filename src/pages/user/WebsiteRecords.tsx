@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { Eye } from "lucide-react";
+import { openInNewTab } from "@/lib/openInNewTab";
 
 const WebsiteRecords = () => {
   const { user } = useAuth();
@@ -98,9 +99,14 @@ const WebsiteRecords = () => {
               <div className="text-sm text-muted-foreground">
                 <a
                   href={website.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="underline"
+                  tabIndex={0}
+                  role="link"
+                  style={{ cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openInNewTab(website.url);
+                  }}
                 >
                   {website.url}
                 </a>
@@ -128,39 +134,46 @@ const WebsiteRecords = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {website.managementData.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell>{record.day}</TableCell>
-                        <TableCell>{record.credit}</TableCell>
-                        <TableCell>{record.profit}</TableCell>
-                        <TableCell>{record.gross_profit}</TableCell>
-                        <TableCell>{record.service_fee}</TableCell>
-                        <TableCell>
-                          {record.start_date
-                            ? new Date(record.start_date)
-                                .toISOString()
-                                .split("T")[0]
-                            : ""}
-                        </TableCell>
-                        <TableCell>
-                          {record.end_date
-                            ? new Date(record.end_date)
-                                .toISOString()
-                                .split("T")[0]
-                            : ""}
-                        </TableCell>
-                        <TableCell>{record.net_profit}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => showWebsiteDetails(website)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {[...website.managementData]
+                      .sort((a, b) => {
+                        // Sort by 'day' field descending (latest day first)
+                        const dayA = Number(a.day) || 0;
+                        const dayB = Number(b.day) || 0;
+                        return dayB - dayA;
+                      })
+                      .map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell>{record.day}</TableCell>
+                          <TableCell>{record.credit}</TableCell>
+                          <TableCell>{record.profit}</TableCell>
+                          <TableCell>{record.gross_profit}</TableCell>
+                          <TableCell>{record.service_fee}</TableCell>
+                          <TableCell>
+                            {record.start_date
+                              ? new Date(record.start_date)
+                                  .toISOString()
+                                  .split("T")[0]
+                              : ""}
+                          </TableCell>
+                          <TableCell>
+                            {record.end_date
+                              ? new Date(record.end_date)
+                                  .toISOString()
+                                  .split("T")[0]
+                              : ""}
+                          </TableCell>
+                          <TableCell>{record.net_profit}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => showWebsiteDetails(website)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               )}
@@ -194,9 +207,14 @@ const WebsiteRecords = () => {
                   <div className="font-medium">
                     <a
                       href={selectedWebsite.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="underline"
+                      tabIndex={0}
+                      role="link"
+                      style={{ cursor: "pointer" }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        openInNewTab(selectedWebsite.url);
+                      }}
                     >
                       {selectedWebsite.url}
                     </a>
@@ -209,9 +227,14 @@ const WebsiteRecords = () => {
                     <div className="font-medium">
                       <a
                         href={selectedWebsite.loginUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="underline"
+                        tabIndex={0}
+                        role="link"
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          openInNewTab(selectedWebsite.loginUrl);
+                        }}
                       >
                         {selectedWebsite.loginUrl}
                       </a>

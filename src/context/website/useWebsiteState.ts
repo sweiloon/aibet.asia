@@ -78,22 +78,27 @@ export const useWebsiteState = () => {
     if (website.files) {
       files = JSON.stringify(website.files);
     }
-    const newWebsite: Website = {
+
+    // Utility to omit managementData if present
+    function omitManagementData<T extends object>(
+      obj: T
+    ): Omit<T, "managementData"> {
+      const { managementData, ...rest } = obj as Record<string, unknown>;
+      return rest as Omit<T, "managementData">;
+    }
+    const websiteData = omitManagementData({
       ...website,
       id: `website-${Date.now()}`,
       userid: user.id,
       useremail: user.email,
       status: "pending",
-      managementData: [],
       createdat: now,
       updatedat: now,
       type: website.type || "website",
-      ...(files ? { files } : {}),
-    };
+      files: files ? files : null,
+    });
 
-    const { error } = await supabase
-      .from("websites")
-      .insert([{ ...newWebsite, files: files ? files : null }]);
+    const { error } = await supabase.from("websites").insert([websiteData]);
     if (error) {
       toast.error(`Failed to add website: ${error.message}`);
       return;
@@ -138,9 +143,10 @@ export const useWebsiteState = () => {
 
   // Update an entire website
   const updateWebsite = async (updatedWebsite: Website) => {
+    const { managementData, ...websiteData } = updatedWebsite;
     const { error } = await supabase
       .from("websites")
-      .update({ ...updatedWebsite, updatedat: new Date().toISOString() })
+      .update({ ...websiteData, updatedat: new Date().toISOString() })
       .eq("id", updatedWebsite.id);
     if (error) {
       toast.error("Failed to update website");
@@ -197,7 +203,7 @@ export const useWebsiteState = () => {
         website.id === websiteId
           ? {
               ...website,
-              managementData: [...website.managementData, newRecord],
+              managementData: [newRecord, ...website.managementData],
             }
           : website
       )

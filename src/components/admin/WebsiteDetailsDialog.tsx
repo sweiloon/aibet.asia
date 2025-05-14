@@ -1,8 +1,13 @@
-
 import { Website } from "@/context/WebsiteContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { openInNewTab } from "@/lib/openInNewTab";
 
 interface WebsiteDetailsDialogProps {
   website: Website | null;
@@ -10,9 +15,13 @@ interface WebsiteDetailsDialogProps {
   onClose: () => void;
 }
 
-export const WebsiteDetailsDialog = ({ website, isOpen, onClose }: WebsiteDetailsDialogProps) => {
+export const WebsiteDetailsDialog = ({
+  website,
+  isOpen,
+  onClose,
+}: WebsiteDetailsDialogProps) => {
   if (!website) return null;
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -30,50 +39,72 @@ export const WebsiteDetailsDialog = ({ website, isOpen, onClose }: WebsiteDetail
               <div className="font-medium capitalize">{website.status}</div>
             </div>
           </div>
-          
-          {website.userEmail && (
+
+          {website.useremail && (
             <div>
               <Label>User Email</Label>
-              <div className="font-medium">{website.userEmail}</div>
+              <div className="font-medium">{website.useremail}</div>
             </div>
           )}
-          
+
           <div>
             <Label>URL</Label>
             <div className="font-medium">
-              <a href={website.url} target="_blank" rel="noopener noreferrer" className="underline">
+              <a
+                href={website.url}
+                className="underline"
+                tabIndex={0}
+                role="link"
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  openInNewTab(website.url);
+                }}
+              >
                 {website.url}
               </a>
             </div>
           </div>
-          
+
           {website.loginUrl && (
             <div>
               <Label>Login URL</Label>
               <div className="font-medium">
-                <a href={website.loginUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                <a
+                  href={website.loginUrl}
+                  className="underline"
+                  tabIndex={0}
+                  role="link"
+                  style={{ cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openInNewTab(website.loginUrl);
+                  }}
+                >
                   {website.loginUrl}
                 </a>
               </div>
             </div>
           )}
-          
+
           {website.username && (
             <div>
               <Label>Username</Label>
               <div className="font-medium">{website.username}</div>
             </div>
           )}
-          
+
           {website.password && (
             <div>
               <Label>Password</Label>
               <div className="font-medium">{website.password}</div>
             </div>
           )}
-          
+
           <div className="pt-4">
-            <Button onClick={onClose} className="w-full">Close</Button>
+            <Button onClick={onClose} className="w-full">
+              Close
+            </Button>
           </div>
         </div>
       </DialogContent>

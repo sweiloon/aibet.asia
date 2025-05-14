@@ -82,6 +82,16 @@ export const UploadDetailsDialog = ({
     }
   };
 
+  const handleDialogDownload = (file) => {
+    if (onOpenChange) onOpenChange(false);
+    const a = document.createElement("a");
+    a.href = `http://localhost:4000/download?url=${encodeURIComponent(file.url)}&name=${encodeURIComponent(file.name)}`;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   return (
     <>
       <a ref={downloadLinkRef} style={{ display: "none" }} />
@@ -216,10 +226,6 @@ export const UploadDetailsDialog = ({
                       file: { name: string; url: string; type: string },
                       index: number
                     ) => {
-                      const handleDialogDownload = () => {
-                        onDownload(file);
-                        onOpenChange(false);
-                      };
                       if (file.type && file.type.includes("image")) {
                         return (
                           <div
@@ -235,7 +241,7 @@ export const UploadDetailsDialog = ({
                               variant="outline"
                               size="sm"
                               className="mt-2 w-full"
-                              onClick={handleDialogDownload}
+                              onClick={() => handleDialogDownload(file)}
                             >
                               Download Image
                             </Button>
@@ -251,7 +257,7 @@ export const UploadDetailsDialog = ({
                               variant="outline"
                               size="sm"
                               className="w-full"
-                              onClick={handleDialogDownload}
+                              onClick={() => handleDialogDownload(file)}
                             >
                               Download PDF
                             </Button>
@@ -267,7 +273,7 @@ export const UploadDetailsDialog = ({
                               variant="outline"
                               size="sm"
                               className="w-full"
-                              onClick={handleDialogDownload}
+                              onClick={() => handleDialogDownload(file)}
                             >
                               Download File
                             </Button>

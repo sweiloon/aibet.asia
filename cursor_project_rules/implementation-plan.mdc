@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+**Done**
+The Hero section's 'Join Now' button now only appears when no user is logged in. Clicking it redirects to the signup page using the same logic as the 'Get Started' button.

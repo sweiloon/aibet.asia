@@ -43,7 +43,7 @@ export function ManagementRecords({
                           new Date(dateB).getTime() - new Date(dateA).getTime()
                         );
                       })
-                      .slice(0, 3)
+                      .slice(0, 2)
                       .map((record) => {
                         if (record.tasks && record.tasks.length > 0) {
                           return (

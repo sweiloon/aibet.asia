@@ -32,6 +32,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { openInNewTab } from "@/lib/openInNewTab";
 
 interface ApprovalsTableProps {
   items: Website[];
@@ -85,9 +86,14 @@ export const ApprovalsTable = ({
     return (
       <a
         href={item.url}
-        target="_blank"
-        rel="noreferrer"
         className="flex items-center gap-1 text-blue-400 hover:underline"
+        tabIndex={0}
+        role="link"
+        style={{ cursor: "pointer" }}
+        onClick={(e) => {
+          e.preventDefault();
+          openInNewTab(item.url);
+        }}
       >
         {getItemIcon(item.type || "website")}
         {item.url}
@@ -260,6 +266,27 @@ export const ApprovalsTable = ({
                       </Button>
                     </>
                   )}
+                  {item.files &&
+                    item.files.length > 0 &&
+                    item.files.map((file, idx) => (
+                      <Button
+                        key={idx}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const a = document.createElement("a");
+                          a.href = `http://localhost:4000/download?url=${encodeURIComponent(
+                            file.url
+                          )}&name=${encodeURIComponent(file.name)}`;
+                          a.download = file.name;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }}
+                      >
+                        Download
+                      </Button>
+                    ))}
                 </div>
               </TableCell>
             </TableRow>

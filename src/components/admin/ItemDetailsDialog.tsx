@@ -20,6 +20,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { openInNewTab } from "@/lib/openInNewTab";
 
 interface ItemDetailsDialogProps {
   open: boolean;
@@ -98,9 +99,14 @@ export const ItemDetailsDialog = ({
               <p className="text-sm font-medium text-muted-foreground">URL</p>
               <a
                 href={item.url}
-                target="_blank"
-                rel="noreferrer"
                 className="text-blue-400 hover:underline"
+                tabIndex={0}
+                role="link"
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  openInNewTab(item.url);
+                }}
               >
                 {item.url}
               </a>
@@ -152,19 +158,21 @@ export const ItemDetailsDialog = ({
                             className="w-32 h-32 object-contain rounded border"
                           />
                           <Button
-                            asChild
                             variant="outline"
                             size="sm"
                             className="mt-2 w-full"
+                            onClick={() => {
+                              const a = document.createElement("a");
+                              a.href = `http://localhost:4000/download?url=${encodeURIComponent(
+                                file.url
+                              )}&name=${encodeURIComponent(file.name)}`;
+                              a.download = file.name;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                            }}
                           >
-                            <a
-                              href={file.url}
-                              download={file.name}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Download Image
-                            </a>
+                            Download Image
                           </Button>
                         </>
                       ) : file.type && file.type.includes("pdf") ? (
@@ -177,27 +185,35 @@ export const ItemDetailsDialog = ({
                           <a
                             href={file.url}
                             download={file.name}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:underline"
+                            tabIndex={0}
+                            role="link"
+                            style={{ cursor: "pointer" }}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              openInNewTab(file.url);
+                            }}
                           >
                             Download PDF
                           </a>
                         </Button>
                       ) : (
                         <Button
-                          asChild
                           variant="outline"
                           size="sm"
                           className="w-full"
+                          onClick={() => {
+                            const a = document.createElement("a");
+                            a.href = `http://localhost:4000/download?url=${encodeURIComponent(
+                              file.url
+                            )}&name=${encodeURIComponent(file.name)}`;
+                            a.download = file.name;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
                         >
-                          <a
-                            href={file.url}
-                            download={file.name}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Download File
-                          </a>
+                          Download File
                         </Button>
                       )}
                     </div>

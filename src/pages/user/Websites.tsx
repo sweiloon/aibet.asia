@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -23,52 +22,73 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { openInNewTab } from "@/lib/openInNewTab";
 
 export default function UserWebsites() {
   const { getUserWebsites } = useWebsites();
   const navigate = useNavigate();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedWebsite, setSelectedWebsite] = useState<any>(null);
-  
+
   const userWebsites = getUserWebsites();
-  
-  const activeWebsites = userWebsites.filter(website => website.status === "approved");
-  const pendingWebsites = userWebsites.filter(website => website.status === "pending");
-  const rejectedWebsites = userWebsites.filter(website => website.status === "rejected");
-  
+
+  const activeWebsites = userWebsites.filter(
+    (website) => website.status === "approved"
+  );
+  const pendingWebsites = userWebsites.filter(
+    (website) => website.status === "pending"
+  );
+  const rejectedWebsites = userWebsites.filter(
+    (website) => website.status === "rejected"
+  );
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return <Badge className="bg-green-500/20 text-green-300 hover:bg-green-500/30">Approved</Badge>;
+        return (
+          <Badge className="bg-green-500/20 text-green-300 hover:bg-green-500/30">
+            Approved
+          </Badge>
+        );
       case "rejected":
-        return <Badge className="bg-red-500/20 text-red-300 hover:bg-red-500/30">Rejected</Badge>;
+        return (
+          <Badge className="bg-red-500/20 text-red-300 hover:bg-red-500/30">
+            Rejected
+          </Badge>
+        );
       case "pending":
-        return <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">Pending</Badge>;
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
+            Pending
+          </Badge>
+        );
       default:
         return null;
     }
   };
-  
+
   const viewWebsiteDetails = (website: any) => {
     setSelectedWebsite(website);
     setDetailsOpen(true);
   };
-  
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">My Websites</h1>
-            <p className="text-muted-foreground">Manage your websites and view their status</p>
+            <p className="text-muted-foreground">
+              Manage your websites and view their status
+            </p>
           </div>
-          
+
           <Button onClick={() => navigate("/dashboard/websites/add")}>
             <Upload className="mr-2 h-4 w-4" />
             Upload Website
           </Button>
         </div>
-        
+
         <Tabs defaultValue="active">
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="active" className="flex items-center gap-2">
@@ -84,7 +104,7 @@ export default function UserWebsites() {
               <Badge variant="outline">{rejectedWebsites.length}</Badge>
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="active">
             {activeWebsites.length > 0 ? (
               <Card className="glass-morphism">
@@ -103,20 +123,39 @@ export default function UserWebsites() {
                     <TableBody>
                       {activeWebsites.map((website) => (
                         <TableRow key={website.id}>
-                          <TableCell className="font-medium">{website.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {website.name}
+                          </TableCell>
                           <TableCell>
-                            <a 
-                              href={website.url.startsWith("http") ? website.url : `https://${website.url}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
+                            <a
+                              href={
+                                website.url.startsWith("http")
+                                  ? website.url
+                                  : `https://${website.url}`
+                              }
                               className="text-blue-400 hover:underline"
+                              tabIndex={0}
+                              role="link"
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                openInNewTab(
+                                  website.url.startsWith("http")
+                                    ? website.url
+                                    : `https://${website.url}`
+                                );
+                              }}
                             >
                               {website.url}
                             </a>
                           </TableCell>
-                          <TableCell>{getStatusBadge(website.status)}</TableCell>
+                          <TableCell>
+                            {getStatusBadge(website.status)}
+                          </TableCell>
                           <TableCell>{website.managementData.length}</TableCell>
-                          <TableCell>{new Date(website.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {new Date(website.createdat).toLocaleDateString()}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button
@@ -130,7 +169,9 @@ export default function UserWebsites() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => navigate(`/dashboard/websites/${website.id}`)}
+                                onClick={() =>
+                                  navigate(`/dashboard/websites/${website.id}`)
+                                }
                               >
                                 View
                               </Button>
@@ -155,7 +196,7 @@ export default function UserWebsites() {
               </Card>
             )}
           </TabsContent>
-          
+
           <TabsContent value="pending">
             {pendingWebsites.length > 0 ? (
               <Card className="glass-morphism">
@@ -173,19 +214,38 @@ export default function UserWebsites() {
                     <TableBody>
                       {pendingWebsites.map((website) => (
                         <TableRow key={website.id}>
-                          <TableCell className="font-medium">{website.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {website.name}
+                          </TableCell>
                           <TableCell>
-                            <a 
-                              href={website.url.startsWith("http") ? website.url : `https://${website.url}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
+                            <a
+                              href={
+                                website.url.startsWith("http")
+                                  ? website.url
+                                  : `https://${website.url}`
+                              }
                               className="text-blue-400 hover:underline"
+                              tabIndex={0}
+                              role="link"
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                openInNewTab(
+                                  website.url.startsWith("http")
+                                    ? website.url
+                                    : `https://${website.url}`
+                                );
+                              }}
                             >
                               {website.url}
                             </a>
                           </TableCell>
-                          <TableCell>{getStatusBadge(website.status)}</TableCell>
-                          <TableCell>{new Date(website.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {getStatusBadge(website.status)}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(website.createdat).toLocaleDateString()}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button
                               variant="outline"
@@ -210,7 +270,7 @@ export default function UserWebsites() {
                     <p className="text-muted-foreground mt-2">
                       Websites awaiting approval will appear here.
                     </p>
-                    <Button 
+                    <Button
                       onClick={() => navigate("/dashboard/websites/add")}
                       className="mt-4"
                     >
@@ -222,7 +282,7 @@ export default function UserWebsites() {
               </Card>
             )}
           </TabsContent>
-          
+
           <TabsContent value="rejected">
             {rejectedWebsites.length > 0 ? (
               <Card className="glass-morphism">
@@ -240,19 +300,38 @@ export default function UserWebsites() {
                     <TableBody>
                       {rejectedWebsites.map((website) => (
                         <TableRow key={website.id}>
-                          <TableCell className="font-medium">{website.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {website.name}
+                          </TableCell>
                           <TableCell>
-                            <a 
-                              href={website.url.startsWith("http") ? website.url : `https://${website.url}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
+                            <a
+                              href={
+                                website.url.startsWith("http")
+                                  ? website.url
+                                  : `https://${website.url}`
+                              }
                               className="text-blue-400 hover:underline"
+                              tabIndex={0}
+                              role="link"
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                openInNewTab(
+                                  website.url.startsWith("http")
+                                    ? website.url
+                                    : `https://${website.url}`
+                                );
+                              }}
                             >
                               {website.url}
                             </a>
                           </TableCell>
-                          <TableCell>{getStatusBadge(website.status)}</TableCell>
-                          <TableCell>{new Date(website.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {getStatusBadge(website.status)}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(website.createdat).toLocaleDateString()}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button
@@ -266,7 +345,9 @@ export default function UserWebsites() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => navigate("/dashboard/websites/add")}
+                                onClick={() =>
+                                  navigate("/dashboard/websites/add")
+                                }
                               >
                                 Resubmit
                               </Button>
@@ -306,52 +387,77 @@ export default function UserWebsites() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Website Name</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Website Name
+                  </p>
                   <p className="text-base">{selectedWebsite.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">URL</p>
-                  <a 
-                    href={selectedWebsite.url} 
-                    target="_blank"
-                    rel="noreferrer"
+                  <p className="text-sm font-medium text-muted-foreground">
+                    URL
+                  </p>
+                  <a
+                    href={selectedWebsite.url}
                     className="text-blue-400 hover:underline"
+                    tabIndex={0}
+                    role="link"
+                    style={{ cursor: "pointer" }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openInNewTab(selectedWebsite.url);
+                    }}
                   >
                     {selectedWebsite.url}
                   </a>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Status</p>
-                  <div className="mt-1">{getStatusBadge(selectedWebsite.status)}</div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Status
+                  </p>
+                  <div className="mt-1">
+                    {getStatusBadge(selectedWebsite.status)}
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Date Submitted</p>
-                  <p className="text-base">{new Date(selectedWebsite.createdAt).toLocaleDateString()}</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Date Submitted
+                  </p>
+                  <p className="text-base">
+                    {new Date(selectedWebsite.createdat).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="pt-2 border-t border-border">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Login Credentials</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Login Credentials
+                </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Username</p>
-                    <p className="text-base">{selectedWebsite.username || "Not provided"}</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Username
+                    </p>
+                    <p className="text-base">
+                      {selectedWebsite.username || "Not provided"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Password</p>
-                    <p className="text-base">{selectedWebsite.password || "Not provided"}</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Password
+                    </p>
+                    <p className="text-base">
+                      {selectedWebsite.password || "Not provided"}
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               {selectedWebsite.status === "rejected" && (
                 <div className="flex justify-end pt-4">
-                  <Button 
-                    onClick={() => navigate("/dashboard/websites/add")}
-                  >
+                  <Button onClick={() => navigate("/dashboard/websites/add")}>
                     Resubmit Website
                   </Button>
                 </div>

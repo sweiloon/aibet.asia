@@ -91,22 +91,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const session = supabase.auth.getSession();
-    session.then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        if (profile) setUser(profile);
+    (async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        console.log("Supabase session after refresh:", session);
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          console.log("Fetched profile after refresh:", profile);
+          if (profile) {
+            setUser(profile);
+          } else {
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Error restoring session:", err);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    })();
     // Listen for auth state changes
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          if (profile) setUser(profile);
-        } else {
+        try {
+          console.log("onAuthStateChange event:", event, "session:", session);
+          if (session?.user) {
+            const profile = await fetchUserProfile(session.user.id);
+            console.log("Fetched profile in onAuthStateChange:", profile);
+            if (profile) {
+              setUser(profile);
+            } else {
+              setUser(null);
+            }
+          } else {
+            setUser(null);
+          }
+        } catch (err) {
+          console.error("Error in onAuthStateChange:", err);
           setUser(null);
+        } finally {
+          setLoading(false);
         }
       }
     );
@@ -184,6 +213,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: email.trim(),
         password,
       });
+      console.log("Auth signUp result:", { data, error });
       if (error || !data.user) {
         toast.error(error?.message || "Signup failed!");
         return false;
@@ -200,6 +230,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           ranking: "customer",
         },
       ]);
+      console.log("Insert profile result:", { profileError });
       if (profileError) {
         toast.error(profileError.message || "Failed to create user profile!");
         return false;
@@ -228,7 +259,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     toast.success("Logged out successfully");
   };
 
-  // Change password (requires re-authentication)
+  // Change password (no re-auth, just update and logout)
   const changePassword = async (
     currentPassword: string,
     newPassword: string
@@ -238,35 +269,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast.error("User email not found. Please re-login.");
         return false;
       }
-      // Verify current password by attempting sign-in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-      });
-      if (signInError) {
-        toast.error("Current password is incorrect.");
-        return false;
-      }
-      // If current password is correct, update password
+      // Directly update password
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
       if (error) {
-        if (
-          error.message &&
-          error.message.includes(
-            "New password should be different from the old password"
-          )
-        ) {
-          toast.error(
-            "New password should be different from the old password."
-          );
-        } else {
-          toast.error(error.message || "Failed to update password.");
-        }
+        toast.error(error.message || "Failed to update password.");
         return false;
       }
       toast.success("Password updated successfully!");
+      // Do not call logout or setUser here
       return true;
     } catch (err) {
       toast.error("Failed to update password.");
