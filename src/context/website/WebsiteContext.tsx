@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from "react";
 import { WebsiteContextType } from "./types";
 import { useWebsiteState } from "./useWebsiteState";
@@ -6,6 +5,8 @@ import { useWebsiteState } from "./useWebsiteState";
 // Create context with default values
 const WebsiteContext = createContext<WebsiteContextType>({
   websites: [],
+  isLoading: false,
+  error: null,
   getUserWebsites: () => [],
   getAllWebsites: () => [],
   addWebsite: () => {},
@@ -24,7 +25,7 @@ export const useWebsites = () => useContext(WebsiteContext);
 // Provider component
 export const WebsiteProvider = ({ children }: { children: ReactNode }) => {
   const websiteState = useWebsiteState();
-  
+
   return (
     <WebsiteContext.Provider value={websiteState}>
       {children}

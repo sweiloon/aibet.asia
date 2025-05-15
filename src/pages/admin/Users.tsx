@@ -44,6 +44,7 @@ export default function AdminUsers() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!currentUser) return; // Wait for user to be loaded
     setLoading(true);
     getAllUsers()
       .then((data) => {
@@ -54,7 +55,7 @@ export default function AdminUsers() {
         setError("Failed to load users");
         setLoading(false);
       });
-  }, [getAllUsers]);
+  }, [getAllUsers, currentUser]);
 
   // Filter users based on search term
   const filteredUsers = users.filter(

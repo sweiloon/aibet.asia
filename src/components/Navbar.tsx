@@ -13,19 +13,30 @@ import { LogOut, Settings, User, Menu, X } from "lucide-react";
 import { Buttons } from "./Buttons";
 
 export function Navbar() {
-  const { user, logout, checkAdminExists } = useAuth();
+  const { user, logout, checkAdminExists, adminStateVersion } = useAuth();
   const navigate = useNavigate();
   const [adminExists, setAdminExists] = useState(true);
+  const [isLoadingAdminCheck, setIsLoadingAdminCheck] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const checkAdmin = async () => {
+      console.log("NAVBAR: Checking admin existence...");
+      setIsLoadingAdminCheck(true);
       const exists = await checkAdminExists();
-      setAdminExists(exists);
+      if (isMounted) {
+        console.log("NAVBAR: Admin exists status:", exists);
+        setAdminExists(exists);
+        setIsLoadingAdminCheck(false);
+      }
     };
 
     checkAdmin();
-  }, [checkAdminExists]);
+    return () => {
+      isMounted = false;
+    };
+  }, [checkAdminExists, adminStateVersion]);
 
   const handleLogout = async () => {
     await logout();
@@ -35,6 +46,8 @@ export function Navbar() {
   const getInitials = (email: string) => {
     return email.substring(0, 2).toUpperCase();
   };
+
+  const showAdminSetupButton = !isLoadingAdminCheck && !user && !adminExists;
 
   return (
     <nav className="fixed top-4 left-1/2 z-50 w-[calc(100vw-32px)] max-w-4xl -translate-x-1/2 rounded-2xl border border-white/10 bg-black/30 backdrop-blur-lg shadow-[0_2px_24px_0_rgba(140,69,255,0.12)] py-2 px-6 flex items-center justify-between">
@@ -120,7 +133,7 @@ export function Navbar() {
               Login
             </Button>
             <Buttons onClick={() => navigate("/signup")}>Join Now</Buttons>
-            {!adminExists && (
+            {showAdminSetupButton && (
               <Button
                 variant="outline"
                 onClick={() => navigate("/admin-signup")}
@@ -309,7 +322,7 @@ export function Navbar() {
                   >
                     Join Now
                   </Buttons>
-                  {!adminExists && (
+                  {showAdminSetupButton && (
                     <Button
                       variant="outline"
                       className="w-full justify-start"
