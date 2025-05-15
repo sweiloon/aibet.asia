@@ -53,19 +53,13 @@ export function Navbar() {
     <nav className="fixed top-4 left-1/2 z-50 w-[calc(100vw-32px)] max-w-4xl -translate-x-1/2 rounded-2xl border border-white/10 bg-black/30 backdrop-blur-lg shadow-[0_2px_24px_0_rgba(140,69,255,0.12)] py-2 px-6 flex items-center justify-between">
       <Link to="/" className="flex items-center gap-2">
         <span className="text-xl font-semibold text-white flex items-center gap-2">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 2L13.09 8.26L19 8.27L14.18 12.14L15.27 18.4L12 14.77L8.73 18.4L9.82 12.14L5 8.27L10.91 8.26L12 2Z"
-              fill="#fff"
-              fillOpacity="0.9"
-            />
-          </svg>
+          <img
+            src="/logo.jpg"
+            alt="Aibet Asia Logo"
+            width={28}
+            height={28}
+            style={{ borderRadius: "6px" }}
+          />
           AIBET.ASIA
         </span>
       </Link>
@@ -224,19 +218,13 @@ export function Navbar() {
           <div className="relative w-[90vw] max-w-sm mx-auto rounded-2xl bg-neutral-900/95 border border-white/10 shadow-2xl flex flex-col animate-fade-in-up my-8">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
               <span className="text-xl font-semibold text-white flex items-center gap-2">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 2L13.09 8.26L19 8.27L14.18 12.14L15.27 18.4L12 14.77L8.73 18.4L9.82 12.14L5 8.27L10.91 8.26L12 2Z"
-                    fill="#fff"
-                    fillOpacity="0.9"
-                  />
-                </svg>
+                <img
+                  src="/logo.jpg"
+                  alt="Aibet Asia Logo"
+                  width={28}
+                  height={28}
+                  style={{ borderRadius: "6px" }}
+                />
                 AIBET.ASIA
               </span>
               <button
