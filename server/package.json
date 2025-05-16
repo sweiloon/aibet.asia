@@ -1,0 +1,19 @@
+{
+  "name": "aibet-download-proxy-server",
+  "version": "1.0.0",
+  "description": "Download proxy server for Aibet Asia",
+  "main": "downloadProxy.js",
+  "type": "module",
+  "scripts": {
+    "start": "node downloadProxy.js",
+    "dev": "nodemon downloadProxy.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
