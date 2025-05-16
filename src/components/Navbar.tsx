@@ -54,11 +54,15 @@ export function Navbar() {
       <Link to="/" className="flex items-center gap-2">
         <span className="text-xl font-semibold text-white flex items-center gap-2">
           <img
-            src="/logo.jpg"
+            src="/circlenav.png"
             alt="Aibet Asia Logo"
             width={28}
             height={28}
-            style={{ borderRadius: "6px" }}
+            style={{
+              borderRadius: "6px",
+              objectFit: "cover",
+              display: "block",
+            }}
           />
           AIBET.ASIA
         </span>
@@ -219,11 +223,15 @@ export function Navbar() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
               <span className="text-xl font-semibold text-white flex items-center gap-2">
                 <img
-                  src="/logo.jpg"
+                  src="/circlenav.png"
                   alt="Aibet Asia Logo"
                   width={28}
                   height={28}
-                  style={{ borderRadius: "6px" }}
+                  style={{
+                    borderRadius: "6px",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
                 />
                 AIBET.ASIA
               </span>
