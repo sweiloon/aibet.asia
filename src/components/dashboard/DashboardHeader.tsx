@@ -37,8 +37,9 @@ export function DashboardHeader({ isAdmin = false }: DashboardHeaderProps) {
               <DialogTitle>Contact Us</DialogTitle>
             </DialogHeader>
             <div className="mb-4">
-              Please contact <span className="font-semibold">+60102286258</span>{" "}
-              (Whatsapp) for further enquiry
+              Please contact{" "}
+              <span className="font-semibold">+6011-12006061</span> (Whatsapp)
+              for further enquiry
             </div>
             <Button className="w-full" onClick={() => setOpen(false)}>
               Close
