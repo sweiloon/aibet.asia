@@ -409,7 +409,11 @@ export default function Home() {
                 do the thinking while you focus on the results.
               </p>
               <div className="mt-5 flex justify-center">
-                <Buttons>Get Started</Buttons>
+                {!user && (
+                  <Buttons onClick={() => navigate("/signup")}>
+                    Join Now
+                  </Buttons>
+                )}
               </div>
             </div>
           </motion.div>
