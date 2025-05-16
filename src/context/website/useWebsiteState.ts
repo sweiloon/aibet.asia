@@ -56,6 +56,12 @@ export const useWebsiteState = () => {
           .from("website_management")
           .select("*");
 
+        console.log(
+          "Fetched managementData (raw from Supabase):",
+          JSON.stringify(managementData, null, 2)
+        );
+        console.log("Fetched managementError:", managementError);
+
         if (managementError) {
           console.error("Failed to fetch management records:", managementError);
 
@@ -101,6 +107,10 @@ export const useWebsiteState = () => {
         });
 
         setWebsites(websitesWithManagement);
+        console.log(
+          "Final websitesWithManagement state:",
+          JSON.stringify(websitesWithManagement, null, 2)
+        );
       } catch (err) {
         console.error("Unexpected error in fetchWebsites:", err);
         setError("An unexpected error occurred. Please try again.");
@@ -328,17 +338,7 @@ export const useWebsiteState = () => {
         return;
       }
 
-      // Update local state
-      setWebsites((prev) =>
-        prev.map((website) =>
-          website.id === websiteId
-            ? {
-                ...website,
-                managementData: [newRecord, ...website.managementData],
-              }
-            : website
-        )
-      );
+      await fetchWebsites();
 
       toast.success("Management record added");
     } catch (err) {
