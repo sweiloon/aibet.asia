@@ -268,25 +268,27 @@ export const ApprovalsTable = ({
                   )}
                   {item.files &&
                     item.files.length > 0 &&
-                    item.files.map((file, idx) => (
-                      <Button
-                        key={idx}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const a = document.createElement("a");
-                          a.href = `http://localhost:4000/download?url=${encodeURIComponent(
-                            file.url
-                          )}&name=${encodeURIComponent(file.name)}`;
-                          a.download = file.name;
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                        }}
-                      >
-                        Download
-                      </Button>
-                    ))}
+                    item.files.map((file, idx) =>
+                      file.url ? (
+                        <Button
+                          key={idx}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const a = document.createElement("a");
+                            a.href = `/api/download?url=${encodeURIComponent(
+                              file.url
+                            )}&name=${encodeURIComponent(file.name)}`;
+                            a.download = file.name;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                        >
+                          Download
+                        </Button>
+                      ) : null
+                    )}
                 </div>
               </TableCell>
             </TableRow>

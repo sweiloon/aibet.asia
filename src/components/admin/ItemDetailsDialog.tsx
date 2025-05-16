@@ -141,11 +141,8 @@ export const ItemDetailsDialog = ({
                 Files
               </p>
               <div className="grid grid-cols-2 gap-4">
-                {item.files.map(
-                  (
-                    file: { name: string; url: string; type: string },
-                    index: number
-                  ) => (
+                {item.files.map((file, index) =>
+                  file.url ? (
                     <div
                       key={index}
                       className="flex flex-col items-center gap-2"
@@ -163,7 +160,7 @@ export const ItemDetailsDialog = ({
                             className="mt-2 w-full"
                             onClick={() => {
                               const a = document.createElement("a");
-                              a.href = `http://localhost:4000/download?url=${encodeURIComponent(
+                              a.href = `/api/download?url=${encodeURIComponent(
                                 file.url
                               )}&name=${encodeURIComponent(file.name)}`;
                               a.download = file.name;
@@ -175,28 +172,6 @@ export const ItemDetailsDialog = ({
                             Download Image
                           </Button>
                         </>
-                      ) : file.type && file.type.includes("pdf") ? (
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                        >
-                          <a
-                            href={file.url}
-                            download={file.name}
-                            className="text-blue-400 hover:underline"
-                            tabIndex={0}
-                            role="link"
-                            style={{ cursor: "pointer" }}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              openInNewTab(file.url);
-                            }}
-                          >
-                            Download PDF
-                          </a>
-                        </Button>
                       ) : (
                         <Button
                           variant="outline"
@@ -204,7 +179,7 @@ export const ItemDetailsDialog = ({
                           className="w-full"
                           onClick={() => {
                             const a = document.createElement("a");
-                            a.href = `http://localhost:4000/download?url=${encodeURIComponent(
+                            a.href = `/api/download?url=${encodeURIComponent(
                               file.url
                             )}&name=${encodeURIComponent(file.name)}`;
                             a.download = file.name;
@@ -217,7 +192,7 @@ export const ItemDetailsDialog = ({
                         </Button>
                       )}
                     </div>
-                  )
+                  ) : null
                 )}
               </div>
             </div>

@@ -84,8 +84,11 @@ export const UploadDetailsDialog = ({
 
   const handleDialogDownload = (file) => {
     if (onOpenChange) onOpenChange(false);
+    if (!file.url) return;
     const a = document.createElement("a");
-    a.href = `http://localhost:4000/download?url=${encodeURIComponent(file.url)}&name=${encodeURIComponent(file.name)}`;
+    a.href = `/api/download?url=${encodeURIComponent(
+      file.url
+    )}&name=${encodeURIComponent(file.name)}`;
     a.download = file.name;
     document.body.appendChild(a);
     a.click();
@@ -221,17 +224,14 @@ export const UploadDetailsDialog = ({
                   Files
                 </p>
                 <div className="grid grid-cols-2 gap-4">
-                  {item.files.map(
-                    (
-                      file: { name: string; url: string; type: string },
-                      index: number
-                    ) => {
-                      if (file.type && file.type.includes("image")) {
-                        return (
-                          <div
-                            key={index}
-                            className="flex flex-col items-center gap-2"
-                          >
+                  {item.files.map((file, index) =>
+                    file.url ? (
+                      <div
+                        key={index}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        {file.type && file.type.includes("image") ? (
+                          <>
                             <img
                               src={file.url}
                               alt={file.name}
@@ -245,42 +245,19 @@ export const UploadDetailsDialog = ({
                             >
                               Download Image
                             </Button>
-                          </div>
-                        );
-                      } else if (file.type && file.type.includes("pdf")) {
-                        return (
-                          <div
-                            key={index}
-                            className="flex flex-col items-center gap-2"
+                          </>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => handleDialogDownload(file)}
                           >
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                              onClick={() => handleDialogDownload(file)}
-                            >
-                              Download PDF
-                            </Button>
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <div
-                            key={index}
-                            className="flex flex-col items-center gap-2"
-                          >
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                              onClick={() => handleDialogDownload(file)}
-                            >
-                              Download File
-                            </Button>
-                          </div>
-                        );
-                      }
-                    }
+                            Download File
+                          </Button>
+                        )}
+                      </div>
+                    ) : null
                   )}
                 </div>
               </div>

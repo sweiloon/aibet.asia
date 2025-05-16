@@ -47,7 +47,7 @@ export default function UploadHistory() {
         window.dispatchEvent(
           new CustomEvent("trigger-download", {
             detail: {
-              url: `http://localhost:4000/download?url=${encodeURIComponent(
+              url: `/api/download?url=${encodeURIComponent(
                 pendingDownloadFile.url
               )}&name=${encodeURIComponent(pendingDownloadFile.name)}`,
             },
@@ -146,11 +146,8 @@ export default function UploadHistory() {
             <div className="mt-8 border-t pt-6">
               <h2 className="text-lg font-semibold mb-2">Download Files</h2>
               <div className="grid grid-cols-2 gap-4">
-                {selectedItem.files.map(
-                  (
-                    file: { name: string; url: string; type: string },
-                    index: number
-                  ) => (
+                {selectedItem.files.map((file, index) =>
+                  file.url ? (
                     <div
                       key={index}
                       className="flex flex-col items-center gap-2"
@@ -169,7 +166,7 @@ export default function UploadHistory() {
                         className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded"
                         onClick={() => {
                           const a = document.createElement("a");
-                          a.href = `http://localhost:4000/download?url=${encodeURIComponent(
+                          a.href = `/api/download?url=${encodeURIComponent(
                             file.url
                           )}&name=${encodeURIComponent(file.name)}`;
                           a.download = file.name;
@@ -181,7 +178,7 @@ export default function UploadHistory() {
                         Download
                       </button>
                     </div>
-                  )
+                  ) : null
                 )}
               </div>
             </div>
