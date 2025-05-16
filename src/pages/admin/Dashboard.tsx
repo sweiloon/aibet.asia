@@ -3,9 +3,11 @@ import { useWebsites } from "@/context/WebsiteContext";
 import { StatsCards } from "@/components/admin/StatsCards";
 import { PendingApprovalsCard } from "@/components/admin/PendingApprovalsCard";
 import { RecentManagementCard } from "@/components/admin/RecentManagementCard";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const { getAllWebsites } = useWebsites();
+  const navigate = useNavigate();
 
   const websites = getAllWebsites();
 
@@ -30,17 +32,17 @@ export default function AdminDashboard() {
     )
     .sort((a, b) => {
       const latestA = [...a.managementData].sort((x, y) => {
-        const dateA = x.date || x.start_date;
-        const dateB = y.date || y.start_date;
+        const dateA = x.start_date;
+        const dateB = y.start_date;
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       })[0];
       const latestB = [...b.managementData].sort((x, y) => {
-        const dateA = x.date || x.start_date;
-        const dateB = y.date || y.start_date;
+        const dateA = x.start_date;
+        const dateB = y.start_date;
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       })[0];
-      const dateA = latestA.date || latestA.start_date;
-      const dateB = latestB.date || latestB.start_date;
+      const dateA = latestA.start_date;
+      const dateB = latestB.start_date;
       return new Date(dateB).getTime() - new Date(dateA).getTime();
     })
     .slice(0, 3);
@@ -102,12 +104,12 @@ export default function AdminDashboard() {
               <div>Bank Submission: {totalBreakdown.bank}</div>
             </div>
             <div className="mt-6">
-              <a
-                href="/admin/websites"
+              <button
                 className="text-zinc-200 text-sm font-semibold flex items-center gap-1 hover:underline"
+                onClick={() => navigate("/admin/websites")}
               >
                 View All <span>&rarr;</span>
-              </a>
+              </button>
             </div>
           </div>
           <div className="bg-[#18181b] rounded-2xl p-7 flex flex-col justify-between border border-[#232329] shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -143,12 +145,12 @@ export default function AdminDashboard() {
               <div>Bank Submission: {pendingBreakdown.bank}</div>
             </div>
             <div className="mt-6">
-              <a
-                href="/admin/websites?status=pending"
+              <button
                 className="text-zinc-200 text-sm font-semibold flex items-center gap-1 hover:underline"
+                onClick={() => navigate("/admin/approvals")}
               >
                 Review Pending <span>&rarr;</span>
-              </a>
+              </button>
             </div>
           </div>
           <div className="bg-[#18181b] rounded-2xl p-7 flex flex-col justify-between border border-[#232329] shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -182,12 +184,12 @@ export default function AdminDashboard() {
               <div>Bank Submission: {activeBreakdown.bank}</div>
             </div>
             <div className="mt-6">
-              <a
-                href="/admin/websites?status=approved"
+              <button
                 className="text-zinc-200 text-sm font-semibold flex items-center gap-1 hover:underline"
+                onClick={() => navigate("/admin/website-records")}
               >
                 View Active <span>&rarr;</span>
-              </a>
+              </button>
             </div>
           </div>
         </div>

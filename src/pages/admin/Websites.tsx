@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -16,15 +15,16 @@ import {
 } from "@/components/ui/table";
 import { useWebsites } from "@/context/WebsiteContext";
 import { Search, X } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 export default function AdminWebsites() {
   const { getAllWebsites } = useWebsites();
   const websites = getAllWebsites();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [searchTerm, setSearchTerm] = useState<string>("");
-  
+
   // Set initial status filter based on URL query param
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -36,41 +36,56 @@ export default function AdminWebsites() {
       }
     }
   }, [location.search]);
-  
-  const filteredWebsites = websites.filter(website => {
+
+  const filteredWebsites = websites.filter((website) => {
     if (!searchTerm) return true;
-    
+
     const searchTermLower = searchTerm.toLowerCase();
-    
+
     return (
       website.name.toLowerCase().includes(searchTermLower) ||
       website.url.toLowerCase().includes(searchTermLower) ||
       website.status.toLowerCase().includes(searchTermLower) ||
-      (website.userEmail && website.userEmail.toLowerCase().includes(searchTermLower))
+      (website.useremail &&
+        website.useremail.toLowerCase().includes(searchTermLower))
     );
   });
-  
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return <Badge className="bg-green-500/20 text-green-300 hover:bg-green-500/30">Approved</Badge>;
+        return (
+          <Badge className="bg-green-500/20 text-green-300 hover:bg-green-500/30">
+            Approved
+          </Badge>
+        );
       case "rejected":
-        return <Badge className="bg-red-500/20 text-red-300 hover:bg-red-500/30">Rejected</Badge>;
+        return (
+          <Badge className="bg-red-500/20 text-red-300 hover:bg-red-500/30">
+            Rejected
+          </Badge>
+        );
       case "pending":
-        return <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">Pending</Badge>;
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
+            Pending
+          </Badge>
+        );
       default:
         return null;
     }
   };
-  
+
   return (
     <DashboardLayout isAdmin>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Manage Websites</h1>
-          <p className="text-muted-foreground">Review and manage all websites in the system</p>
+          <p className="text-muted-foreground">
+            Review and manage all websites in the system
+          </p>
         </div>
-        
+
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -80,7 +95,7 @@ export default function AdminWebsites() {
             className="pl-8 pr-8"
           />
           {searchTerm && (
-            <button 
+            <button
               className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground hover:text-foreground"
               onClick={() => setSearchTerm("")}
             >
@@ -88,7 +103,7 @@ export default function AdminWebsites() {
             </button>
           )}
         </div>
-        
+
         <Card className="glass-morphism">
           <CardContent className="p-0">
             <Table>
@@ -107,15 +122,21 @@ export default function AdminWebsites() {
                 {filteredWebsites.length > 0 ? (
                   filteredWebsites.map((website) => {
                     // Get user info (in a real app would fetch from database)
-                    const userEmail = website.userEmail || "user@aibet.asia"; // Placeholder
-                    
+                    const userEmail = website.useremail || "user@aibet.asia"; // Placeholder
+
                     return (
                       <TableRow key={website.id}>
-                        <TableCell className="font-medium">{website.name}</TableCell>
+                        <TableCell className="font-medium">
+                          {website.name}
+                        </TableCell>
                         <TableCell>
-                          <a 
-                            href={website.url.startsWith("http") ? website.url : `https://${website.url}`} 
-                            target="_blank" 
+                          <a
+                            href={
+                              website.url.startsWith("http")
+                                ? website.url
+                                : `https://${website.url}`
+                            }
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-400 hover:underline"
                           >
@@ -124,13 +145,34 @@ export default function AdminWebsites() {
                         </TableCell>
                         <TableCell>{getStatusBadge(website.status)}</TableCell>
                         <TableCell>{userEmail}</TableCell>
-                        <TableCell>{new Date(website.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {new Date(website.createdat).toLocaleDateString()}
+                        </TableCell>
                         <TableCell>{website.managementData.length}</TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => navigate(`/admin/websites/${website.id}`)}
+                            onClick={() => {
+                              if (
+                                website.type === "id-card" ||
+                                website.type === "bank-statement"
+                              ) {
+                                toast.info(
+                                  "This document submission does not have management records."
+                                );
+                              } else if (website.status === "approved") {
+                                navigate(
+                                  `/admin/website-records?websiteId=${website.id}`
+                                );
+                              } else if (website.status === "rejected") {
+                                toast.error(
+                                  "This website is rejected. No records available."
+                                );
+                              } else if (website.status === "pending") {
+                                navigate("/admin/approvals");
+                              }
+                            }}
                           >
                             Manage
                           </Button>

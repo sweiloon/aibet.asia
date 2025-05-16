@@ -16,6 +16,7 @@ import { Search, X } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { WebsiteRecordCard } from "@/components/admin/WebsiteRecordCard";
 import { RecordForm } from "@/components/admin/RecordForm";
+import { useLocation } from "react-router-dom";
 
 const WebsiteRecords = () => {
   const {
@@ -28,11 +29,23 @@ const WebsiteRecords = () => {
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const location = useLocation();
+
+  // Get websiteId from query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const websiteIdFromQuery = queryParams.get("websiteId");
 
   // Only approved websites of type "website"
-  const approvedWebsites = websites.filter(
+  let approvedWebsites = websites.filter(
     (website) => website.status === "approved" && website.type === "website"
   );
+
+  // If websiteId is in query, filter for that specific website
+  if (websiteIdFromQuery) {
+    approvedWebsites = approvedWebsites.filter(
+      (website) => website.id === websiteIdFromQuery
+    );
+  }
 
   // Apply search
   const filteredWebsites = approvedWebsites.filter((website) => {

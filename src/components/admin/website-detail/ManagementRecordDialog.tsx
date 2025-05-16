@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { WebsiteManagement } from "@/context/WebsiteContext";
 import { Button } from "@/components/ui/button";
@@ -40,19 +39,33 @@ export function ManagementRecordDialog({
   onOpenChange,
   onSave,
   editRecord,
-  websiteName
+  websiteName,
 }: ManagementRecordDialogProps) {
-  const [recordDate, setRecordDate] = useState(new Date().toISOString().split("T")[0]);
+  const [recordDate, setRecordDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [tasks, setTasks] = useState<Task[]>([
     { type: "Backup", description: "Full website backup", status: "completed" },
-    { type: "Security", description: "Security scan and updates", status: "completed" },
-    { type: "Performance", description: "Performance optimization", status: "pending" }
+    {
+      type: "Security",
+      description: "Security scan and updates",
+      status: "completed",
+    },
+    {
+      type: "Performance",
+      description: "Performance optimization",
+      status: "pending",
+    },
   ]);
 
   // Initialize form when editing a record
   useEffect(() => {
     if (editRecord) {
-      setRecordDate(new Date(editRecord.date || editRecord.startDate).toISOString().split("T")[0]);
+      setRecordDate(
+        new Date(editRecord.date || editRecord.startDate)
+          .toISOString()
+          .split("T")[0]
+      );
       if (editRecord.tasks && editRecord.tasks.length > 0) {
         setTasks(editRecord.tasks);
       }
@@ -60,18 +73,27 @@ export function ManagementRecordDialog({
       // Reset to defaults for new record
       setRecordDate(new Date().toISOString().split("T")[0]);
       setTasks([
-        { type: "Backup", description: "Full website backup", status: "completed" },
-        { type: "Security", description: "Security scan and updates", status: "completed" },
-        { type: "Performance", description: "Performance optimization", status: "pending" }
+        {
+          type: "Backup",
+          description: "Full website backup",
+          status: "completed",
+        },
+        {
+          type: "Security",
+          description: "Security scan and updates",
+          status: "completed",
+        },
+        {
+          type: "Performance",
+          description: "Performance optimization",
+          status: "pending",
+        },
       ]);
     }
   }, [editRecord, open]);
 
   const handleAddTask = () => {
-    setTasks([
-      ...tasks,
-      { type: "Other", description: "", status: "pending" }
-    ]);
+    setTasks([...tasks, { type: "Other", description: "", status: "pending" }]);
   };
 
   const handleRemoveTask = (index: number) => {
@@ -99,7 +121,7 @@ export function ManagementRecordDialog({
             Record management tasks performed on {websiteName}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6 py-4">
           <div className="space-y-2">
             <Label htmlFor="record-date">Record Date</Label>
@@ -110,7 +132,7 @@ export function ManagementRecordDialog({
               onChange={(e) => setRecordDate(e.target.value)}
             />
           </div>
-          
+
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <Label>Tasks</Label>
@@ -123,13 +145,15 @@ export function ManagementRecordDialog({
                 Add Task
               </Button>
             </div>
-            
+
             {tasks.map((task, index) => (
               <div key={index} className="grid grid-cols-12 gap-3 items-start">
                 <div className="col-span-3">
                   <Select
                     value={task.type}
-                    onValueChange={(value) => handleTaskChange(index, "type", value)}
+                    onValueChange={(value) =>
+                      handleTaskChange(index, "type", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Type" />
@@ -144,20 +168,24 @@ export function ManagementRecordDialog({
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="col-span-5">
                   <Textarea
                     placeholder="Description"
                     value={task.description}
-                    onChange={(e) => handleTaskChange(index, "description", e.target.value)}
+                    onChange={(e) =>
+                      handleTaskChange(index, "description", e.target.value)
+                    }
                     className="min-h-9 resize-none"
                   />
                 </div>
-                
+
                 <div className="col-span-3">
                   <Select
                     value={task.status}
-                    onValueChange={(value) => handleTaskChange(index, "status", value)}
+                    onValueChange={(value) =>
+                      handleTaskChange(index, "status", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Status" />
@@ -169,7 +197,7 @@ export function ManagementRecordDialog({
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="col-span-1 flex justify-center items-center h-9">
                   <Button
                     type="button"
@@ -186,9 +214,13 @@ export function ManagementRecordDialog({
             ))}
           </div>
         </div>
-        
+
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button type="button" onClick={handleSave}>
