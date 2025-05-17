@@ -5,6 +5,7 @@ import {
   useEffect,
   ReactNode,
   useCallback,
+  useRef,
 } from "react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabaseClient";
@@ -13,6 +14,14 @@ import {
   SupabaseClient,
   PostgrestError,
 } from "@supabase/supabase-js";
+
+export type ProfileStatusType =
+  | "idle"
+  | "loading_full"
+  | "partial_fallback"
+  | "loaded_full"
+  | "loaded_full_stale"
+  | "failed_fetch";
 
 export interface User {
   id: string;
@@ -28,6 +37,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  profileStatus: ProfileStatusType;
   login: (
     email: string,
     password: string,
@@ -61,6 +71,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  profileStatus: "idle",
   login: async () => false,
   signup: async () => false,
   logout: () => {},
@@ -93,8 +104,19 @@ const withTimeout = <T,>(
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileStatus, setProfileStatus] = useState<ProfileStatusType>("idle");
   const [adminStateVersion, setAdminStateVersion] = useState(0);
   const bumpAdminStateVersion = () => setAdminStateVersion((v) => v + 1);
+  const isInitialProfileLoadAttempt = useRef(true);
+  const profileStatusRef = useRef<ProfileStatusType>(profileStatus);
+
+  useEffect(() => {
+    profileStatusRef.current = profileStatus;
+    console.log(
+      "AUTH_CONTEXT: profileStatusRef updated to:",
+      profileStatusRef.current
+    );
+  }, [profileStatus]);
 
   const fetchUserProfile = async (
     userId: string,
@@ -143,7 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
 
       console.log(
-        "AUTH_CONTEXT: fetchUserProfile - Supabase query wrapped in Promise. Applying timeout (1s)."
+        "AUTH_CONTEXT: fetchUserProfile - Supabase query wrapped in Promise. Applying timeout (3s)."
       );
       console.log(
         "AUTH_CONTEXT: fetchUserProfile - ABOUT TO AWAIT withTimeout for supabaseQueryAsPromise."
@@ -151,9 +173,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const queryResult: ExpectedSupabaseResponse = await withTimeout(
         supabaseQueryAsPromise,
-        1000,
+        3000,
         new Error(
-          `Supabase query timed out after 10 seconds for user ID: ${userId}`
+          `Supabase query timed out after 3 seconds for user ID: ${userId}`
         )
       );
 
@@ -225,9 +247,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error(
           `AUTH_CONTEXT: fetchUserProfile - Supabase query TIMED OUT for user ID: ${userId}. Error:`,
           err
-        );
-        toast.error(
-          "Loading your profile took too long. Please check your connection."
         );
       } else if (err && typeof err === "object" && "message" in err) {
         const anError = err as PostgrestError;
@@ -302,43 +321,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }`
         );
         if (session?.user) {
-          console.log(
-            `AUTH_CONTEXT: onAuthStateChange - Session for ${session.user.id} detected. Fetching profile.`
-          );
-          if (!loading) setLoading(true);
+          setProfileStatus("loading_full");
+
+          const wasInitialAttempt = isInitialProfileLoadAttempt.current;
+          if (wasInitialAttempt) {
+            isInitialProfileLoadAttempt.current = false;
+          }
 
           const profile = await fetchUserProfile(session.user.id);
           if (profile) {
             console.log(
-              `AUTH_CONTEXT: onAuthStateChange - Profile for ${profile.email} loaded.`
+              `AUTH_CONTEXT: onAuthStateChange - Profile for ${profile.email} loaded successfully on event ${_event}.`
             );
             setUser(profile);
-            setLoading(false);
+            setProfileStatus("loaded_full");
           } else {
             console.warn(
-              `AUTH_CONTEXT: onAuthStateChange - Profile not found for ${session.user.id}. Event: ${_event}.`
+              `AUTH_CONTEXT: onAuthStateChange - Profile fetch failed or returned null for user ${session.user.id} on event ${_event}.`
             );
-            setUser(null);
-            if (_event !== "SIGNED_IN") {
-              console.log(
-                `AUTH_CONTEXT: Signing out user ${session.user.id} due to missing profile on ${_event}`
+
+            if (profileStatus === "loaded_full") {
+              console.warn(
+                `AUTH_CONTEXT: Failed to refresh full profile for ${
+                  user?.email || session.user.id
+                }. Retaining stale data.`
               );
-              await supabase.auth.signOut();
+              setProfileStatus("loaded_full_stale");
+              toast.warning(
+                "Couldn't refresh all data. Displaying last known information. Try refreshing later."
+              );
             } else {
-              setLoading(false);
+              console.warn(
+                `AUTH_CONTEXT: Initial/critical profile fetch failed for ${session.user.email}. Setting minimal user.`
+              );
+              setUser({
+                id: session.user.id,
+                email: session.user.email as string,
+                role:
+                  (session.user.app_metadata?.userrole as User["role"]) ||
+                  "user",
+              });
+              setProfileStatus("partial_fallback");
+              if (!wasInitialAttempt) {
+                toast.warning(
+                  "Could not load all profile details. Some features might be limited. You can try refreshing."
+                );
+              }
             }
           }
         } else {
           console.log(
-            "AUTH_CONTEXT: onAuthStateChange - No session. Clearing user state."
+            "AUTH_CONTEXT: onAuthStateChange - No session or user signed out. Clearing user state."
           );
           setUser(null);
-          setLoading(false);
+          setProfileStatus("idle");
         }
+        setLoading(false);
       }
     );
-
-    supabase.auth.getUser().then(console.log);
 
     return () => {
       console.log("AUTH_CONTEXT: useEffect cleanup - Unsubscribing.");
@@ -721,11 +761,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Effect for handling tab visibility changes to auto-refresh if needed
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        console.log(
+          "AUTH_CONTEXT: visibilitychange (visible) - current handler sees profileStatus via ref:",
+          profileStatusRef.current
+        );
+
+        if (
+          profileStatusRef.current === "partial_fallback" ||
+          profileStatusRef.current === "loaded_full_stale"
+        ) {
+          console.log(
+            `AUTH_CONTEXT: Profile is ${profileStatusRef.current} on tab focus (checked via ref), reloading page.`
+          );
+          window.location.reload();
+        }
+      }
+    };
+
+    console.log(
+      "AUTH_CONTEXT: visibilitychange effect (mount) - registering listener."
+    );
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      console.log(
+        "AUTH_CONTEXT: visibilitychange effect (unmount) - cleanup listener."
+      );
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []); // Empty dependency array: runs only on mount and unmount
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
+        profileStatus,
         login,
         signup,
         logout,
