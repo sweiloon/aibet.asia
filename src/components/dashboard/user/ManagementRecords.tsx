@@ -6,22 +6,31 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Website } from "@/context/WebsiteContext";
+import { Website, WebsiteTask } from "@/context/WebsiteContext";
 import { useNavigate } from "react-router-dom";
 import { FileUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 
 interface ManagementRecordsProps {
   approvedWebsites: Website[];
 }
 
+// Helper function to get translated task status
+const getTranslatedTaskStatus = (taskCompleted: boolean, t: TFunction) => {
+  if (taskCompleted) return t("Completed");
+  return t("Pending"); // Default to Pending if not completed
+};
+
 export function ManagementRecords({
   approvedWebsites,
 }: ManagementRecordsProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Recent Management Records</h2>
+      <h2 className="text-2xl font-bold">{t("Recent Management Records")}</h2>
 
       {approvedWebsites.length > 0 ? (
         <div className="space-y-4">
@@ -37,8 +46,8 @@ export function ManagementRecords({
                   <div className="space-y-4">
                     {site.managementData
                       .sort((a, b) => {
-                        const dateA = a.date || a.start_date;
-                        const dateB = b.date || b.start_date;
+                        const dateA = a.start_date;
+                        const dateB = b.start_date;
                         return (
                           new Date(dateB).getTime() - new Date(dateA).getTime()
                         );
@@ -53,44 +62,45 @@ export function ManagementRecords({
                             >
                               <div className="flex justify-between items-center mb-2">
                                 <strong>
-                                  Date:{" "}
+                                  {t("Date:")}
                                   {new Date(
-                                    record.date || record.start_date
+                                    record.start_date
                                   ).toLocaleDateString()}
                                 </strong>
                               </div>
                               <div className="space-y-2">
-                                {record.tasks.map((task, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex items-center justify-between text-sm"
-                                  >
-                                    <div>
-                                      <span className="font-semibold">
-                                        {task.type}:
-                                      </span>{" "}
-                                      {task.description}
+                                {(record.tasks as WebsiteTask[]).map(
+                                  (task, index) => (
+                                    <div
+                                      key={task.id || index}
+                                      className="flex items-center justify-between text-sm"
+                                    >
+                                      <div>
+                                        <span className="font-semibold">
+                                          {task.label}:
+                                        </span>{" "}
+                                      </div>
+                                      <div>
+                                        <span
+                                          className={`px-2 py-1 rounded-full text-xs ${
+                                            task.completed
+                                              ? "bg-green-500/20 text-green-300"
+                                              : "bg-blue-500/20 text-blue-300"
+                                          }`}
+                                        >
+                                          {getTranslatedTaskStatus(
+                                            task.completed,
+                                            t
+                                          )}
+                                        </span>
+                                      </div>
                                     </div>
-                                    <div>
-                                      <span
-                                        className={`px-2 py-1 rounded-full text-xs ${
-                                          task.status === "completed"
-                                            ? "bg-green-500/20 text-green-300"
-                                            : task.status === "in-progress"
-                                            ? "bg-yellow-500/20 text-yellow-300"
-                                            : "bg-blue-500/20 text-blue-300"
-                                        }`}
-                                      >
-                                        {task.status}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
+                                  )
+                                )}
                               </div>
                             </div>
                           );
                         } else {
-                          // For the new management record format
                           return (
                             <div
                               key={record.id}
@@ -101,28 +111,28 @@ export function ManagementRecords({
                                   ? new Date(
                                       record.start_date
                                     ).toLocaleDateString()
-                                  : "Invalid Date"}
+                                  : t("Invalid Date")}
                               </div>
                               <div className="space-y-1 text-sm">
                                 <div>
-                                  <b>Day:</b> {record.day ?? "-"}
+                                  <b>{t("Day:")}</b> {record.day ?? "-"}
                                 </div>
                                 <div>
-                                  <b>Credit:</b> {record.credit ?? "-"}
+                                  <b>{t("Credit:")}</b> {record.credit ?? "-"}
                                 </div>
                                 <div>
-                                  <b>Profit:</b> {record.profit ?? "-"}
+                                  <b>{t("Profit:")}</b> {record.profit ?? "-"}
                                 </div>
                                 <div>
-                                  <b>Gross Profit:</b>{" "}
+                                  <b>{t("Gross Profit:")}</b>{" "}
                                   {record.gross_profit ?? "-"}
                                 </div>
                                 <div>
-                                  <b>Service Fee:</b>{" "}
+                                  <b>{t("Service Fee:")}</b>{" "}
                                   {record.service_fee ?? "-"}
                                 </div>
                                 <div>
-                                  <b>Start Date:</b>{" "}
+                                  <b>{t("Start Date:")}</b>{" "}
                                   {record.start_date
                                     ? new Date(
                                         record.start_date
@@ -130,7 +140,7 @@ export function ManagementRecords({
                                     : "-"}
                                 </div>
                                 <div>
-                                  <b>End Date:</b>{" "}
+                                  <b>{t("End Date:")}</b>{" "}
                                   {record.end_date
                                     ? new Date(
                                         record.end_date
@@ -138,7 +148,8 @@ export function ManagementRecords({
                                     : "-"}
                                 </div>
                                 <div>
-                                  <b>Net Profit:</b> {record.net_profit ?? "-"}
+                                  <b>{t("Net Profit:")}</b>{" "}
+                                  {record.net_profit ?? "-"}
                                 </div>
                               </div>
                             </div>
@@ -152,7 +163,7 @@ export function ManagementRecords({
                       variant="outline"
                       onClick={() => navigate(`/dashboard/websites/${site.id}`)}
                     >
-                      View All Records
+                      {t("View All Records")}
                     </Button>
                   </div>
                 </CardContent>
@@ -164,10 +175,11 @@ export function ManagementRecords({
             <Card className="glass-morphism">
               <CardContent className="pt-6">
                 <div className="text-center py-6">
-                  <p>No management records available yet.</p>
+                  <p>{t("No management records available yet.")}</p>
                   <p className="text-muted-foreground text-sm mt-1">
-                    Management records will appear once our team starts working
-                    on your websites.
+                    {t(
+                      "Management records will appear once our team starts working on your websites."
+                    )}
                   </p>
                 </div>
               </CardContent>
@@ -178,17 +190,18 @@ export function ManagementRecords({
         <Card className="glass-morphism">
           <CardContent className="pt-6">
             <div className="text-center py-6">
-              <p className="text-xl">No approved websites yet</p>
+              <p className="text-xl">{t("No approved websites yet")}</p>
               <p className="text-muted-foreground mt-2">
-                Submit your websites for approval to see management records
-                here.
+                {t(
+                  "Submit your websites for approval to see management records here."
+                )}
               </p>
               <Button
                 onClick={() => navigate("/dashboard/websites/add")}
                 className="mt-4"
               >
                 <FileUp className="mr-2 h-4 w-4" />
-                Upload Website
+                {t("Upload Website")}
               </Button>
             </div>
           </CardContent>

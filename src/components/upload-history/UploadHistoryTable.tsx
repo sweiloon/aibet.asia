@@ -8,14 +8,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Eye, FileText, File, Trash2 } from "lucide-react";
+import { Eye, FileText, File } from "lucide-react";
 import { Website } from "@/context/WebsiteContext";
+import { TFunction } from "i18next";
+import { i18n as I18nInstanceType } from "i18next";
 
 interface UploadHistoryTableProps {
   uploads: Website[];
   onViewDetails: (item: Website) => void;
   title?: string;
   deleteWebsite?: (id: string) => void;
+  t: TFunction;
+  i18n: I18nInstanceType;
 }
 
 export const UploadHistoryTable = ({
@@ -23,54 +27,50 @@ export const UploadHistoryTable = ({
   onViewDetails,
   title,
   deleteWebsite,
+  t,
+  i18n,
 }: UploadHistoryTableProps) => {
   const getStatusBadge = (status: string) => {
+    const statusKey = status.charAt(0).toUpperCase() + status.slice(1);
     switch (status) {
       case "approved":
         return (
           <Badge className="bg-green-500/20 text-green-300 hover:bg-green-500/30">
-            Approved
+            {t(statusKey)}
           </Badge>
         );
       case "rejected":
         return (
           <Badge className="bg-red-500/20 text-red-300 hover:bg-red-500/30">
-            Rejected
+            {t(statusKey)}
           </Badge>
         );
       case "pending":
         return (
           <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
-            Pending
+            {t(statusKey)}
           </Badge>
         );
       default:
-        return null;
+        return <Badge>{t(statusKey)}</Badge>;
     }
   };
 
   const getTypeBadge = (type: string) => {
-    switch (type) {
-      case "website":
-        return <Badge variant="outline">Website</Badge>;
-      case "document":
-        return <Badge variant="outline">Document</Badge>;
-      case "id-card":
-        return <Badge variant="outline">ID Card</Badge>;
-      case "bank-statement":
-        return <Badge variant="outline">Bank Statement</Badge>;
-      default:
-        return <Badge variant="outline">Website</Badge>;
-    }
+    let typeKey = "Website";
+    if (type === "document") typeKey = "Document";
+    else if (type === "id-card") typeKey = "ID Card";
+    else if (type === "bank-statement") typeKey = "Bank Statement";
+    return <Badge variant="outline">{t(typeKey)}</Badge>;
   };
 
   const getTypeIcon = (item: Website) => {
     if (
-      item.type === "id-card" ||
-      item.type === "bank-statement" ||
-      item.type === "document"
+      (item.type as string) === "id-card" ||
+      (item.type as string) === "bank-statement" ||
+      (item.type as string) === "document"
     ) {
-      return item.type === "bank-statement" ? (
+      return (item.type as string) === "bank-statement" ? (
         <FileText className="h-4 w-4 mr-1" />
       ) : (
         <File className="h-4 w-4 mr-1" />
@@ -79,15 +79,17 @@ export const UploadHistoryTable = ({
     return null;
   };
 
+  const defaultTitle = title || t("Submitted On");
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>{title || "Submitted On"}</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead>{t("Name")}</TableHead>
+          <TableHead>{t("Type")}</TableHead>
+          <TableHead>{t("Status")}</TableHead>
+          <TableHead>{defaultTitle}</TableHead>
+          <TableHead className="text-right">{t("Actions")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -115,7 +117,7 @@ export const UploadHistoryTable = ({
                     onClick={() => onViewDetails(upload)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    Details
+                    {t("Details")}
                   </Button>
                 </div>
               </TableCell>
@@ -125,11 +127,11 @@ export const UploadHistoryTable = ({
           <TableRow>
             <TableCell colSpan={5} className="text-center py-6">
               <p>
-                No{" "}
-                {title
-                  ? title.toLowerCase().replace(" on", "")
-                  : "upload history"}{" "}
-                found
+                {t("No {{type}} found", {
+                  type: title
+                    ? t(title.toLowerCase().replace(" on", ""))
+                    : t("upload history"),
+                })}
               </p>
             </TableCell>
           </TableRow>

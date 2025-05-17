@@ -22,6 +22,8 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import { TFunction } from "i18next";
+import { i18n as I18nInstanceType } from "i18next";
 
 interface UploadDetailsDialogProps {
   open: boolean;
@@ -30,6 +32,8 @@ interface UploadDetailsDialogProps {
   deleteWebsite: (id: string) => void;
   onClose: () => void;
   onDownload: (file: { name: string; url: string }) => void;
+  t: TFunction;
+  i18n: I18nInstanceType;
 }
 
 export const UploadDetailsDialog = ({
@@ -39,6 +43,8 @@ export const UploadDetailsDialog = ({
   deleteWebsite,
   onClose,
   onDownload,
+  t,
+  i18n,
 }: UploadDetailsDialogProps) => {
   const navigate = useNavigate();
   const downloadLinkRef = useRef<HTMLAnchorElement | null>(null);
@@ -47,37 +53,41 @@ export const UploadDetailsDialog = ({
   if (!item) return null;
 
   const getStatusBadge = (status: string) => {
+    const statusKey = status.charAt(0).toUpperCase() + status.slice(1);
     switch (status) {
       case "approved":
         return (
           <Badge className="bg-green-500/20 text-green-300 hover:bg-green-500/30">
-            Approved
+            {t(statusKey)}
           </Badge>
         );
       case "rejected":
         return (
           <Badge className="bg-red-500/20 text-red-300 hover:bg-red-500/30">
-            Rejected
+            {t(statusKey)}
           </Badge>
         );
       case "pending":
         return (
           <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
-            Pending
+            {t(statusKey)}
           </Badge>
         );
       default:
-        return null;
+        return <Badge>{t(statusKey)}</Badge>; // Fallback
     }
   };
 
   const handleResubmit = () => {
     onOpenChange(false);
-
-    // Navigate to appropriate upload page based on type
-    if (item.type === "website") {
+    if ((item.type as string) === "website") {
+      // Cast for comparison
       navigate("/dashboard/websites/add");
-    } else if (item.type === "id-card" || item.type === "bank-statement") {
+    } else if (
+      (item.type as string) === "id-card" ||
+      (item.type as string) === "bank-statement"
+    ) {
+      // Cast for comparison
       navigate("/dashboard/upload-document");
     }
   };
@@ -101,14 +111,16 @@ export const UploadDetailsDialog = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Submission Details</DialogTitle>
+            <DialogTitle>{t("Submission Details")}</DialogTitle>
             <DialogDescription>
-              Details for your submitted item
+              {t("Details for your submitted item")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Submission Details</h2>
+              <h2 className="text-lg font-semibold">
+                {t("Submission Details")}
+              </h2>
               <AlertDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -124,14 +136,17 @@ export const UploadDetailsDialog = ({
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      {t("Delete Submission")}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete this submission? This
-                      action cannot be undone.
+                      {t(
+                        "Are you sure you want to delete this submission? This action cannot be undone."
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
                     <AlertDialogAction
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       onClick={() => {
@@ -140,7 +155,7 @@ export const UploadDetailsDialog = ({
                         onClose();
                       }}
                     >
-                      Delete
+                      {t("Delete")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -149,28 +164,34 @@ export const UploadDetailsDialog = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Name
+                  {t("Name")}
                 </p>
                 <p className="text-base">{item.name}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Type
+                  {t("Type")}
                 </p>
-                <p className="text-base capitalize">{item.type || "Website"}</p>
+                <p className="text-base capitalize">
+                  {t(
+                    item.type
+                      ? item.type.charAt(0).toUpperCase() + item.type.slice(1)
+                      : "Website"
+                  )}
+                </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Status
+                  {t("Status")}
                 </p>
                 <div className="mt-1">{getStatusBadge(item.status)}</div>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Date Submitted
+                  {t("Date Submitted")}
                 </p>
                 <p className="text-base">
                   {new Date(item.createdat).toLocaleDateString()}
@@ -180,7 +201,9 @@ export const UploadDetailsDialog = ({
 
             {item.url && item.url !== "N/A" && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">URL</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("URL")}
+                </p>
                 <a
                   href={
                     item.url.startsWith("http")
@@ -196,23 +219,28 @@ export const UploadDetailsDialog = ({
               </div>
             )}
 
-            {item.username && (
+            {item.adminCredentials && (
               <div className="pt-2 border-t border-border">
                 <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Login Credentials
+                  {t("Login Credentials")}
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
-                      Username
+                      {t("Username")}
                     </p>
-                    <p className="text-base">{item.username}</p>
+                    <p className="text-base">
+                      {item.adminCredentials.username}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
-                      Password
+                      {t("Password")}
                     </p>
-                    <p className="text-base">{item.password}</p>
+                    {/* Consider hiding/masking password or showing a generic message */}
+                    <p className="text-base">
+                      {item.adminCredentials.password}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -221,7 +249,7 @@ export const UploadDetailsDialog = ({
             {Array.isArray(item.files) && item.files.length > 0 ? (
               <div className="pt-2 border-t border-border">
                 <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Files
+                  {t("Files")}
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   {item.files.map((file, index) =>
@@ -243,7 +271,7 @@ export const UploadDetailsDialog = ({
                               className="mt-2 w-full"
                               onClick={() => handleDialogDownload(file)}
                             >
-                              Download Image
+                              {t("Download Image")}
                             </Button>
                           </>
                         ) : (
@@ -253,7 +281,7 @@ export const UploadDetailsDialog = ({
                             className="w-full"
                             onClick={() => handleDialogDownload(file)}
                           >
-                            Download File
+                            {t("Download File")}
                           </Button>
                         )}
                       </div>
@@ -264,10 +292,12 @@ export const UploadDetailsDialog = ({
             ) : (
               <div className="pt-2 border-t border-border">
                 <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Files
+                  {t("Files")}
                 </p>
                 <div className="text-xs text-muted-foreground">
-                  No files available or files are not in the correct format.
+                  {t(
+                    "No files available or files are not in the correct format."
+                  )}
                 </div>
               </div>
             )}
@@ -275,7 +305,7 @@ export const UploadDetailsDialog = ({
             {item.status === "rejected" && item.rejectionReason && (
               <div className="pt-2 border-t border-border">
                 <p className="text-sm font-medium text-muted-foreground">
-                  Rejection Reason
+                  {t("Rejection Reason")}
                 </p>
                 <p className="text-base text-red-400">{item.rejectionReason}</p>
               </div>
@@ -283,7 +313,7 @@ export const UploadDetailsDialog = ({
 
             {item.status === "rejected" && (
               <div className="flex justify-end pt-4">
-                <Button onClick={handleResubmit}>Resubmit</Button>
+                <Button onClick={handleResubmit}>{t("Resubmit")}</Button>
               </div>
             )}
           </div>

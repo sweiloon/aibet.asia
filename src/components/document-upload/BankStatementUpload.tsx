@@ -11,14 +11,23 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FileText, Upload, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useWebsites } from "@/context/WebsiteContext";
+import { useWebsites, WebsiteType } from "@/context/WebsiteContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
+import { TFunction } from "i18next";
+import { i18n as I18nInstanceType } from "i18next";
+import { useAuth } from "@/context/AuthContext";
 
-export const BankStatementUpload = () => {
+interface BankStatementUploadProps {
+  t: TFunction;
+  i18n: I18nInstanceType;
+}
+
+export const BankStatementUpload = ({ t, i18n }: BankStatementUploadProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addWebsite } = useWebsites();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bankStatementFiles, setBankStatementFiles] = useState<File[]>([]);
 
@@ -39,19 +48,17 @@ export const BankStatementUpload = () => {
     e.preventDefault();
     if (bankStatementFiles.length === 0) {
       toast({
-        title: "Bank Statement Required",
-        description: "Please upload at least one bank statement.",
+        title: t("Bank Statement Required"),
+        description: t("Please upload at least one bank statement."),
         variant: "destructive",
       });
       return;
     }
     setIsSubmitting(true);
     try {
-      // Upload all PDFs to Supabase Storage
       const uploads = bankStatementFiles.map(async (file) => {
         const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const filePath = `bank-statements/${Date.now()}-${sanitizedFileName}`;
-        // Ensure the 'documents' bucket exists and is public in Supabase dashboard if you get 400 errors
         const { error } = await supabase.storage
           .from("documents")
           .upload(filePath, file, { upsert: true, contentType: file.type });
@@ -63,28 +70,35 @@ export const BankStatementUpload = () => {
           name: file.name,
           url: data.publicUrl,
           type: file.type,
+          size: file.size,
+          lastModified: file.lastModified,
         };
       });
       const files = await Promise.all(uploads);
-      await addWebsite({
-        name: "Bank Statement Submission",
+
+      const websiteData = {
+        name: t("Bank Statement Submission"),
         url: "N/A",
-        type: "bank-statement",
-        files,
-      });
+        type: "bank-statement" as WebsiteType,
+        files: files,
+        useremail: user?.email || "",
+      };
+
+      await addWebsite(websiteData);
       toast({
-        title: "Bank Statement Submitted",
-        description:
-          "Your bank statement has been successfully submitted for review.",
+        title: t("Bank Statement Submitted"),
+        description: t(
+          "Your bank statement has been successfully submitted for review."
+        ),
       });
       navigate("/dashboard/upload-history");
     } catch (err: unknown) {
-      let message = "There was a problem submitting your bank statement.";
+      let message = t("There was a problem submitting your bank statement.");
       if (isErrorWithMessage(err)) {
         message = err.message;
       }
       toast({
-        title: "Upload Failed",
+        title: t("Upload Failed"),
         description: message,
         variant: "destructive",
       });
@@ -96,20 +110,20 @@ export const BankStatementUpload = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upload Bank Statement</CardTitle>
+        <CardTitle>{t("Upload Bank Statement")}</CardTitle>
         <CardDescription>
-          Please upload your bank statement documents (PDF format)
+          {t("Please upload your bank statement documents (PDF format)")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleBankStatementSubmit} className="space-y-6">
           <div>
-            <Label htmlFor="bank-statement">Bank Statement</Label>
+            <Label htmlFor="bank-statement">{t("Bank Statement")}</Label>
             <div className="mt-2">
               <div className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                 <FileText className="h-10 w-10 text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground mb-2">
-                  Click to upload PDF files
+                  {t("Click to upload PDF files")}
                 </p>
                 <Input
                   id="bank-statement"
@@ -127,7 +141,7 @@ export const BankStatementUpload = () => {
                   }
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Browse Files
+                  {t("Browse Files")}
                 </Button>
               </div>
             </div>
@@ -135,7 +149,7 @@ export const BankStatementUpload = () => {
 
           {bankStatementFiles.length > 0 && (
             <div>
-              <Label>Selected Files</Label>
+              <Label>{t("Selected Files")}</Label>
               <div className="mt-2 space-y-2">
                 {bankStatementFiles.map((file, index) => (
                   <div
@@ -168,7 +182,7 @@ export const BankStatementUpload = () => {
               type="submit"
               disabled={isSubmitting || bankStatementFiles.length === 0}
             >
-              {isSubmitting ? "Submitting..." : "Submit Bank Statement"}
+              {isSubmitting ? t("Submitting...") : t("Submit Bank Statement")}
             </Button>
           </div>
         </form>

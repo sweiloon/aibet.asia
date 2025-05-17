@@ -6,3 +6,11 @@ alwaysApply: false
 **Done**
 Migrated all website data management to Supabase. All CRUD operations now use Supabase queries with async logic and robust error handling. Local storage usage removed.
 
+
+**Done: Implement Language Switcher (English/Chinese)**
+- Added a language switch button next to the WhatsApp button in admin and user dashboards.
+- Implemented i18next for language toggling between English and Chinese.
+- Translated dashboard headers, sidebars, and multiple pages/components within User and Admin dashboards including: User Dashboard (Welcome, Statistics, Management Records, Website Add, Upload History, Website Records, Upload Document, Settings) and Admin Dashboard (Dashboard Page, Approvals, Website Records, User Management, Settings) and their relevant child components.
+- Language preference is stored in localStorage by i18next-browser-languagedetector.
+- Ensured dynamic content uses `t()` with interpolation where necessary.
+

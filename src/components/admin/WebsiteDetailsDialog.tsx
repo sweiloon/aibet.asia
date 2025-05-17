@@ -8,47 +8,57 @@ import {
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { openInNewTab } from "@/lib/openInNewTab";
+import { TFunction } from "i18next";
+import { i18n as I18nInstanceType } from "i18next";
 
 interface WebsiteDetailsDialogProps {
   website: Website | null;
   isOpen: boolean;
   onClose: () => void;
+  t: TFunction;
+  i18n: I18nInstanceType;
 }
 
 export const WebsiteDetailsDialog = ({
   website,
   isOpen,
   onClose,
+  t,
+  i18n,
 }: WebsiteDetailsDialogProps) => {
   if (!website) return null;
+
+  const translatedStatus = t(
+    website.status.charAt(0).toUpperCase() + website.status.slice(1)
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Website Details</DialogTitle>
+          <DialogTitle>{t("Website Details")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Name</Label>
+              <Label>{t("Name")}</Label>
               <div className="font-medium">{website.name}</div>
             </div>
             <div>
-              <Label>Status</Label>
-              <div className="font-medium capitalize">{website.status}</div>
+              <Label>{t("Status")}</Label>
+              <div className="font-medium capitalize">{translatedStatus}</div>
             </div>
           </div>
 
           {website.useremail && (
             <div>
-              <Label>User Email</Label>
+              <Label>{t("User Email")}</Label>
               <div className="font-medium">{website.useremail}</div>
             </div>
           )}
 
           <div>
-            <Label>URL</Label>
+            <Label>{t("URL")}</Label>
             <div className="font-medium">
               <a
                 href={website.url}
@@ -66,44 +76,47 @@ export const WebsiteDetailsDialog = ({
             </div>
           </div>
 
-          {website.loginUrl && (
+          {website.adminUrl && (
             <div>
-              <Label>Login URL</Label>
+              <Label>{t("Login URL")}</Label>
               <div className="font-medium">
                 <a
-                  href={website.loginUrl}
+                  href={website.adminUrl}
                   className="underline"
                   tabIndex={0}
                   role="link"
                   style={{ cursor: "pointer" }}
                   onClick={(e) => {
                     e.preventDefault();
-                    openInNewTab(website.loginUrl);
+                    openInNewTab(website.adminUrl);
                   }}
                 >
-                  {website.loginUrl}
+                  {website.adminUrl}
                 </a>
               </div>
             </div>
           )}
 
-          {website.username && (
-            <div>
-              <Label>Username</Label>
-              <div className="font-medium">{website.username}</div>
-            </div>
-          )}
-
-          {website.password && (
-            <div>
-              <Label>Password</Label>
-              <div className="font-medium">{website.password}</div>
-            </div>
+          {website.adminCredentials && (
+            <>
+              <div>
+                <Label>{t("Username")}</Label>
+                <div className="font-medium">
+                  {website.adminCredentials.username}
+                </div>
+              </div>
+              <div>
+                <Label>{t("Password")}</Label>
+                <div className="font-medium">
+                  {website.adminCredentials.password}
+                </div>
+              </div>
+            </>
           )}
 
           <div className="pt-4">
             <Button onClick={onClose} className="w-full">
-              Close
+              {t("Close")}
             </Button>
           </div>
         </div>

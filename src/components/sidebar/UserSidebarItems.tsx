@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -13,57 +12,65 @@ import {
   Files,
   ListChecks,
 } from "lucide-react";
+import { TFunction } from "i18next";
+import { i18n as I18nInstanceType } from "i18next";
 
 interface UserSidebarItemsProps {
   className?: string;
+  t: TFunction;
+  i18n: I18nInstanceType;
 }
 
-export function UserSidebarItems({ className }: UserSidebarItemsProps) {
+export function UserSidebarItems({
+  className,
+  t,
+  i18n,
+}: UserSidebarItemsProps) {
   const navigate = useNavigate();
-  
+
   return (
     <SidebarMenu className={className}>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <button onClick={() => navigate("/dashboard")}>
             <LayoutDashboard />
-            <span>Dashboard</span>
+            <span>{t("Dashboard")}</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>
-      
+
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <button onClick={() => navigate("/dashboard/websites/add")}>
             <Upload />
-            <span>Upload Website</span>
+            <span>{t("Upload Website")}</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>
-      
+
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <button onClick={() => navigate("/dashboard/upload-history")}>
             <History />
-            <span>Upload History</span>
+            <span>{t("Upload History")}</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>
-      
+
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <button onClick={() => navigate("/dashboard/website-records")}>
             <ListChecks />
-            <span>Website Records</span>
+            <span>{t("Website Records")}</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>
-      
+
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <button onClick={() => navigate("/dashboard/upload-document")}>
             <Files />
-            <span>Upload Document</span>
+            <span>{t("Upload Document")}</span>
           </button>
         </SidebarMenuButton>
       </SidebarMenuItem>

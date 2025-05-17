@@ -4,8 +4,10 @@ import { StatsCards } from "@/components/admin/StatsCards";
 import { PendingApprovalsCard } from "@/components/admin/PendingApprovalsCard";
 import { RecentManagementCard } from "@/components/admin/RecentManagementCard";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const { getAllWebsites } = useWebsites();
   const navigate = useNavigate();
 
@@ -66,9 +68,9 @@ export default function AdminDashboard() {
     <DashboardLayout isAdmin>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold">{t("Admin Dashboard")}</h1>
           <p className="text-muted-foreground">
-            Manage all websites and user accounts
+            {t("Manage all websites and user accounts")}
           </p>
         </div>
 
@@ -95,20 +97,28 @@ export default function AdminDashboard() {
                 <div className="text-4xl font-extrabold text-white">
                   {websites.length}
                 </div>
-                <div className="text-zinc-300 font-medium">Total Websites</div>
+                <div className="text-zinc-300 font-medium">
+                  {t("Total Websites")}
+                </div>
               </div>
             </div>
             <div className="mt-2 text-xs text-zinc-400 space-y-1">
-              <div>Website Submission: {totalBreakdown.website}</div>
-              <div>ID Card Submission: {totalBreakdown.idCard}</div>
-              <div>Bank Submission: {totalBreakdown.bank}</div>
+              <div>
+                {t("Website Submission")}: {totalBreakdown.website}
+              </div>
+              <div>
+                {t("ID Card Submission")}: {totalBreakdown.idCard}
+              </div>
+              <div>
+                {t("Bank Submission")}: {totalBreakdown.bank}
+              </div>
             </div>
             <div className="mt-6">
               <button
                 className="text-zinc-200 text-sm font-semibold flex items-center gap-1 hover:underline"
                 onClick={() => navigate("/admin/websites")}
               >
-                View All <span>&rarr;</span>
+                {t("View All")} <span>&rarr;</span>
               </button>
             </div>
           </div>
@@ -135,21 +145,27 @@ export default function AdminDashboard() {
                   {pendingCount}
                 </div>
                 <div className="text-zinc-300 font-medium">
-                  Pending Websites
+                  {t("Pending Websites")}
                 </div>
               </div>
             </div>
             <div className="mt-2 text-xs text-zinc-400 space-y-1">
-              <div>Website Submission: {pendingBreakdown.website}</div>
-              <div>ID Card Submission: {pendingBreakdown.idCard}</div>
-              <div>Bank Submission: {pendingBreakdown.bank}</div>
+              <div>
+                {t("Website Submission")}: {pendingBreakdown.website}
+              </div>
+              <div>
+                {t("ID Card Submission")}: {pendingBreakdown.idCard}
+              </div>
+              <div>
+                {t("Bank Submission")}: {pendingBreakdown.bank}
+              </div>
             </div>
             <div className="mt-6">
               <button
                 className="text-zinc-200 text-sm font-semibold flex items-center gap-1 hover:underline"
                 onClick={() => navigate("/admin/approvals")}
               >
-                Review Pending <span>&rarr;</span>
+                {t("Review Pending")} <span>&rarr;</span>
               </button>
             </div>
           </div>
@@ -175,20 +191,28 @@ export default function AdminDashboard() {
                 <div className="text-4xl font-extrabold text-white">
                   {approvedCount}
                 </div>
-                <div className="text-zinc-300 font-medium">Active Websites</div>
+                <div className="text-zinc-300 font-medium">
+                  {t("Active Websites")}
+                </div>
               </div>
             </div>
             <div className="mt-2 text-xs text-zinc-400 space-y-1">
-              <div>Website Submission: {activeBreakdown.website}</div>
-              <div>ID Card Submission: {activeBreakdown.idCard}</div>
-              <div>Bank Submission: {activeBreakdown.bank}</div>
+              <div>
+                {t("Website Submission")}: {activeBreakdown.website}
+              </div>
+              <div>
+                {t("ID Card Submission")}: {activeBreakdown.idCard}
+              </div>
+              <div>
+                {t("Bank Submission")}: {activeBreakdown.bank}
+              </div>
             </div>
             <div className="mt-6">
               <button
                 className="text-zinc-200 text-sm font-semibold flex items-center gap-1 hover:underline"
                 onClick={() => navigate("/admin/website-records")}
               >
-                View Active <span>&rarr;</span>
+                {t("View Active")} <span>&rarr;</span>
               </button>
             </div>
           </div>

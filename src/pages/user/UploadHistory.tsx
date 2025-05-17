@@ -7,8 +7,10 @@ import { useWebsites } from "@/context/WebsiteContext";
 import { UploadHistoryTable } from "@/components/upload-history/UploadHistoryTable";
 import { UploadDetailsDialog } from "@/components/upload-history/UploadDetailsDialog";
 import { Website } from "@/context/WebsiteContext";
+import { useTranslation } from "react-i18next";
 
 export default function UploadHistory() {
+  const { t, i18n } = useTranslation();
   const { getUserWebsites, deleteWebsite } = useWebsites();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Website | null>(null);
@@ -62,28 +64,28 @@ export default function UploadHistory() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Upload History</h1>
+          <h1 className="text-3xl font-bold">{t("Upload History")}</h1>
           <p className="text-muted-foreground">
-            View all your previous upload submissions
+            {t("View all your previous upload submissions")}
           </p>
         </div>
 
         <Tabs defaultValue="all">
           <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="all" className="flex items-center gap-2">
-              <span>All</span>
+              <span>{t("All")}</span>
               <Badge variant="outline">{userUploads.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="approved" className="flex items-center gap-2">
-              <span>Approved</span>
+              <span>{t("Approved")}</span>
               <Badge variant="outline">{approvedUploads.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="pending" className="flex items-center gap-2">
-              <span>Pending</span>
+              <span>{t("Pending")}</span>
               <Badge variant="outline">{pendingUploads.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="rejected" className="flex items-center gap-2">
-              <span>Rejected</span>
+              <span>{t("Rejected")}</span>
               <Badge variant="outline">{rejectedUploads.length}</Badge>
             </TabsTrigger>
           </TabsList>
@@ -95,6 +97,8 @@ export default function UploadHistory() {
                 <UploadHistoryTable
                   uploads={userUploads}
                   onViewDetails={viewDetails}
+                  t={t}
+                  i18n={i18n}
                 />
               </CardContent>
             </Card>
@@ -107,7 +111,9 @@ export default function UploadHistory() {
                 <UploadHistoryTable
                   uploads={approvedUploads}
                   onViewDetails={viewDetails}
-                  title="Approved On"
+                  title={t("Approved On")}
+                  t={t}
+                  i18n={i18n}
                 />
               </CardContent>
             </Card>
@@ -120,7 +126,9 @@ export default function UploadHistory() {
                 <UploadHistoryTable
                   uploads={pendingUploads}
                   onViewDetails={viewDetails}
-                  title="Submitted On"
+                  title={t("Submitted On")}
+                  t={t}
+                  i18n={i18n}
                 />
               </CardContent>
             </Card>
@@ -133,7 +141,9 @@ export default function UploadHistory() {
                 <UploadHistoryTable
                   uploads={rejectedUploads}
                   onViewDetails={viewDetails}
-                  title="Rejected On"
+                  title={t("Rejected On")}
+                  t={t}
+                  i18n={i18n}
                 />
               </CardContent>
             </Card>
@@ -144,7 +154,9 @@ export default function UploadHistory() {
           Array.isArray(selectedItem.files) &&
           selectedItem.files.length > 0 && (
             <div className="mt-8 border-t pt-6">
-              <h2 className="text-lg font-semibold mb-2">Download Files</h2>
+              <h2 className="text-lg font-semibold mb-2">
+                {t("Download Files")}
+              </h2>
               <div className="grid grid-cols-2 gap-4">
                 {selectedItem.files.map((file, index) =>
                   file.url ? (
@@ -175,7 +187,7 @@ export default function UploadHistory() {
                           document.body.removeChild(a);
                         }}
                       >
-                        Download
+                        {t("Download")}
                       </button>
                     </div>
                   ) : null
@@ -192,6 +204,8 @@ export default function UploadHistory() {
         onClose={() => setDetailsOpen(false)}
         onDownload={handleDownload}
         deleteWebsite={deleteWebsite}
+        t={t}
+        i18n={i18n}
       />
     </DashboardLayout>
   );

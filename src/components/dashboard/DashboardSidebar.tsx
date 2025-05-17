@@ -16,6 +16,7 @@ import { UserSidebarItems } from "../sidebar/UserSidebarItems";
 import { AccountItems } from "../sidebar/AccountItems";
 import { useAuth } from "@/context/AuthContext";
 import { User } from "@/context/AuthContext"; // Assuming User type is exported
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 interface DashboardSidebarProps {
   isAdmin?: boolean;
@@ -28,6 +29,7 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation(); // Initialize useTranslation
 
   const handleLogout = async () => {
     await logout();
@@ -37,6 +39,8 @@ export function DashboardSidebar({
   const getRankingBadge = () => {
     // Default to "customer" if no ranking is set
     const userRanking = user.ranking || "customer";
+    const rankingKey =
+      userRanking.charAt(0).toUpperCase() + userRanking.slice(1);
 
     const rankingStyles: { [key: string]: string } = {
       customer: "bg-blue-500/20 text-blue-300",
@@ -47,11 +51,7 @@ export function DashboardSidebar({
 
     const style = rankingStyles[userRanking] || "";
 
-    return (
-      <Badge className={`${style} mb-2`}>
-        {userRanking.charAt(0).toUpperCase() + userRanking.slice(1)}
-      </Badge>
-    );
+    return <Badge className={`${style} mb-2`}>{t(rankingKey)}</Badge>;
   };
 
   return (
@@ -61,26 +61,30 @@ export function DashboardSidebar({
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold text-gradient">AIBET.ASIA</span>
             <span className="text-xs rounded-full px-2 bg-blue-500/30 text-blue-200">
-              AI
+              {t("AI")}
             </span>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            {isAdmin ? "Admin Dashboard" : "User Dashboard"}
+            {isAdmin ? t("Administrator Dashboard") : t("User Dashboard")}
           </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("Navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
-            {isAdmin ? <AdminSidebarItems /> : <UserSidebarItems />}
+            {isAdmin ? (
+              <AdminSidebarItems t={t} i18n={i18n} />
+            ) : (
+              <UserSidebarItems t={t} i18n={i18n} />
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Account</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("Account")}</SidebarGroupLabel>
           <SidebarGroupContent>
-            <AccountItems isAdmin={isAdmin} />
+            <AccountItems isAdmin={isAdmin} t={t} i18n={i18n} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
@@ -89,7 +93,7 @@ export function DashboardSidebar({
         <div className="w-full">
           {!isAdmin && getRankingBadge()}
           <span className="text-xs text-muted-foreground block mb-2">
-            Logged in as {user?.email}
+            {t("Logged in as {{email}}", { email: user?.email })}
           </span>
           <Button
             variant="outline"
@@ -97,7 +101,7 @@ export function DashboardSidebar({
             onClick={handleLogout}
           >
             <LogOut className="mr-2 h-4 w-4" />
-            Logout
+            {t("Logout")}
           </Button>
         </div>
       </SidebarFooter>

@@ -18,19 +18,19 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 import { useState } from "react";
-import { Eye } from "lucide-react";
 import { openInNewTab } from "@/lib/openInNewTab";
+import { useTranslation } from "react-i18next";
 
 const WebsiteRecords = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { websites } = useWebsites();
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Only show approved websites of type "website" that belong to the current user
   const userApprovedWebsites = user
     ? websites.filter(
         (website) =>
@@ -40,14 +40,12 @@ const WebsiteRecords = () => {
       )
     : [];
 
-  // Filter websites based on search term
   const filteredWebsites = userApprovedWebsites.filter(
     (website) =>
       !searchTerm ||
       website.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Show website details
   const showWebsiteDetails = (website: Website) => {
     setSelectedWebsite(website);
     setIsDetailOpen(true);
@@ -57,14 +55,14 @@ const WebsiteRecords = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Website Records</h1>
+          <h1 className="text-2xl font-bold">{t("Website Records")}</h1>
         </div>
 
         {userApprovedWebsites.length > 0 && (
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search websites..."
+              placeholder={t("Search websites...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
@@ -76,8 +74,8 @@ const WebsiteRecords = () => {
           <div className="text-center p-10 border rounded-lg">
             <p className="text-muted-foreground">
               {userApprovedWebsites.length === 0
-                ? "You don't have any approved websites yet"
-                : "No websites found matching your search"}
+                ? t("You don't have any approved websites yet")
+                : t("No websites found matching your search")}
             </p>
             {searchTerm && (
               <Button
@@ -85,7 +83,7 @@ const WebsiteRecords = () => {
                 onClick={() => setSearchTerm("")}
                 className="mt-2"
               >
-                Clear search
+                {t("Clear search")}
               </Button>
             )}
           </div>
@@ -115,28 +113,29 @@ const WebsiteRecords = () => {
               {website.managementData.length === 0 ? (
                 <div className="text-center p-6 border rounded-lg">
                   <p className="text-muted-foreground">
-                    No management records yet
+                    {t("No management records yet")}
                   </p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Day</TableHead>
-                      <TableHead>Credit</TableHead>
-                      <TableHead>Profit</TableHead>
-                      <TableHead>Gross Profit</TableHead>
-                      <TableHead>Service Fee</TableHead>
-                      <TableHead>Start Date</TableHead>
-                      <TableHead>End Date</TableHead>
-                      <TableHead>Net Profit</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{t("Day")}</TableHead>
+                      <TableHead>{t("Credit")}</TableHead>
+                      <TableHead>{t("Profit")}</TableHead>
+                      <TableHead>{t("Gross Profit")}</TableHead>
+                      <TableHead>{t("Service Fee")}</TableHead>
+                      <TableHead>{t("Start Date")}</TableHead>
+                      <TableHead>{t("End Date")}</TableHead>
+                      <TableHead>{t("Net Profit")}</TableHead>
+                      <TableHead className="text-right">
+                        {t("Actions")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {[...website.managementData]
                       .sort((a, b) => {
-                        // Sort by 'day' field descending (latest day first)
                         const dayA = Number(a.day) || 0;
                         const dayB = Number(b.day) || 0;
                         return dayB - dayA;
@@ -153,14 +152,14 @@ const WebsiteRecords = () => {
                               ? new Date(record.start_date)
                                   .toISOString()
                                   .split("T")[0]
-                              : ""}
+                              : "-"}
                           </TableCell>
                           <TableCell>
                             {record.end_date
                               ? new Date(record.end_date)
                                   .toISOString()
                                   .split("T")[0]
-                              : ""}
+                              : "-"}
                           </TableCell>
                           <TableCell>{record.net_profit}</TableCell>
                           <TableCell className="text-right">
@@ -181,29 +180,31 @@ const WebsiteRecords = () => {
           ))
         )}
 
-        {/* Website Details Dialog */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Website Details</DialogTitle>
+              <DialogTitle>{t("Website Details")}</DialogTitle>
             </DialogHeader>
             {selectedWebsite && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Name</Label>
+                    <Label>{t("Name")}</Label>
                     <div className="font-medium">{selectedWebsite.name}</div>
                   </div>
                   <div>
-                    <Label>Status</Label>
+                    <Label>{t("Status")}</Label>
                     <div className="font-medium capitalize">
-                      {selectedWebsite.status}
+                      {t(
+                        selectedWebsite.status.charAt(0).toUpperCase() +
+                          selectedWebsite.status.slice(1)
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <Label>URL</Label>
+                  <Label>{t("URL")}</Label>
                   <div className="font-medium">
                     <a
                       href={selectedWebsite.url}
@@ -221,22 +222,22 @@ const WebsiteRecords = () => {
                   </div>
                 </div>
 
-                {selectedWebsite.loginUrl && (
+                {selectedWebsite.adminUrl && (
                   <div>
-                    <Label>Login URL</Label>
+                    <Label>{t("Login URL")}</Label>
                     <div className="font-medium">
                       <a
-                        href={selectedWebsite.loginUrl}
+                        href={selectedWebsite.adminUrl}
                         className="underline"
                         tabIndex={0}
                         role="link"
                         style={{ cursor: "pointer" }}
                         onClick={(e) => {
                           e.preventDefault();
-                          openInNewTab(selectedWebsite.loginUrl);
+                          openInNewTab(selectedWebsite.adminUrl);
                         }}
                       >
-                        {selectedWebsite.loginUrl}
+                        {selectedWebsite.adminUrl}
                       </a>
                     </div>
                   </div>
@@ -247,7 +248,7 @@ const WebsiteRecords = () => {
                     onClick={() => setIsDetailOpen(false)}
                     className="w-full"
                   >
-                    Close
+                    {t("Close")}
                   </Button>
                 </div>
               </div>

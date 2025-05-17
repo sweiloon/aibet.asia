@@ -16,8 +16,10 @@ import {
 import { useWebsites } from "@/context/WebsiteContext";
 import { Search, X } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { useTranslation } from "react-i18next";
 
 export default function AdminWebsites() {
+  const { t } = useTranslation();
   const { getAllWebsites } = useWebsites();
   const websites = getAllWebsites();
   const navigate = useNavigate();
@@ -42,37 +44,44 @@ export default function AdminWebsites() {
 
     const searchTermLower = searchTerm.toLowerCase();
 
+    // Include translated status in search
+    const translatedStatus = t(
+      website.status.charAt(0).toUpperCase() + website.status.slice(1)
+    ).toLowerCase();
+
     return (
       website.name.toLowerCase().includes(searchTermLower) ||
       website.url.toLowerCase().includes(searchTermLower) ||
       website.status.toLowerCase().includes(searchTermLower) ||
+      translatedStatus.includes(searchTermLower) || // Search by translated status
       (website.useremail &&
         website.useremail.toLowerCase().includes(searchTermLower))
     );
   });
 
   const getStatusBadge = (status: string) => {
+    const statusKey = status.charAt(0).toUpperCase() + status.slice(1); // Capitalize first letter for key
     switch (status) {
       case "approved":
         return (
           <Badge className="bg-green-500/20 text-green-300 hover:bg-green-500/30">
-            Approved
+            {t(statusKey)}
           </Badge>
         );
       case "rejected":
         return (
           <Badge className="bg-red-500/20 text-red-300 hover:bg-red-500/30">
-            Rejected
+            {t(statusKey)}
           </Badge>
         );
       case "pending":
         return (
           <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
-            Pending
+            {t(statusKey)}
           </Badge>
         );
       default:
-        return null;
+        return <Badge>{t(statusKey)}</Badge>; // Fallback for other statuses if any
     }
   };
 
@@ -80,16 +89,16 @@ export default function AdminWebsites() {
     <DashboardLayout isAdmin>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Manage Websites</h1>
+          <h1 className="text-3xl font-bold">{t("Manage Websites")}</h1>
           <p className="text-muted-foreground">
-            Review and manage all websites in the system
+            {t("Review and manage all websites in the system")}
           </p>
         </div>
 
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, URL, status, or user email..."
+            placeholder={t("Search by name, URL, status, or user email...")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8 pr-8"
@@ -109,13 +118,13 @@ export default function AdminWebsites() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>URL</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Records</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("Name")}</TableHead>
+                  <TableHead>{t("URL")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                  <TableHead>{t("User")}</TableHead>
+                  <TableHead>{t("Submitted")}</TableHead>
+                  <TableHead>{t("Records")}</TableHead>
+                  <TableHead className="text-right">{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -159,7 +168,9 @@ export default function AdminWebsites() {
                                 website.type === "bank-statement"
                               ) {
                                 toast.info(
-                                  "This document submission does not have management records."
+                                  t(
+                                    "This document submission does not have management records."
+                                  )
                                 );
                               } else if (website.status === "approved") {
                                 navigate(
@@ -167,14 +178,16 @@ export default function AdminWebsites() {
                                 );
                               } else if (website.status === "rejected") {
                                 toast.error(
-                                  "This website is rejected. No records available."
+                                  t(
+                                    "This website is rejected. No records available."
+                                  )
                                 );
                               } else if (website.status === "pending") {
                                 navigate("/admin/approvals");
                               }
                             }}
                           >
-                            Manage
+                            {t("Manage")}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -183,14 +196,14 @@ export default function AdminWebsites() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-6">
-                      <p>No websites found matching your search</p>
+                      <p>{t("No websites found matching your search")}</p>
                       {searchTerm && (
                         <Button
                           variant="link"
                           onClick={() => setSearchTerm("")}
                           className="mt-2"
                         >
-                          Clear search
+                          {t("Clear search")}
                         </Button>
                       )}
                     </TableCell>

@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { openInNewTab } from "@/lib/openInNewTab";
+import { TFunction } from "i18next";
+import { i18n as I18nInstanceType } from "i18next";
 
 interface ApprovalsTableProps {
   items: Website[];
@@ -44,6 +46,8 @@ interface ApprovalsTableProps {
   searchTerm?: string;
   onClearSearch?: () => void;
   deleteWebsite?: (id: string) => void;
+  t: TFunction;
+  i18n: I18nInstanceType;
 }
 
 export const ApprovalsTable = ({
@@ -56,12 +60,14 @@ export const ApprovalsTable = ({
   searchTerm,
   onClearSearch,
   deleteWebsite,
+  t,
+  i18n,
 }: ApprovalsTableProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const getItemIcon = (type: string) => {
-    switch (type) {
+    switch (type as string) {
       case "website":
         return <Globe2 className="h-4 w-4" />;
       case "id-card":
@@ -76,10 +82,17 @@ export const ApprovalsTable = ({
   };
 
   const getItemTypeDisplay = (item: Website) => {
+    let itemTypeKey =
+      (item.type as string).charAt(0).toUpperCase() +
+      (item.type as string).slice(1);
+    if ((item.type as string) === "id-card") itemTypeKey = "ID Card";
+    if ((item.type as string) === "bank-statement")
+      itemTypeKey = "Bank Statement";
+
     if (item.url === "N/A" || !item.url) {
       return (
         <Badge variant="outline" className="capitalize">
-          {item.type || "Document"}
+          {t(itemTypeKey) || t("Document")}
         </Badge>
       );
     }
@@ -95,44 +108,12 @@ export const ApprovalsTable = ({
           openInNewTab(item.url);
         }}
       >
-        {getItemIcon(item.type || "website")}
+        {getItemIcon(item.type as string)}
         {item.url}
       </a>
     );
   };
 
-  // Function to check if file is downloadable (PDF or image)
-  const isDownloadable = (item: Website) => {
-    return (
-      item.files &&
-      item.files.length > 0 &&
-      (item.type === "id-card" ||
-        item.type === "bank-statement" ||
-        item.type === "document")
-    );
-  };
-
-  // Function to handle download of files
-  const handleDownload = (item: Website) => {
-    if (!item.files || item.files.length === 0) return;
-
-    // For each file in the item, create an anchor and trigger download
-    item.files.forEach((file, index) => {
-      // Check if file has a valid URL
-      if (file.url) {
-        const link = document.createElement("a");
-        link.href = file.url;
-        link.download = `${item.name}-file-${index + 1}${getFileExtension(
-          file.url
-        )}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    });
-  };
-
-  // Helper function to get file extension
   const getFileExtension = (url: string) => {
     const parts = url.split(".");
     if (parts.length > 1) {
@@ -141,20 +122,22 @@ export const ApprovalsTable = ({
     return "";
   };
 
+  const defaultTitle = title || t("Submitted On");
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Type/URL</TableHead>
-          <TableHead>Submitted By</TableHead>
-          <TableHead>Date</TableHead>
+          <TableHead>{t("Name")}</TableHead>
+          <TableHead>{t("Type/URL")}</TableHead>
+          <TableHead>{t("Submitted By")}</TableHead>
+          <TableHead>{t("Date")}</TableHead>
           {showActions ? (
-            <TableHead>Details</TableHead>
+            <TableHead>{t("Details")}</TableHead>
           ) : (
-            <TableHead>{title || ""}</TableHead>
+            <TableHead>{defaultTitle}</TableHead>
           )}
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead className="text-right">{t("Actions")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -163,21 +146,24 @@ export const ApprovalsTable = ({
             <TableRow key={item.id}>
               <TableCell className="font-medium">{item.name}</TableCell>
               <TableCell>{getItemTypeDisplay(item)}</TableCell>
-              <TableCell>{item.useremail || "Unknown User"}</TableCell>
+              <TableCell>{item.useremail || t("Unknown User")}</TableCell>
               <TableCell>
                 {new Date(item.createdat).toLocaleDateString()}
               </TableCell>
               {showActions ? (
                 <TableCell>
-                  {item.username || item.files ? (
+                  {item.adminCredentials?.username ||
+                  (item.files && item.files.length > 0) ? (
                     <Badge className="flex items-center gap-1">
                       <KeyRound className="h-3 w-3" />
-                      {item.files
-                        ? `${item.files.length} Files`
-                        : "Credentials"}
+                      {item.files && item.files.length > 0
+                        ? t("{{count}} Files", { count: item.files.length })
+                        : t("Credentials")}
                     </Badge>
                   ) : (
-                    <span className="text-muted-foreground text-sm">None</span>
+                    <span className="text-muted-foreground text-sm">
+                      {t("None")}
+                    </span>
                   )}
                 </TableCell>
               ) : (
@@ -196,7 +182,7 @@ export const ApprovalsTable = ({
                     onClick={() => onViewDetails(item)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    Details
+                    {t("Details")}
                   </Button>
                   {deleteWebsite && (
                     <AlertDialog
@@ -220,14 +206,17 @@ export const ApprovalsTable = ({
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            {t("Delete Submission")}
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to delete this submission?
-                            This action cannot be undone.
+                            {t(
+                              "Are you sure you want to delete this submission? This action cannot be undone."
+                            )}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
                           <AlertDialogAction
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             onClick={() => {
@@ -236,7 +225,7 @@ export const ApprovalsTable = ({
                               setPendingDeleteId(null);
                             }}
                           >
-                            Delete
+                            {t("Delete")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -248,21 +237,21 @@ export const ApprovalsTable = ({
                         variant="outline"
                         size="sm"
                         className="bg-green-500/20 hover:bg-green-500/30 text-green-300"
-                        title="Approve"
+                        title={t("Approve")}
                         onClick={() => onApprove(item.id)}
                       >
                         <CheckCircle className="h-4 w-4 mr-1" />
-                        Approve
+                        {t("Approve")}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         className="bg-red-500/20 hover:bg-red-500/30 text-red-300"
-                        title="Reject"
+                        title={t("Reject")}
                         onClick={() => onReject(item.id)}
                       >
                         <XCircle className="h-4 w-4 mr-1" />
-                        Reject
+                        {t("Reject")}
                       </Button>
                     </>
                   )}
@@ -285,7 +274,7 @@ export const ApprovalsTable = ({
                             document.body.removeChild(a);
                           }}
                         >
-                          Download
+                          {t("Download")}
                         </Button>
                       ) : null
                     )}
@@ -296,10 +285,21 @@ export const ApprovalsTable = ({
         ) : (
           <TableRow>
             <TableCell colSpan={6} className="text-center py-6">
-              <p>No {title ? title.toLowerCase() : "items"} found</p>
+              <p>
+                {t("No {{items}} found", {
+                  items: title
+                    ? t(
+                        title
+                          .toLowerCase()
+                          .replace(" on", "")
+                          .replace("date ", "")
+                      )
+                    : t("items"),
+                })}
+              </p>
               {searchTerm && onClearSearch && (
                 <Button variant="link" onClick={onClearSearch} className="mt-2">
-                  Clear search
+                  {t("Clear search")}
                 </Button>
               )}
             </TableCell>

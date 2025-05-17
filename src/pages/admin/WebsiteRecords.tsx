@@ -17,8 +17,10 @@ import { toast } from "@/components/ui/sonner";
 import { WebsiteRecordCard } from "@/components/admin/WebsiteRecordCard";
 import { RecordForm } from "@/components/admin/RecordForm";
 import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const WebsiteRecords = () => {
+  const { t, i18n } = useTranslation();
   const {
     websites,
     addManagementRecord,
@@ -76,7 +78,7 @@ const WebsiteRecords = () => {
 
     setIsAddDialogOpen(false);
     setSelectedWebsite(null);
-    toast.success("Record added successfully");
+    toast.success(t("Record added successfully"));
   };
 
   // Handle edit field
@@ -90,13 +92,13 @@ const WebsiteRecords = () => {
       | Array<{ type: string; description: string; status: string }>
   ) => {
     updateManagementRecord(websiteId, recordId, { [field]: value });
-    toast.success(`${field} updated successfully`);
+    toast.success(t("{{field}} updated successfully", { field: t(field) }));
   };
 
   // Handle delete record
   const handleDeleteRecord = (websiteId: string, recordId: string) => {
     deleteManagementRecord(websiteId, recordId);
-    toast.success("Record deleted successfully");
+    toast.success(t("Record deleted successfully"));
   };
 
   // Handle clear all records for a website
@@ -107,24 +109,24 @@ const WebsiteRecords = () => {
       !website.managementData ||
       website.managementData.length === 0
     ) {
-      toast.info("There are no records to clear for this website.");
+      toast.info(t("There are no records to clear for this website."));
       return;
     }
     clearAllManagementRecords(websiteId);
-    toast.success("All records cleared successfully");
+    toast.success(t("All records cleared successfully"));
   };
 
   return (
     <DashboardLayout isAdmin>
       <div className="space-y-6">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Website Records</h1>
+          <h1 className="text-2xl font-bold">{t("Website Records")}</h1>
         </div>
 
         <div className="relative mb-4">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by website name or user email..."
+            placeholder={t("Search by website name or user email...")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8 pr-8"
@@ -143,8 +145,8 @@ const WebsiteRecords = () => {
           <div className="text-center p-10 border rounded-lg">
             <p className="text-muted-foreground">
               {approvedWebsites.length === 0
-                ? "No approved websites found"
-                : "No websites found matching your search"}
+                ? t("No approved websites found")
+                : t("No websites found matching your search")}
             </p>
           </div>
         ) : (
@@ -157,6 +159,8 @@ const WebsiteRecords = () => {
                 onDeleteRecord={handleDeleteRecord}
                 onClearRecords={handleClearAllRecords}
                 onEditField={handleEditField}
+                t={t}
+                i18n={i18n}
               />
             ))}
           </div>
@@ -166,7 +170,7 @@ const WebsiteRecords = () => {
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Management Record</DialogTitle>
+              <DialogTitle>{t("Add Management Record")}</DialogTitle>
             </DialogHeader>
             <RecordForm
               onSave={handleAddRecord}
@@ -184,6 +188,8 @@ const WebsiteRecords = () => {
                     }
                   : {}
               }
+              t={t}
+              i18n={i18n}
             />
           </DialogContent>
         </Dialog>

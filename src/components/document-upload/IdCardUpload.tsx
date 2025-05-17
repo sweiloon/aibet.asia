@@ -11,14 +11,23 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { IdCard, Upload, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useWebsites } from "@/context/WebsiteContext";
+import { useWebsites, WebsiteType } from "@/context/website";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
+import { TFunction } from "i18next";
+import { i18n as I18nInstanceType } from "i18next";
+import { useAuth } from "@/context/AuthContext";
 
-export const IdCardUpload = () => {
+interface IdCardUploadProps {
+  t: TFunction;
+  i18n: I18nInstanceType;
+}
+
+export const IdCardUpload = ({ t, i18n }: IdCardUploadProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addWebsite } = useWebsites();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [idFrontImage, setIdFrontImage] = useState<File | null>(null);
   const [idBackImage, setIdBackImage] = useState<File | null>(null);
@@ -39,27 +48,25 @@ export const IdCardUpload = () => {
     e.preventDefault();
     if (!idFrontImage) {
       toast({
-        title: "Front ID Image Required",
-        description: "Please upload a front image of your ID card.",
+        title: t("Front ID Image Required"),
+        description: t("Please upload a front image of your ID card."),
         variant: "destructive",
       });
       return;
     }
     if (!idBackImage) {
       toast({
-        title: "Back ID Image Required",
-        description: "Please upload a back image of your ID card.",
+        title: t("Back ID Image Required"),
+        description: t("Please upload a back image of your ID card."),
         variant: "destructive",
       });
       return;
     }
     setIsSubmitting(true);
     try {
-      // Upload both images to Supabase Storage
       const uploads = [idFrontImage, idBackImage].map(async (file, idx) => {
         const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const filePath = `id-cards/${Date.now()}-${sanitizedFileName}`;
-        // Ensure the 'documents' bucket exists and is public in Supabase dashboard if you get 400 errors
         const { error } = await supabase.storage
           .from("documents")
           .upload(filePath, file, { upsert: true, contentType: file.type });
@@ -71,27 +78,36 @@ export const IdCardUpload = () => {
           name: file.name,
           url: data.publicUrl,
           type: file.type,
+          size: file.size,
+          lastModified: file.lastModified,
         };
       });
       const files = await Promise.all(uploads);
-      await addWebsite({
-        name: "ID Card Submission",
+
+      const websiteData = {
+        name: t("ID Card Submission"),
         url: "N/A",
-        type: "id-card",
-        files,
-      });
+        type: "id-card" as WebsiteType,
+        files: files,
+        useremail: user?.email || "",
+      };
+
+      await addWebsite(websiteData);
+
       toast({
-        title: "ID Card Submitted",
-        description: "Your ID card has been successfully submitted for review.",
+        title: t("ID Card Submitted"),
+        description: t(
+          "Your ID card has been successfully submitted for review."
+        ),
       });
       navigate("/dashboard/upload-history");
     } catch (err: unknown) {
-      let message = "There was a problem uploading your ID card images.";
+      let message = t("There was a problem uploading your ID card images.");
       if (isErrorWithMessage(err)) {
         message = err.message;
       }
       toast({
-        title: "Upload Failed",
+        title: t("Upload Failed"),
         description: message,
         variant: "destructive",
       });
@@ -103,9 +119,9 @@ export const IdCardUpload = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upload ID Card</CardTitle>
+        <CardTitle>{t("Upload ID Card")}</CardTitle>
         <CardDescription>
-          Please upload both front and back images of your ID card
+          {t("Please upload both front and back images of your ID card")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -113,18 +129,20 @@ export const IdCardUpload = () => {
           <div className="space-y-4">
             <ImageUploadField
               id="id-front"
-              label="ID Card Front"
+              label={t("ID Card Front")}
               image={idFrontImage}
               onUpload={handleIdFrontUpload}
               onClear={() => setIdFrontImage(null)}
+              t={t}
             />
 
             <ImageUploadField
               id="id-back"
-              label="ID Card Back"
+              label={t("ID Card Back")}
               image={idBackImage}
               onUpload={handleIdBackUpload}
               onClear={() => setIdBackImage(null)}
+              t={t}
             />
           </div>
 
@@ -133,7 +151,7 @@ export const IdCardUpload = () => {
               type="submit"
               disabled={isSubmitting || !idFrontImage || !idBackImage}
             >
-              {isSubmitting ? "Submitting..." : "Submit ID Card"}
+              {isSubmitting ? t("Submitting...") : t("Submit ID Card")}
             </Button>
           </div>
         </form>
@@ -148,6 +166,7 @@ interface ImageUploadFieldProps {
   image: File | null;
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
+  t: TFunction;
 }
 
 const ImageUploadField = ({
@@ -156,6 +175,7 @@ const ImageUploadField = ({
   image,
   onUpload,
   onClear,
+  t,
 }: ImageUploadFieldProps) => {
   return (
     <div>
@@ -182,7 +202,9 @@ const ImageUploadField = ({
           <div className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
             <IdCard className="h-10 w-10 text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground mb-2">
-              Click to upload {label.toLowerCase()} image
+              {t("Click to upload {{label}} image", {
+                label: label.toLowerCase(),
+              })}
             </p>
             <Input
               id={id}
@@ -197,7 +219,7 @@ const ImageUploadField = ({
               onClick={() => document.getElementById(id)?.click()}
             >
               <Upload className="h-4 w-4 mr-2" />
-              Browse Files
+              {t("Browse Files")}
             </Button>
           </div>
         )}

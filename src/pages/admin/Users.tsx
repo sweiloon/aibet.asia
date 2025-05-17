@@ -24,8 +24,10 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { EditUserDialog } from "@/components/admin/EditUserDialog";
+import { useTranslation } from "react-i18next";
 
 export default function AdminUsers() {
+  const { t, i18n } = useTranslation();
   const {
     user: currentUser,
     getAllUsers,
@@ -44,7 +46,7 @@ export default function AdminUsers() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!currentUser) return; // Wait for user to be loaded
+    if (!currentUser) return;
     setLoading(true);
     getAllUsers()
       .then((data) => {
@@ -52,12 +54,11 @@ export default function AdminUsers() {
         setLoading(false);
       })
       .catch((err) => {
-        setError("Failed to load users");
+        setError(t("Failed to load users"));
         setLoading(false);
       });
-  }, [getAllUsers, currentUser]);
+  }, [getAllUsers, currentUser, t]);
 
-  // Filter users based on search term
   const filteredUsers = users.filter(
     (u) =>
       u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -66,19 +67,28 @@ export default function AdminUsers() {
 
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
-
     try {
       await deleteUser(userToDelete);
       toast({
-        title: "User deleted",
-        description: "The user has been successfully deleted.",
+        title: t("User deleted"),
+        description: t("The user has been successfully deleted."),
       });
       setIsDeleteDialogOpen(false);
       setUserToDelete(null);
+      setLoading(true);
+      getAllUsers()
+        .then((data) => {
+          setUsers(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          setError(t("Failed to load users"));
+          setLoading(false);
+        });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete user. Please try again.",
+        title: t("Error"),
+        description: t("Failed to delete user. Please try again."),
         variant: "destructive",
       });
     }
@@ -89,17 +99,28 @@ export default function AdminUsers() {
     currentStatus: string
   ) => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
-
     try {
       await updateUserStatus(userId, newStatus);
       toast({
-        title: "Status updated",
-        description: `User status changed to ${newStatus}.`,
+        title: t("Status updated"),
+        description: t("User status changed to {{newStatus}}.", {
+          newStatus: t(newStatus),
+        }),
       });
+      setLoading(true);
+      getAllUsers()
+        .then((data) => {
+          setUsers(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          setError(t("Failed to load users"));
+          setLoading(false);
+        });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update user status. Please try again.",
+        title: t("Error"),
+        description: t("Failed to update user status. Please try again."),
         variant: "destructive",
       });
     }
@@ -122,13 +143,12 @@ export default function AdminUsers() {
   ) => {
     const success = await updateUser(userId, userData, newPassword);
     if (success) {
-      // Refresh only the users table
       setLoading(true);
       try {
         const data = await getAllUsers();
         setUsers(data);
       } catch (err) {
-        setError("Failed to load users");
+        setError(t("Failed to load users"));
       } finally {
         setLoading(false);
       }
@@ -136,34 +156,38 @@ export default function AdminUsers() {
     return success;
   };
 
-  const getRankingBadge = (ranking: string) => {
-    switch (ranking) {
-      case "customer":
-        return <Badge className="bg-blue-500/20 text-blue-300">Customer</Badge>;
-      case "agent":
-        return <Badge className="bg-green-500/20 text-green-300">Agent</Badge>;
-      case "master":
-        return (
-          <Badge className="bg-purple-500/20 text-purple-300">Master</Badge>
-        );
-      case "senior":
-        return (
-          <Badge className="bg-yellow-500/20 text-yellow-300">Senior</Badge>
-        );
-      default:
-        return <Badge className="bg-blue-500/20 text-blue-300">Customer</Badge>; // Default to Customer
-    }
+  const getRankingBadge = (ranking: string | undefined) => {
+    const rank = ranking || "customer";
+    const rankKey = rank.charAt(0).toUpperCase() + rank.slice(1);
+    return (
+      <Badge className={`bg-${rank}-500/20 text-${rank}-300`}>
+        {t(rankKey)}
+      </Badge>
+    );
   };
 
-  // Calculate days since account creation
+  const getRoleBadge = (role: string | undefined) => {
+    const roleKey = role
+      ? role.charAt(0).toUpperCase() + role.slice(1)
+      : "User";
+    return (
+      <Badge variant={role === "admin" ? "default" : "secondary"}>
+        {t(roleKey)}
+      </Badge>
+    );
+  };
+
+  const getStatusDisplay = (status: string | undefined) => {
+    const statusKey = status || "active";
+    return t(statusKey);
+  };
+
   const calculateDayCount = (createdAt?: string | number) => {
     if (!createdAt) return 0;
-
     const creationDate = new Date(createdAt);
     const today = new Date();
     const diffTime = Math.abs(today.getTime() - creationDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
     return diffDays;
   };
 
@@ -171,13 +195,13 @@ export default function AdminUsers() {
     <DashboardLayout isAdmin>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
+          <h1 className="text-3xl font-bold">{t("User Management")}</h1>
           <p className="text-muted-foreground">
-            View and manage users of the platform
+            {t("View and manage users of the platform")}
           </p>
         </div>
         {loading ? (
-          <div className="text-center p-10">Loading users...</div>
+          <div className="text-center p-10">{t("Loading users...")}</div>
         ) : error ? (
           <div className="text-center p-10 text-red-500">{error}</div>
         ) : (
@@ -185,7 +209,7 @@ export default function AdminUsers() {
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by email or name..."
+                placeholder={t("Search by email or name...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8 pr-8"
@@ -204,13 +228,15 @@ export default function AdminUsers() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Day Count</TableHead>
-                      <TableHead>Ranking</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{t("Email")}</TableHead>
+                      <TableHead>{t("Role")}</TableHead>
+                      <TableHead>{t("Status")}</TableHead>
+                      <TableHead>{t("Joined")}</TableHead>
+                      <TableHead>{t("Day Count")}</TableHead>
+                      <TableHead>{t("Ranking")}</TableHead>
+                      <TableHead className="text-right">
+                        {t("Actions")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -220,22 +246,14 @@ export default function AdminUsers() {
                           <TableCell className="font-medium">
                             {user.email}
                           </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                user.role === "admin" ? "default" : "secondary"
-                              }
-                            >
-                              {user.role}
-                            </Badge>
-                          </TableCell>
+                          <TableCell>{getRoleBadge(user.role)}</TableCell>
                           <TableCell>
                             <Badge
                               variant="secondary"
                               className={
                                 user.status === "active"
                                   ? "bg-green-500/20 text-green-300"
-                                  : ""
+                                  : "bg-red-500/20 text-red-300"
                               }
                               onClick={() =>
                                 user.id !== currentUser?.id &&
@@ -245,7 +263,7 @@ export default function AdminUsers() {
                                 )
                               }
                             >
-                              {user.status || "active"}
+                              {getStatusDisplay(user.status)}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -256,16 +274,14 @@ export default function AdminUsers() {
                           <TableCell>
                             {calculateDayCount(user.createdAt)}
                           </TableCell>
-                          <TableCell>
-                            {getRankingBadge(user.ranking || "customer")}
-                          </TableCell>
+                          <TableCell>{getRankingBadge(user.ranking)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="w-8 h-8 p-0"
-                                title="Edit user"
+                                title={t("Edit user")}
                                 onClick={() => openEditDialog(user)}
                               >
                                 <Edit2 className="h-4 w-4" />
@@ -274,7 +290,7 @@ export default function AdminUsers() {
                                 variant="outline"
                                 size="sm"
                                 className="w-8 h-8 p-0"
-                                title="Delete user"
+                                title={t("Delete user")}
                                 onClick={() => confirmDelete(user.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -286,7 +302,7 @@ export default function AdminUsers() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center">
-                          No users found.
+                          {t("No users found.")}
                         </TableCell>
                       </TableRow>
                     )}
@@ -298,14 +314,14 @@ export default function AdminUsers() {
         )}
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>{t("Delete User")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this user? This action cannot be
-              undone.
+              {t(
+                "Are you sure you want to delete this user? This action cannot be undone."
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -313,21 +329,22 @@ export default function AdminUsers() {
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDeleteUser}>
-              Delete
+              {t("Delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit User Dialog */}
       <EditUserDialog
         user={userToEdit}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         onSave={handleSaveUser}
+        t={t}
+        i18n={i18n}
       />
     </DashboardLayout>
   );

@@ -10,8 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ApprovalsTable } from "@/components/admin/ApprovalsTable";
 import { ItemDetailsDialog } from "@/components/admin/ItemDetailsDialog";
 import { Website } from "@/context/WebsiteContext";
+import { useTranslation } from "react-i18next";
 
 export default function AdminApprovals() {
+  const { t, i18n } = useTranslation();
   const { getAllWebsites, updateWebsiteStatus, deleteWebsite } = useWebsites();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,16 +53,16 @@ export default function AdminApprovals() {
   const handleApprove = (itemId: string) => {
     updateWebsiteStatus(itemId, "approved");
     toast({
-      title: "Item approved",
-      description: "The item has been approved.",
+      title: t("Item approved"),
+      description: t("The item has been approved."),
     });
   };
 
   const handleReject = (itemId: string) => {
     updateWebsiteStatus(itemId, "rejected");
     toast({
-      title: "Item rejected",
-      description: "The item has been rejected.",
+      title: t("Item rejected"),
+      description: t("The item has been rejected."),
     });
   };
 
@@ -73,9 +75,9 @@ export default function AdminApprovals() {
     <DashboardLayout isAdmin>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Approval Requests</h1>
+          <h1 className="text-3xl font-bold">{t("Approval Requests")}</h1>
           <p className="text-muted-foreground">
-            Review and manage website and document submissions
+            {t("Review and manage website and document submissions")}
           </p>
         </div>
 
@@ -83,7 +85,7 @@ export default function AdminApprovals() {
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search requests..."
+              placeholder={t("Search requests...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
@@ -94,15 +96,15 @@ export default function AdminApprovals() {
         <Tabs defaultValue="pending">
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="pending" className="flex items-center gap-2">
-              <span className="hidden sm:inline">Pending Approvals</span>
+              <span className="hidden sm:inline">{t("Pending Approvals")}</span>
               <Badge variant="outline">{pendingItems.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="approved" className="flex items-center gap-2">
-              <span className="hidden sm:inline">Approved</span>
+              <span className="hidden sm:inline">{t("Approved")}</span>
               <Badge variant="outline">{approvedItems.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="rejected" className="flex items-center gap-2">
-              <span className="hidden sm:inline">Rejected</span>
+              <span className="hidden sm:inline">{t("Rejected")}</span>
               <Badge variant="outline">{rejectedItems.length}</Badge>
             </TabsTrigger>
           </TabsList>
@@ -119,6 +121,8 @@ export default function AdminApprovals() {
                   searchTerm={searchTerm}
                   onClearSearch={() => setSearchTerm("")}
                   deleteWebsite={deleteWebsite}
+                  t={t}
+                  i18n={i18n}
                 />
               </CardContent>
             </Card>
@@ -130,10 +134,12 @@ export default function AdminApprovals() {
                 <ApprovalsTable
                   items={approvedItems}
                   onViewDetails={viewItemDetails}
-                  title="Date Approved"
+                  title={t("Date Approved")}
                   searchTerm={searchTerm}
                   onClearSearch={() => setSearchTerm("")}
                   deleteWebsite={deleteWebsite}
+                  t={t}
+                  i18n={i18n}
                 />
               </CardContent>
             </Card>
@@ -145,10 +151,12 @@ export default function AdminApprovals() {
                 <ApprovalsTable
                   items={rejectedItems}
                   onViewDetails={viewItemDetails}
-                  title="Date Rejected"
+                  title={t("Date Rejected")}
                   searchTerm={searchTerm}
                   onClearSearch={() => setSearchTerm("")}
                   deleteWebsite={deleteWebsite}
+                  t={t}
+                  i18n={i18n}
                 />
               </CardContent>
             </Card>
@@ -164,6 +172,8 @@ export default function AdminApprovals() {
         onReject={handleReject}
         deleteWebsite={deleteWebsite}
         onClose={() => setDetailsOpen(false)}
+        t={t}
+        i18n={i18n}
       />
     </DashboardLayout>
   );

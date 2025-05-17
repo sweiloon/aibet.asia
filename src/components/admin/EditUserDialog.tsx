@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,21 +21,33 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-const formSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email("Invalid email address").optional(),
-  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal('')),
-  confirmPassword: z.string().optional().or(z.literal('')),
-  role: z.enum(["user", "admin"]).optional(),
-  status: z.enum(["active", "inactive"]).optional(),
-  ranking: z.enum(["customer", "agent", "master", "senior"]).optional(),
-}).refine(data => !data.password || data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const formSchema = z
+  .object({
+    name: z.string().optional(),
+    email: z.string().email("Invalid email address").optional(),
+    password: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .optional()
+      .or(z.literal("")),
+    confirmPassword: z.string().optional().or(z.literal("")),
+    role: z.enum(["user", "admin"]).optional(),
+    status: z.enum(["active", "inactive"]).optional(),
+    ranking: z.enum(["customer", "agent", "master", "senior"]).optional(),
+  })
+  .refine((data) => !data.password || data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -44,10 +55,19 @@ interface EditUserDialogProps {
   user: User | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (userId: string, userData: Partial<User>, newPassword?: string) => Promise<boolean>;
+  onSave: (
+    userId: string,
+    userData: Partial<User>,
+    newPassword?: string
+  ) => Promise<boolean>;
 }
 
-export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDialogProps) {
+export function EditUserDialog({
+  user,
+  open,
+  onOpenChange,
+  onSave,
+}: EditUserDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialValues, setInitialValues] = useState<FormValues | null>(null);
@@ -61,9 +81,10 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
       confirmPassword: "",
       role: user?.role || "user",
       status: user?.status || "active",
-      ranking: (user?.ranking && user?.ranking !== "") ? 
-        (user.ranking as "customer" | "agent" | "master" | "senior") : 
-        "customer",
+      ranking:
+        user?.ranking && user?.ranking !== ""
+          ? (user.ranking as "customer" | "agent" | "master" | "senior")
+          : "customer",
     },
   });
 
@@ -71,10 +92,11 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
   useEffect(() => {
     if (open && user) {
       // Properly type the ranking value using as to ensure it matches the expected enum type
-      const userRanking = user?.ranking && user?.ranking !== "" 
-        ? (user.ranking as "customer" | "agent" | "master" | "senior") 
-        : "customer";
-      
+      const userRanking =
+        user?.ranking && user?.ranking !== ""
+          ? (user.ranking as "customer" | "agent" | "master" | "senior")
+          : "customer";
+
       const values: FormValues = {
         name: user?.name || "",
         email: user?.email || "",
@@ -84,7 +106,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
         status: user?.status || "active",
         ranking: userRanking,
       };
-      
+
       form.reset(values);
       setInitialValues(values);
     }
@@ -92,28 +114,32 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
 
   const handleSubmit = async (values: FormValues) => {
     if (!user || !initialValues) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Only include fields that have been changed
       const userData: Partial<User> = {};
-      
+
       if (values.name !== initialValues.name) userData.name = values.name;
       if (values.email !== initialValues.email) userData.email = values.email;
       if (values.role !== initialValues.role) userData.role = values.role;
-      if (values.status !== initialValues.status) userData.status = values.status;
-      
+      if (values.status !== initialValues.status)
+        userData.status = values.status;
+
       // Check if ranking has changed
       if (values.ranking !== initialValues.ranking) {
         userData.ranking = values.ranking;
       }
-      
+
       // Only pass password if it was entered, changed, and not empty
-      const newPassword = values.password && values.password.trim() !== "" ? values.password : undefined;
-      
+      const newPassword =
+        values.password && values.password.trim() !== ""
+          ? values.password
+          : undefined;
+
       const success = await onSave(user.id, userData, newPassword);
-      
+
       if (success) {
         toast({
           title: "User updated",
@@ -138,12 +164,16 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update the user's details and permissions. Only changed fields will be updated.
+            Update the user's details and permissions. Only changed fields will
+            be updated.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -157,7 +187,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="email"
@@ -171,7 +201,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="role"
@@ -179,8 +209,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <FormControl>
-                    <Select 
-                      value={field.value} 
+                    <Select
+                      value={field.value}
                       onValueChange={field.onChange}
                       disabled={user?.id === undefined}
                     >
@@ -197,7 +227,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="ranking"
@@ -205,8 +235,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                 <FormItem>
                   <FormLabel>Ranking</FormLabel>
                   <FormControl>
-                    <Select 
-                      value={field.value || "customer"} 
+                    <Select
+                      value={field.value || "customer"}
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger>
@@ -224,7 +254,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="status"
@@ -232,10 +262,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                 <FormItem>
                   <FormLabel>Status</FormLabel>
                   <FormControl>
-                    <Select 
-                      value={field.value} 
-                      onValueChange={field.onChange}
-                    >
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
@@ -249,11 +276,13 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                 </FormItem>
               )}
             />
-            
+
             <div className="pt-4 border-t">
               <h3 className="text-sm font-medium mb-2">Change Password</h3>
-              <p className="text-xs text-muted-foreground mb-4">Leave blank to keep the current password</p>
-              
+              <p className="text-xs text-muted-foreground mb-4">
+                Leave blank to keep the current password
+              </p>
+
               <FormField
                 control={form.control}
                 name="password"
@@ -261,13 +290,17 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                   <FormItem>
                     <FormLabel>New Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="confirmPassword"
@@ -275,16 +308,24 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            
+
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
