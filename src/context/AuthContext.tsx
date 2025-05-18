@@ -224,7 +224,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           `AUTH_CONTEXT: fetchUserProfile SUCCESS - Profile data found for user ID: ${userId}`,
           data[0]
         );
-        return data[0] as unknown as User;
+        const userData = data[0] as unknown as Record<string, unknown>;
+        return {
+          ...userData,
+          createdAt: userData.createdat,
+        } as User;
       } else if (Array.isArray(data) && data.length === 0) {
         console.warn(
           `AUTH_CONTEXT: fetchUserProfile - No user found for ID: ${userId}.`
@@ -626,7 +630,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast.error("Failed to fetch users.");
         return [];
       }
-      return data as User[];
+      // Map 'createdat' from Supabase to 'createdAt' in User object
+      return (data || []).map((u: Record<string, unknown>) => ({
+        id: u.id as string,
+        email: u.email as string,
+        name: u.name as string | undefined,
+        role: u.role as "user" | "admin",
+        status: u.status as "active" | "inactive" | undefined,
+        createdAt: u.createdat as string,
+        ranking: u.ranking as string | undefined,
+        phone: u.phone as string | undefined,
+      }));
     } catch (err) {
       console.error("Unexpected error in getAllUsers:", err);
       toast.error("An unexpected error occurred while fetching users.");

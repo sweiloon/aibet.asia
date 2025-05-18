@@ -369,6 +369,15 @@ const resources = {
         "User details have been successfully updated.", // Toast
       "Failed to update user. Please try again.":
         "Failed to update user. Please try again.", // Toast
+      "editUserDialog.title": "Edit User",
+      "editUserDialog.description":
+        "Update the user's details and permissions. Only changed fields will be updated.",
+      "editUserDialog.nameLabel": "Name",
+      "editUserDialog.emailLabel": "Email",
+      "editUserDialog.roleLabel": "Role",
+      "editUserDialog.rankingLabel": "Ranking",
+      "editUserDialog.statusLabel": "Status",
+      "editUserDialog.cancelButton": "Cancel",
 
       // Admin Settings Page
       "Admin Settings": "Admin Settings",
@@ -376,6 +385,10 @@ const resources = {
         "Manage your admin account settings",
       "Your admin account details": "Your admin account details",
       // Add more translations here as needed
+
+      // Sidebar User Info
+      "sidebar.signupDate": "Sign up date: {{date}}",
+      "sidebar.activeDay": "Active days: {{days}}",
     },
   },
   zh: {
@@ -725,12 +738,25 @@ const resources = {
       "User details have been successfully updated.":
         "用户详细信息已成功更新。", // Toast
       "Failed to update user. Please try again.": "更新用户失败。请再试一次。", // Toast
+      "editUserDialog.title": "Edit User",
+      "editUserDialog.description":
+        "Update the user's details and permissions. Only changed fields will be updated.",
+      "editUserDialog.nameLabel": "Name",
+      "editUserDialog.emailLabel": "Email",
+      "editUserDialog.roleLabel": "Role",
+      "editUserDialog.rankingLabel": "Ranking",
+      "editUserDialog.statusLabel": "Status",
+      "editUserDialog.cancelButton": "Cancel",
 
       // Admin Settings Page
       "Admin Settings": "管理员设置",
       "Manage your admin account settings": "管理您的管理员帐户设置",
       "Your admin account details": "您的管理员帐户详细信息",
       // Add more translations here as needed
+
+      // Sidebar User Info
+      "sidebar.signupDate": "注册日期：{{date}}",
+      "sidebar.activeDay": "活跃天数：{{days}}",
     },
   },
 };

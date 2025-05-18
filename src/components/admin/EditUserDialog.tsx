@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const formSchema = z
   .object({
@@ -71,6 +72,7 @@ export function EditUserDialog({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialValues, setInitialValues] = useState<FormValues | null>(null);
+  const { t } = useTranslation();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -162,10 +164,9 @@ export function EditUserDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
+          <DialogTitle>{t("editUserDialog.title")}</DialogTitle>
           <DialogDescription>
-            Update the user's details and permissions. Only changed fields will
-            be updated.
+            {t("editUserDialog.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -179,7 +180,7 @@ export function EditUserDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t("editUserDialog.nameLabel")}</FormLabel>
                   <FormControl>
                     <Input placeholder="User name" {...field} />
                   </FormControl>
@@ -193,7 +194,7 @@ export function EditUserDialog({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t("editUserDialog.emailLabel")}</FormLabel>
                   <FormControl>
                     <Input placeholder="email@example.com" {...field} />
                   </FormControl>
@@ -207,7 +208,7 @@ export function EditUserDialog({
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>{t("editUserDialog.roleLabel")}</FormLabel>
                   <FormControl>
                     <Select
                       value={field.value}
@@ -233,7 +234,7 @@ export function EditUserDialog({
               name="ranking"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ranking</FormLabel>
+                  <FormLabel>{t("editUserDialog.rankingLabel")}</FormLabel>
                   <FormControl>
                     <Select
                       value={field.value || "customer"}
@@ -260,7 +261,7 @@ export function EditUserDialog({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
+                  <FormLabel>{t("editUserDialog.statusLabel")}</FormLabel>
                   <FormControl>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
@@ -326,7 +327,7 @@ export function EditUserDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                Cancel
+                {t("editUserDialog.cancelButton")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Saving..." : "Save changes"}

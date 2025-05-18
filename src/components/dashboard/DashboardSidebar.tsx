@@ -51,7 +51,34 @@ export function DashboardSidebar({
 
     const style = rankingStyles[userRanking] || "";
 
-    return <Badge className={`${style} mb-2`}>{t(rankingKey)}</Badge>;
+    return (
+      <Badge className={`${style} mb-2 text-sm font-bold py-2 px-4`}>
+        {t(rankingKey)}
+      </Badge>
+    );
+  };
+
+  const getSignupDateSentence = () => {
+    if (!user.createdAt) return null;
+    const dateStr = new Date(user.createdAt).toLocaleDateString();
+    return (
+      <span className="text-sm font-bold text-muted-foreground block">
+        {t("sidebar.signupDate", { date: dateStr })}
+      </span>
+    );
+  };
+
+  const getActiveDaySentence = () => {
+    if (!user.createdAt) return null;
+    const creationDate = new Date(user.createdAt);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - creationDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return (
+      <span className="text-sm font-bold text-muted-foreground block mb-2">
+        {t("sidebar.activeDay", { days: diffDays })}
+      </span>
+    );
   };
 
   return (
@@ -91,7 +118,13 @@ export function DashboardSidebar({
 
       <SidebarFooter className="p-4">
         <div className="w-full">
-          {!isAdmin && getRankingBadge()}
+          {!isAdmin && (
+            <>
+              {getRankingBadge()}
+              {getSignupDateSentence()}
+              {getActiveDaySentence()}
+            </>
+          )}
           <span className="text-xs text-muted-foreground block mb-2">
             {t("Logged in as {{email}}", { email: user?.email })}
           </span>

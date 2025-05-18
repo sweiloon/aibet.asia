@@ -267,12 +267,14 @@ export default function AdminUsers() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {new Date(
-                              user.createdAt || Date.now()
-                            ).toLocaleDateString()}
+                            {user.createdAt
+                              ? new Date(user.createdAt).toLocaleDateString()
+                              : "-"}
                           </TableCell>
                           <TableCell>
-                            {calculateDayCount(user.createdAt)}
+                            {user.createdAt
+                              ? calculateDayCount(user.createdAt)
+                              : 0}
                           </TableCell>
                           <TableCell>{getRankingBadge(user.ranking)}</TableCell>
                           <TableCell className="text-right">
@@ -343,8 +345,6 @@ export default function AdminUsers() {
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         onSave={handleSaveUser}
-        t={t}
-        i18n={i18n}
       />
     </DashboardLayout>
   );
