@@ -25,8 +25,12 @@ export const RecordForm = ({
     profit: initialValues?.profit || 0,
     gross_profit: initialValues?.gross_profit || 0,
     service_fee: initialValues?.service_fee || 0,
-    start_date: initialValues?.start_date || format(new Date(), "yyyy-MM-dd"),
-    end_date: initialValues?.end_date || format(new Date(), "yyyy-MM-dd"),
+    start_date: initialValues?.start_date
+      ? format(new Date(initialValues.start_date), "yyyy-MM-dd")
+      : format(new Date(), "yyyy-MM-dd"),
+    end_date: initialValues?.end_date
+      ? format(new Date(initialValues.end_date), "yyyy-MM-dd")
+      : format(new Date(), "yyyy-MM-dd"),
     net_profit: initialValues?.net_profit || 0,
     tasks: initialValues?.tasks,
   });

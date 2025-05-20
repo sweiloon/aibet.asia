@@ -30,6 +30,13 @@ import {
 import { openInNewTab } from "@/lib/openInNewTab";
 import { TFunction } from "i18next";
 import { i18n as I18nInstanceType } from "i18next";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { RecordForm } from "@/components/admin/RecordForm";
 
 interface WebsiteRecordCardProps {
   website: Website;
@@ -63,6 +70,7 @@ export const WebsiteRecordCard = ({
     fieldType?: string;
   } | null>(null);
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
+  const [editRecord, setEditRecord] = useState<WebsiteManagement | null>(null);
 
   const handleEditFieldClick = (
     recordId: string,
@@ -283,7 +291,11 @@ export const WebsiteRecordCard = ({
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => {}}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditRecord(record)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
@@ -351,6 +363,69 @@ export const WebsiteRecordCard = ({
             i18n={i18n}
           />
         )}
+
+      {editRecord && (
+        <Dialog
+          open={!!editRecord}
+          onOpenChange={(open) => !open && setEditRecord(null)}
+        >
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>{t("Edit Management Record")}</DialogTitle>
+            </DialogHeader>
+            <RecordForm
+              initialValues={editRecord}
+              onCancel={() => setEditRecord(null)}
+              onSave={(updated) => {
+                onEditField(website.id, editRecord.id, "day", updated.day);
+                onEditField(
+                  website.id,
+                  editRecord.id,
+                  "credit",
+                  updated.credit
+                );
+                onEditField(
+                  website.id,
+                  editRecord.id,
+                  "profit",
+                  updated.profit
+                );
+                onEditField(
+                  website.id,
+                  editRecord.id,
+                  "gross_profit",
+                  updated.gross_profit
+                );
+                onEditField(
+                  website.id,
+                  editRecord.id,
+                  "service_fee",
+                  updated.service_fee
+                );
+                onEditField(
+                  website.id,
+                  editRecord.id,
+                  "net_profit",
+                  updated.net_profit
+                );
+                onEditField(
+                  website.id,
+                  editRecord.id,
+                  "start_date",
+                  updated.start_date
+                );
+                onEditField(
+                  website.id,
+                  editRecord.id,
+                  "end_date",
+                  updated.end_date
+                );
+                setEditRecord(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       <AlertDialog open={isClearDialogOpen} onOpenChange={setIsClearDialogOpen}>
         <AlertDialogContent>
