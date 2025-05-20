@@ -140,27 +140,45 @@ export const ItemDetailsDialog = ({
             </div>
           )}
 
-          {item.adminCredentials && ( // Check for adminCredentials
-            <div className="pt-2 border-t border-border">
-              <p className="text-sm font-medium text-muted-foreground mb-2">
-                {t("Login Credentials")}
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {t("Username")}
-                  </p>
-                  <p className="text-base">{item.adminCredentials.username}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {t("Password")}
-                  </p>
-                  <p className="text-base">{item.adminCredentials.password}</p>
+          {/* Credentials Section: Only for website (URL) type submissions */}
+          {(item.type === "website" ||
+            item.type === "app" ||
+            item.type === "other") &&
+            (item.adminCredentials ||
+              // @ts-expect-error: username/password may exist on legacy Website objects
+              item.username ||
+              // @ts-expect-error: username/password may exist on legacy Website objects
+              item.password) && (
+              <div className="pt-2 border-t border-border">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  {t("Credentials")}
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {t("Username")}
+                    </p>
+                    <p className="text-base">
+                      {item.adminCredentials
+                        ? item.adminCredentials.username
+                        : // @ts-expect-error: username may exist on legacy Website objects
+                          item.username || t("Not provided")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {t("Password")}
+                    </p>
+                    <p className="text-base">
+                      {item.adminCredentials
+                        ? item.adminCredentials.password
+                        : // @ts-expect-error: password may exist on legacy Website objects
+                          item.password || t("Not provided")}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {Array.isArray(item.files) && item.files.length > 0 ? (
             <div className="pt-2 border-t border-border">

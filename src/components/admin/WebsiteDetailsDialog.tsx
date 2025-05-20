@@ -97,21 +97,35 @@ export const WebsiteDetailsDialog = ({
             </div>
           )}
 
-          {website.adminCredentials && (
-            <>
-              <div>
-                <Label>{t("Username")}</Label>
-                <div className="font-medium">
-                  {website.adminCredentials.username}
+          {/* Credentials Section: Show if either adminCredentials or username/password fields exist */}
+          {(website.adminCredentials ||
+            // @ts-expect-error: username/password may exist on legacy Website objects
+            website.username ||
+            // @ts-expect-error: username/password may exist on legacy Website objects
+            website.password) && (
+            <div>
+              <Label>{t("Credentials")}</Label>
+              <div className="grid grid-cols-2 gap-4 mt-1">
+                <div>
+                  <Label>{t("Username")}</Label>
+                  <div className="font-medium">
+                    {website.adminCredentials
+                      ? website.adminCredentials.username
+                      : // @ts-expect-error: username may exist on legacy Website objects
+                        website.username || t("Not provided")}
+                  </div>
+                </div>
+                <div>
+                  <Label>{t("Password")}</Label>
+                  <div className="font-medium">
+                    {website.adminCredentials
+                      ? website.adminCredentials.password
+                      : // @ts-expect-error: password may exist on legacy Website objects
+                        website.password || t("Not provided")}
+                  </div>
                 </div>
               </div>
-              <div>
-                <Label>{t("Password")}</Label>
-                <div className="font-medium">
-                  {website.adminCredentials.password}
-                </div>
-              </div>
-            </>
+            </div>
           )}
 
           <div className="pt-4">

@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Eye, Trash2, Plus, Mail } from "lucide-react";
+import { Eye, Trash2, Plus, Mail, Edit } from "lucide-react";
 import { WebsiteDetailsDialog } from "./WebsiteDetailsDialog";
 import { EditFieldDialog } from "./EditFieldDialog";
 import {
@@ -131,6 +131,15 @@ export const WebsiteRecordCard = ({
           >
             <Trash2 className="h-4 w-4" />
             <span>{t("Clear Records")}</span>
+          </Button>
+          <Button
+            onClick={() => setIsDetailOpen(true)}
+            variant="outline"
+            size="sm"
+            className="gap-1"
+          >
+            <Eye className="h-4 w-4" />
+            <span>{t("View Detail")}</span>
           </Button>
           <Button
             onClick={() => onAddRecord(website)}
@@ -274,12 +283,8 @@ export const WebsiteRecordCard = ({
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsDetailOpen(true)}
-                    >
-                      <Eye className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" onClick={() => {}}>
+                      <Edit className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
