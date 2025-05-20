@@ -485,6 +485,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
+      // Check for duplicate phone number
+      const { data: phoneCheck, error: phoneCheckError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("phone", phone)
+        .maybeSingle();
+      if (phoneCheckError) {
+        console.error(
+          "AUTH_CONTEXT: signup - Phone check error:",
+          phoneCheckError
+        );
+        toast.error("Failed to check phone number. Please try again.");
+        setLoading(false);
+        return false;
+      }
+      if (phoneCheck) {
+        toast.error(
+          "This phone number has already been registered! Please use another one."
+        );
+        setLoading(false);
+        return false;
+      }
+
       const { data: signUpAuthData, error: signUpError } =
         await supabase.auth.signUp({
           email: email.trim(),

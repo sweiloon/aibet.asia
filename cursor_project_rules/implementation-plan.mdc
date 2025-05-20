@@ -5,3 +5,7 @@ alwaysApply: false
 ---
 **Done**
 The Hero section's 'Join Now' button now only appears when no user is logged in. Clicking it redirects to the signup page using the same logic as the 'Get Started' button.
+
+**Done**
+Added a Supabase query in the signup logic to check for existing phone numbers before registration.
+If a duplicate is found, the user is notified and registration is blocked.
